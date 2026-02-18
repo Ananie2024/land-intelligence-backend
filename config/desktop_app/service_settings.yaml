@@ -1,0 +1,48 @@
+# =============================================================================
+# DESKTOP APPLICATION - SERVICE SETTINGS
+# =============================================================================
+# Local service configuration for single-machine deployment
+# =============================================================================
+
+# FastAPI service
+fastapi:
+  host: "127.0.0.1"
+  port: 8000
+  reload: true  # Set to false in production
+  workers: 1
+  log_level: "info"
+  access_log: true
+
+# MySQL service
+mysql:
+  host: "localhost"
+  port: 3306
+  socket: null  # Use socket on Linux: "/var/run/mysqld/mysqld.sock"
+  charset: "utf8mb4"
+  collation: "utf8mb4_unicode_ci"
+
+# Service management
+service_management:
+  # Windows
+  windows:
+    mysql_service_name: "MySQL80"
+    fastapi_service_name: "LandIntelligenceAPI"
+    use_nssm: true  # Use NSSM for Windows service management
+    
+  # Linux
+  linux:
+    mysql_service_name: "mysql"
+    fastapi_service_name: "land-intelligence-api"
+    use_systemd: true
+
+# Startup behavior
+startup:
+  auto_start_services: true
+  wait_for_database: true
+  database_timeout_seconds: 30
+  run_migrations_on_startup: false  # Set to true for development
+
+# Shutdown behavior
+shutdown:
+  graceful_timeout_seconds: 30
+  backup_on_shutdown: false

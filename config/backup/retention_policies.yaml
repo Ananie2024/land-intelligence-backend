@@ -1,0 +1,40 @@
+# =============================================================================
+# BACKUP RETENTION POLICIES
+# =============================================================================
+# Define how long backups are kept in different storage tiers
+# =============================================================================
+
+retention:
+  # Daily incremental backups
+  daily_incremental:
+    local: 7  # Keep for 7 days locally
+    cloud: 30  # Keep for 30 days in cloud
+    description: "Quick recovery for recent changes"
+    
+  # Weekly full backups
+  weekly_full:
+    local: 28  # Keep for 4 weeks locally
+    cloud: 84  # Keep for 12 weeks in cloud
+    description: "Medium-term recovery point"
+    
+  # Monthly archives
+  monthly_archive:
+    local: 90  # Keep for 3 months locally
+    cloud: 2555  # Keep forever in cloud (~7 years)
+    description: "Long-term compliance and disaster recovery"
+    
+  # Special retention
+  verification_logs:
+    retention_days: 365
+    description: "Keep verification logs for 1 year"
+    
+  audit_logs:
+    retention_days: 2555
+    description: "Legal compliance requirement - 7 years"
+
+# Cleanup settings
+cleanup:
+  enabled: true
+  schedule: "0 4 * * *"  # Daily at 4:00 AM
+  grace_period_days: 7  # Keep expired backups for 7 extra days
+  notify_before_deletion: true

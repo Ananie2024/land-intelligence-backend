@@ -1,0 +1,69 @@
+# =============================================================================
+# NOTIFICATION RULES CONFIGURATION
+# =============================================================================
+# Configure email alerts and notifications for backup events
+# =============================================================================
+
+notifications:
+  email:
+    enabled: true
+    smtp_host: "smtp.gmail.com"
+    smtp_port: 587
+    use_tls: true
+    sender: "backup-system@church.org"
+    sender_name: "Land Intelligence Backup System"
+    
+    # Recipients
+    recipients:
+      - email: "it-admin@church.org"
+        name: "IT Administrator"
+        role: "admin"
+      - email: "land-records-officer@church.org"
+        name: "Land Records Officer"
+        role: "user"
+    
+  # Event-based notifications
+  events:
+    backup_success:
+      enabled: true
+      send_to: ["admin"]
+      include_details: true
+      
+    backup_failure:
+      enabled: true
+      send_to: ["admin", "user"]
+      priority: "high"
+      include_logs: true
+      
+    verification_failure:
+      enabled: true
+      send_to: ["admin"]
+      priority: "high"
+      
+    weekly_summary:
+      enabled: true
+      send_to: ["admin", "user"]
+      schedule: "0 9 * * 1"  # Monday 9:00 AM
+      
+    storage_quota_warning:
+      enabled: true
+      send_to: ["admin"]
+      threshold_percent: 80
+      
+    restore_completed:
+      enabled: true
+      send_to: ["admin", "user"]
+      priority: "high"
+  
+  # Email templates
+  templates:
+    success_subject: "✅ Backup Successful - {date}"
+    failure_subject: "❌ BACKUP FAILED - {date} - Action Required"
+    verification_failure_subject: "⚠️ Backup Verification Failed - {date}"
+    weekly_summary_subject: "📊 Weekly Backup Summary - Week of {date}"
+    
+  # Notification throttling
+  throttling:
+    enabled: true
+    max_emails_per_hour: 10
+    min_interval_minutes: 15

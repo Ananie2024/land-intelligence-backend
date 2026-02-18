@@ -1,0 +1,47 @@
+# =============================================================================
+# BACKUP SCHEDULE CONFIGURATION
+# =============================================================================
+# Define automated backup schedules using cron expressions
+# Format: "minute hour day month day_of_week"
+# =============================================================================
+
+schedules:
+  # Daily incremental backup
+  daily_incremental:
+    enabled: true
+    backup_type: INCREMENTAL
+    tiers: 
+      - LOCAL
+      - CLOUD
+    cron: "0 3 * * *"  # Every day at 3:00 AM
+    retention_days: 30
+    description: "Daily incremental backup of changed files and data"
+    
+  # Weekly full backup
+  weekly_full:
+    enabled: true
+    backup_type: FULL
+    tiers:
+      - LOCAL
+      - CLOUD
+    cron: "0 2 * * 0"  # Every Sunday at 2:00 AM
+    retention_days: 84  # 12 weeks
+    description: "Complete system backup including database and documents"
+    
+  # Monthly archive
+  monthly_archive:
+    enabled: true
+    backup_type: ARCHIVE
+    tiers:
+      - CLOUD
+    cron: "0 2 1 * *"  # 1st day of every month at 2:00 AM
+    retention_days: 2555  # ~7 years for legal compliance
+    description: "Long-term archival backup for compliance"
+
+# Global backup settings
+global_settings:
+  max_concurrent_backups: 1
+  timeout_minutes: 120
+  verify_after_backup: true
+  notify_on_completion: true
+  notify_on_failure: true

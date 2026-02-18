@@ -1,0 +1,110 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Environment Variables
+.env
+.env.local
+.env.production
+
+# Database
+*.db
+*.sqlite3
+*.sql
+
+# Logs
+logs/*.log
+*.log
+
+# Backups (local backup storage - don't commit)
+backups/daily/*
+backups/weekly/*
+backups/monthly/*
+backups/manifests/*
+backups/temp/*
+!backups/.gitkeep
+
+# Cloud Storage Credentials
+config/backup/credentials/
+*.json
+*-key.json
+service-account*.json
+
+# Temporary Files
+temp/
+tmp/
+*.tmp
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Alembic
+alembic/versions/__pycache__/
+
+# Documents (actual uploaded files - don't commit)
+documents/
+qr-codes/generated/
+gis-data/
+
+# Jupyter Notebooks (if used for analysis)
+.ipynb_checkpoints
+*.ipynb
+
+# Package managers
+poetry.lock
+Pipfile.lock
+
+# Encryption keys (NEVER commit)
+*.key
+*.pem
+*.crt
+encryption/
+keys/

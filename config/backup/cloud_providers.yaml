@@ -1,0 +1,54 @@
+# =============================================================================
+# CLOUD STORAGE PROVIDERS CONFIGURATION
+# =============================================================================
+# Configure cloud backup destinations
+# =============================================================================
+
+# Active provider selection
+active_provider: google_cloud_storage  # Options: google_cloud_storage, backblaze_b2
+
+providers:
+  google_cloud_storage:
+    enabled: true
+    project_id: "church-land-intelligence"
+    bucket_name: "land-intelligence-backups"
+    credentials_path: "/path/to/service-account-key.json"
+    region: "us-central1"
+    storage_class: "STANDARD"  # Options: STANDARD, NEARLINE, COLDLINE, ARCHIVE
+    
+    # Client-side encryption (optional)
+    encryption:
+      enabled: false
+      key_path: "/secure/encryption.key"
+      algorithm: "AES256"
+    
+    # Lifecycle management
+    lifecycle:
+      enabled: true
+      transition_to_nearline_days: 90
+      transition_to_coldline_days: 365
+      delete_after_days: 2555  # 7 years
+    
+  backblaze_b2:
+    enabled: false
+    account_id: "your_account_id"
+    application_key_path: "/path/to/b2-key.txt"
+    bucket_name: "church-backups"
+    
+    # Encryption
+    encryption:
+      enabled: false
+      key_path: "/secure/b2-encryption.key"
+    
+    # Lifecycle rules
+    lifecycle:
+      enabled: true
+      keep_days: 2555
+
+# Upload settings
+upload_settings:
+  chunk_size_mb: 10
+  max_retries: 3
+  retry_delay_seconds: 60
+  use_compression: true
+  verify_checksums: true
