@@ -1,7 +1,7 @@
 # =============================================================================
 # DESKTOP APPLICATION - SERVICE SETTINGS
 # =============================================================================
-# Local service configuration for single-machine deployment
+# Local service configuration for single-machine deployment - WINDOWS 11 PRIMARY
 # =============================================================================
 
 # FastAPI service
@@ -13,23 +13,35 @@ fastapi:
   log_level: "info"
   access_log: true
 
-# MySQL service
+# MySQL service (Windows 11)
 mysql:
   host: "localhost"
   port: 3306
-  socket: null  # Use socket on Linux: "/var/run/mysqld/mysqld.sock"
+  socket: null  # Not used on Windows (sockets are Linux/Unix only)
   charset: "utf8mb4"
   collation: "utf8mb4_unicode_ci"
+  
+  # Windows-specific MySQL settings
+  windows:
+    service_name: "MySQL80"  # Default MySQL 8.0 service name
+    data_directory: "C:/ProgramData/MySQL/MySQL Server 8.0/Data"
+    config_file: "C:/ProgramData/MySQL/MySQL Server 8.0/my.ini"
+    enable_spatial: true  # MySQL 8.0+ has spatial support by default
 
 # Service management
 service_management:
-  # Windows
+  # Windows 11 (PRIMARY)
   windows:
     mysql_service_name: "MySQL80"
     fastapi_service_name: "LandIntelligenceAPI"
-    use_nssm: true  # Use NSSM for Windows service management
+    use_nssm: true  # Use NSSM (Non-Sucking Service Manager) for Windows services
+    nssm_path: "C:/Program Files/NSSM/nssm.exe"  # Update if installed elsewhere
     
-  # Linux
+    # Task Scheduler for automated backups (alternative to service)
+    use_task_scheduler: true
+    task_name: "LandIntelligenceBackup"
+    
+  # Linux (REFERENCE ONLY)
   linux:
     mysql_service_name: "mysql"
     fastapi_service_name: "land-intelligence-api"
@@ -41,8 +53,26 @@ startup:
   wait_for_database: true
   database_timeout_seconds: 30
   run_migrations_on_startup: false  # Set to true for development
+  check_mysql_service: true  # Verify MySQL service is running
 
 # Shutdown behavior
 shutdown:
   graceful_timeout_seconds: 30
   backup_on_shutdown: false
+  stop_mysql_service: false  # Don't stop MySQL when app shuts down
+
+# Windows 11 specific settings
+windows_settings:
+  # PowerShell execution policy (may need to allow scripts)
+  require_powershell_scripts: false
+  
+  # Windows Defender exclusions recommended for better performance
+  recommend_defender_exclusions:
+    - "C:/LandIntelligence"
+    - "C:/ProgramData/MySQL"
+  
+  # Long path support (Windows 10 1607+)
+  enable_long_paths: true
+  
+  # Windows firewall (not needed for localhost-only)
+  configure_firewall: false

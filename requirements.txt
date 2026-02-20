@@ -1,3 +1,6 @@
+pip==26.0.1
+setuptools==82.0.0
+wheel==0.46.3
 # Core Framework
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
@@ -32,7 +35,7 @@ pyyaml==6.0.1
 
 # Cloud Storage Providers
 google-cloud-storage==2.14.0
-b2sdk==1.30.0
+b2sdk>=2.10,<2.11
 
 # Background Tasks & Scheduling
 celery[redis]==5.3.6

@@ -1,12 +1,13 @@
 # =============================================================================
 # DESKTOP APPLICATION - LOCAL PATHS CONFIGURATION
 # =============================================================================
-# Single-machine deployment path settings
+# Single-machine deployment path settings - WINDOWS 11 PRIMARY
 # =============================================================================
 
 application:
   mode: "desktop"  # Single-machine mode
   deployment_type: "standalone"
+  platform: "windows"  # Options: windows, linux, macos
 
 # Network settings (localhost only)
 network:
@@ -20,26 +21,36 @@ network:
     workers: 1
 
 # File system paths
-# IMPORTANT: Update these paths based on your operating system
+# IMPORTANT: Use forward slashes (/) even on Windows - Python handles conversion
 paths:
-  # Windows paths (uncomment for Windows)
-  # storage_root: "C:/LandIntelligence"
-  # documents: "C:/LandIntelligence/documents"
-  # backups_local: "C:/LandIntelligence/backups"
-  # logs: "C:/LandIntelligence/logs"
-  # temp: "C:/LandIntelligence/temp"
-  # qr_codes: "C:/LandIntelligence/qr-codes"
-  # gis_data: "C:/LandIntelligence/gis-data"
+  # Windows 11 paths (PRIMARY CONFIGURATION)
+  storage_root: "C:/LandIntelligence"
+  documents: "C:/LandIntelligence/documents"
+  backups_local: "C:/LandIntelligence/backups"
+  logs: "C:/LandIntelligence/logs"
+  temp: "C:/LandIntelligence/temp"
+  qr_codes: "C:/LandIntelligence/qr-codes"
+  gis_data: "C:/LandIntelligence/gis-data"
   
-  # Linux paths (uncomment for Linux)
-  storage_root: "/home/user/LandIntelligence"
-  documents: "/home/user/LandIntelligence/documents"
-  backups_local: "/home/user/LandIntelligence/backups"
-  logs: "/home/user/LandIntelligence/logs"
-  temp: "/home/user/LandIntelligence/temp"
-  qr_codes: "/home/user/LandIntelligence/qr-codes"
-  gis_data: "/home/user/LandIntelligence/gis-data"
+  # Alternative Windows paths (if using different drive or user folder)
+  # storage_root: "D:/LandIntelligence"  # For D: drive
+  # storage_root: "C:/Users/YourUsername/Documents/LandIntelligence"  # User folder
+  
+  # Linux paths (REFERENCE ONLY - comment out these and uncomment above for Linux)
+  # storage_root: "/home/user/LandIntelligence"
+  # documents: "/home/user/LandIntelligence/documents"
+  # backups_local: "/home/user/LandIntelligence/backups"
+  # logs: "/home/user/LandIntelligence/logs"
+  # temp: "/home/user/LandIntelligence/temp"
+  # qr_codes: "/home/user/LandIntelligence/qr-codes"
+  # gis_data: "/home/user/LandIntelligence/gis-data"
 
 # Auto-create directories on startup
 auto_create_directories: true
-directory_permissions: "755"  # Linux only
+directory_permissions: "755"  # Linux only (ignored on Windows)
+
+# Windows-specific settings
+windows:
+  use_long_path_support: true  # Enable long path support (Windows 10+)
+  handle_path_separators: true  # Auto-convert backslashes to forward slashes
+  create_with_powershell: false  # Use Python for directory creation
