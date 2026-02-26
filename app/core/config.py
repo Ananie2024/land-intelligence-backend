@@ -1,46 +1,34 @@
-# app/core/config.py
-"""
-Backend Core Configuration
-Phase 1 — Section 2.3
-Land Intelligence System
-"""
-
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
-from typing import Optional
-
 
 class Settings(BaseSettings):
-    """
-    Application settings loaded from environment variables.
-    All configuration for the Land Intelligence System backend.
-    """
     
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore"
+    )
+
     # API Configuration
-    API_HOST: str = Field(default="0.0.0.0", env="API_HOST")
-    API_PORT: int = Field(default=8000, env="API_PORT")
+    API_HOST: str = Field(default="0.0.0.0")
+    API_PORT: int = Field(default=8000)
     
     # Database Configuration
-    DATABASE_URL: str = Field(..., env="DATABASE_URL")
+    DATABASE_URL: str = Field(...)
     
     # Security Configuration
-    SECRET_KEY: str = Field(..., env="SECRET_KEY")
+    SECRET_KEY: str = Field(...)
     
     # File Storage Configuration
-    FILE_STORAGE_PATH: str = Field(default="./file-storage", env="FILE_STORAGE_PATH")
+    FILE_STORAGE_PATH: str = Field(default="./file-storage")
     
     # Backup Configuration
-    BACKUP_BASE_PATH: str = Field(default="./backups", env="BACKUP_BASE_PATH")
+    BACKUP_BASE_PATH: str = Field(default="./backups")
     
-    # Logging Configuration
-    LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
-    
-    class Config:
-        """Pydantic configuration for settings."""
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
-
-
-# Create global settings instance
+   # Logging Configuration
+    LOG_LEVEL: str = Field(default="INFO")
+    LOG_FILE_PATH: str = Field(default="./logs/app.log")
+    LOG_MAX_BYTES: int = Field(default=10485760)  # 10 MB
+    LOG_BACKUP_COUNT: int = Field(default=5)
 settings = Settings()
