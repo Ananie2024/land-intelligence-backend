@@ -42,7 +42,7 @@ class LocationRepository(BaseRepository[PhysicalLocation, PhysicalLocationCreate
         result = await self.db.execute(
             select(PhysicalLocation).where(
                 PhysicalLocation.document_id == document_id,
-                PhysicalLocation.is_active == True
+                PhysicalLocation.is_active
             )
         )
         return result.scalar_one_or_none()
@@ -60,7 +60,7 @@ class LocationRepository(BaseRepository[PhysicalLocation, PhysicalLocationCreate
         result = await self.db.execute(
             select(StorageCabinet).where(
                 StorageCabinet.id == cabinet_id,
-                StorageCabinet.is_active == True
+                StorageCabinet.is_active
             )
         )
         cabinet = result.scalar_one_or_none()
@@ -79,7 +79,7 @@ class LocationRepository(BaseRepository[PhysicalLocation, PhysicalLocationCreate
         result = await self.db.execute(
             select(StorageCabinet).where(
                 StorageCabinet.physical_location_id == location_id,
-                StorageCabinet.is_active == True
+                StorageCabinet.is_active
             ).order_by(StorageCabinet.cabinet_number)
         )
         return list(result.scalars().all())
@@ -97,7 +97,7 @@ class LocationRepository(BaseRepository[PhysicalLocation, PhysicalLocationCreate
         result = await self.db.execute(
             select(StorageCabinet).where(
                 StorageCabinet.id == cabinet_id,
-                StorageCabinet.is_active == True
+                StorageCabinet.is_active
             )
         )
         return result.scalar_one_or_none()
@@ -117,7 +117,7 @@ class LocationRepository(BaseRepository[PhysicalLocation, PhysicalLocationCreate
             select(StorageCabinet).where(
                 StorageCabinet.physical_location_id == location_id,
                 StorageCabinet.cabinet_number == cabinet_number,
-                StorageCabinet.is_active == True
+                StorageCabinet.is_active
             )
         )
         return result.scalar_one_or_none()
@@ -135,7 +135,7 @@ class LocationRepository(BaseRepository[PhysicalLocation, PhysicalLocationCreate
         result = await self.db.execute(
             select(PhysicalLocation).where(
                 PhysicalLocation.location_code == location_code,
-                PhysicalLocation.is_active == True
+                PhysicalLocation.is_active
             )
         )
         return result.scalar_one_or_none()
@@ -196,7 +196,7 @@ class LocationRepository(BaseRepository[PhysicalLocation, PhysicalLocationCreate
         Returns:
             List of matching physical locations
         """
-        query = select(PhysicalLocation).where(PhysicalLocation.is_active == True)
+        query = select(PhysicalLocation).where(PhysicalLocation.is_active)
         
         if name:
             query = query.where(PhysicalLocation.name.contains(name))

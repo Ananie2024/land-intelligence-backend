@@ -62,7 +62,7 @@ class ParishRepository(BaseRepository[Parish, ParishCreate, ParishUpdate]):
         result = await self.db.execute(
             select(Parish).where(
                 Parish.code == code,
-                Parish.is_active == True
+                Parish.is_active
             )
         )
         return result.scalar_one_or_none()
@@ -81,7 +81,7 @@ class ParishRepository(BaseRepository[Parish, ParishCreate, ParishUpdate]):
         result = await self.db.execute(
             select(func.count()).select_from(Parcel).where(
                 Parcel.parish_id == id,
-                Parcel.is_active == True
+                Parcel.is_active
             )
         )
         count = result.scalar_one()
@@ -109,7 +109,7 @@ class ParishRepository(BaseRepository[Parish, ParishCreate, ParishUpdate]):
         result = await self.db.execute(
             select(Parish).where(
                 Parish.name.contains(name),
-                Parish.is_active == True
+                Parish.is_active
             ).limit(limit)
         )
         return list(result.scalars().all())# app/repositories/parish_repository.py

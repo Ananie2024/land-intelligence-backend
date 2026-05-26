@@ -42,7 +42,7 @@ class QRRegistryRepository(BaseRepository[QRCodeRegistry, QRCodeCreate, QRCodeUp
         result = await self.db.execute(
             select(QRCodeRegistry).where(
                 QRCodeRegistry.code == qr_string,
-                QRCodeRegistry.is_active == True
+                QRCodeRegistry.is_active
             )
         )
         return result.scalar_one_or_none()
@@ -60,7 +60,7 @@ class QRRegistryRepository(BaseRepository[QRCodeRegistry, QRCodeCreate, QRCodeUp
         result = await self.db.execute(
             select(QRCodeRegistry).where(
                 QRCodeRegistry.parcel_id == parcel_id,
-                QRCodeRegistry.is_active == True
+                QRCodeRegistry.is_active
             ).order_by(desc(QRCodeRegistry.created_at))
         )
         return list(result.scalars().all())
@@ -78,7 +78,7 @@ class QRRegistryRepository(BaseRepository[QRCodeRegistry, QRCodeCreate, QRCodeUp
         result = await self.db.execute(
             select(QRCodeRegistry).where(
                 QRCodeRegistry.document_id == document_id,
-                QRCodeRegistry.is_active == True
+                QRCodeRegistry.is_active
             ).order_by(desc(QRCodeRegistry.created_at))
             .limit(1)
         )
@@ -99,8 +99,8 @@ class QRRegistryRepository(BaseRepository[QRCodeRegistry, QRCodeCreate, QRCodeUp
         result = await self.db.execute(
             select(QRCodeRegistry).where(
                 QRCodeRegistry.code == qr_string,
-                QRCodeRegistry.is_active == True,
-                QRCodeRegistry.is_revoked == False,
+                QRCodeRegistry.is_active,
+                not QRCodeRegistry.is_revoked,
                 or_(
                     QRCodeRegistry.expires_at.is_(None),
                     QRCodeRegistry.expires_at > now
@@ -159,8 +159,8 @@ class QRRegistryRepository(BaseRepository[QRCodeRegistry, QRCodeCreate, QRCodeUp
         result = await self.db.execute(
             select(QRCodeRegistry).where(
                 QRCodeRegistry.parcel_id == parcel_id,
-                QRCodeRegistry.is_active == True,
-                QRCodeRegistry.is_revoked == False,
+                QRCodeRegistry.is_active,
+                not QRCodeRegistry.is_revoked,
                 or_(
                     QRCodeRegistry.expires_at.is_(None),
                     QRCodeRegistry.expires_at > now
@@ -180,7 +180,7 @@ class QRRegistryRepository(BaseRepository[QRCodeRegistry, QRCodeCreate, QRCodeUp
         
         result = await self.db.execute(
             select(QRCodeRegistry).where(
-                QRCodeRegistry.is_active == True,
+                QRCodeRegistry.is_active,
                 QRCodeRegistry.expires_at.is_not(None),
                 QRCodeRegistry.expires_at <= now
             )

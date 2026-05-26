@@ -16,6 +16,7 @@ from app.api.middleware.error_handlers import register_error_handlers
 from app.core.config import settings
 from app.core.database import engine, get_db
 from app.core.logging_config import setup_logging
+from sqlalchemy import text
 
 # Setup structured logging
 setup_logging()
@@ -68,7 +69,7 @@ async def health_check():
     try:
         # Attempt to get a database session and execute a simple query
         async for db in get_db():
-            await db.execute("SELECT 1")
+            await db.execute(text("SELECT 1"))
             db_status = "healthy"
             break
     except Exception as e:
@@ -90,7 +91,7 @@ async def startup_event():
     # Verify database connection on startup
     try:
         async for db in get_db():
-            await db.execute("SELECT 1")
+            await db.execute(text("SELECT 1"))
             logger.info("Database connection verified")
             break
     except Exception as e:

@@ -76,7 +76,7 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
         """
         result = await self.db.execute(
             select(Document)
-            .where(Document.is_active == True)
+            .where(Document.is_active)
             .order_by(desc(Document.created_at))
             .limit(limit)
         )
@@ -95,7 +95,7 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
         result = await self.db.execute(
             select(Document).where(
                 Document.reference_number == reference_number,
-                Document.is_active == True
+                Document.is_active
             )
         )
         return result.scalar_one_or_none()
@@ -113,7 +113,7 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
         result = await self.db.execute(
             select(Document).where(
                 Document.filename == filename,
-                Document.is_active == True
+                Document.is_active
             )
         )
         return result.scalar_one_or_none()
@@ -131,7 +131,7 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
         result = await self.db.execute(
             select(Document).where(
                 Document.file_path == file_path,
-                Document.is_active == True
+                Document.is_active
             )
         )
         return result.scalar_one_or_none()
@@ -163,7 +163,7 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
         Returns:
             List of matching document instances
         """
-        query = select(Document).where(Document.is_active == True)
+        query = select(Document).where(Document.is_active)
         
         if filename:
             query = query.where(Document.filename.contains(filename))

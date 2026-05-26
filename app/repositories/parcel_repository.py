@@ -80,7 +80,7 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
         # Base implementation - spatial logic handled by service layer
         # Returns all active parcels; filtering by geometry done in service
         result = await self.db.execute(
-            select(Parcel).where(Parcel.is_active == True)
+            select(Parcel).where(Parcel.is_active)
         )
         return list(result.scalars().all())
     
@@ -97,7 +97,7 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
         result = await self.db.execute(
             select(Parcel).where(
                 Parcel.parcel_number == parcel_number,
-                Parcel.is_active == True
+                Parcel.is_active
             )
         )
         return result.scalar_one_or_none()
@@ -115,7 +115,7 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
         result = await self.db.execute(
             select(Parcel).where(
                 Parcel.title_deed_number == title_deed_number,
-                Parcel.is_active == True
+                Parcel.is_active
             )
         )
         return result.scalar_one_or_none()
@@ -147,7 +147,7 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
         Returns:
             List of matching parcel instances
         """
-        query = select(Parcel).where(Parcel.is_active == True)
+        query = select(Parcel).where(Parcel.is_active)
         
         if owner_name:
             query = query.where(Parcel.owner_name.contains(owner_name))

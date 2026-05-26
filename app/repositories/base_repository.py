@@ -53,7 +53,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             result = await self.db.execute(
                 select(self.model).where(
                     self.model.id == id,
-                    self.model.is_active == True
+                    self.model.is_active
                 )
             )
             return result.scalar_one_or_none()
@@ -83,7 +83,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             List of model instances
         """
         try:
-            query = select(self.model).where(self.model.is_active == True)
+            query = select(self.model).where(self.model.is_active)
             
             # Apply filters
             if filters:
@@ -228,7 +228,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
         try:
             query = select(func.count()).select_from(self.model).where(
-                self.model.is_active == True
+                self.model.is_active
             )
             
             # Apply filters
@@ -257,7 +257,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             result = await self.db.execute(
                 select(func.count()).select_from(self.model).where(
                     self.model.id == id,
-                    self.model.is_active == True
+                    self.model.is_active
                 )
             )
             return result.scalar_one() > 0

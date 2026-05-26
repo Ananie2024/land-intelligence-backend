@@ -43,7 +43,7 @@ class TaxRepository(BaseRepository[TaxRecord, TaxRecordCreate, TaxRecordUpdate])
             select(TaxRecord)
             .where(
                 TaxRecord.parcel_id == parcel_id,
-                TaxRecord.is_active == True
+                TaxRecord.is_active
             )
             .order_by(
                 desc(TaxRecord.assessment_year),
@@ -70,7 +70,7 @@ class TaxRepository(BaseRepository[TaxRecord, TaxRecordCreate, TaxRecordUpdate])
             .join(TaxRecord)
             .where(
                 TaxRecord.parcel_id == parcel_id,
-                TaxPayment.is_active == True
+                TaxPayment.is_active
             )
             .order_by(desc(TaxPayment.payment_date))
             .offset(skip)
@@ -93,7 +93,7 @@ class TaxRepository(BaseRepository[TaxRecord, TaxRecordCreate, TaxRecordUpdate])
         result = await self.db.execute(
             select(TaxRecord).where(
                 TaxRecord.parcel_id == parcel_id,
-                TaxRecord.is_active == True,
+                TaxRecord.is_active,
                 TaxRecord.status != "paid"
             )
         )
@@ -106,8 +106,8 @@ class TaxRepository(BaseRepository[TaxRecord, TaxRecordCreate, TaxRecordUpdate])
                 select(func.sum(TaxPayment.payment_amount))
                 .where(
                     TaxPayment.tax_record_id == record.id,
-                    TaxPayment.is_active == True,
-                    TaxPayment.is_reversal == False
+                    TaxPayment.is_active,
+                    not TaxPayment.is_reversal
                 )
             )
             total_paid = payments_result.scalar_one() or 0.0
@@ -134,7 +134,7 @@ class TaxRepository(BaseRepository[TaxRecord, TaxRecordCreate, TaxRecordUpdate])
             select(TaxRecord).where(
                 TaxRecord.parcel_id == parcel_id,
                 TaxRecord.assessment_year == year,
-                TaxRecord.is_active == True
+                TaxRecord.is_active
             )
         )
         return result.scalar_one_or_none()
@@ -172,7 +172,7 @@ class TaxRepository(BaseRepository[TaxRecord, TaxRecordCreate, TaxRecordUpdate])
         
         result = await self.db.execute(
             select(TaxRecord).where(
-                TaxRecord.is_active == True,
+                TaxRecord.is_active,
                 TaxRecord.status == "pending",
                 TaxRecord.due_date < today
             )
@@ -206,8 +206,8 @@ class TaxRepository(BaseRepository[TaxRecord, TaxRecordCreate, TaxRecordUpdate])
             select(TaxPayment)
             .where(
                 TaxPayment.tax_record_id == tax_record_id,
-                TaxPayment.is_active == True,
-                TaxPayment.is_reversal == False
+                TaxPayment.is_active,
+                not TaxPayment.is_reversal
             )
             .order_by(TaxPayment.payment_date)
         )
