@@ -6,7 +6,7 @@ Land Intelligence System
 """
 
 from typing import List, Tuple
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Polygon
 from shapely import wkb
 from shapely.geometry.base import BaseGeometry
 

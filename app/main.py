@@ -16,7 +16,6 @@ from app.api.middleware.error_handlers import register_error_handlers
 from app.core.config import settings
 from app.core.database import engine, get_db
 from app.core.logging_config import setup_logging
-from app.core.security import verify_token
 
 # Setup structured logging
 setup_logging()

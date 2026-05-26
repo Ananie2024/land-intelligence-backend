@@ -4,7 +4,7 @@ Phase 2 — Section 3.1
 Land Intelligence System
 """
 
-from sqlalchemy import Column, String, Text, ForeignKey, Boolean
+from sqlalchemy import Column, String, Text, ForeignKey
 from sqlalchemy.dialects.mysql import CHAR
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index

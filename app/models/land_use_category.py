@@ -7,7 +7,6 @@ Land Intelligence System
 
 from sqlalchemy import Column, String, Text, Float, Boolean
 from sqlalchemy.orm import relationship
-from sqlalchemy import Index
 
 from app.models.base import BaseModel
 

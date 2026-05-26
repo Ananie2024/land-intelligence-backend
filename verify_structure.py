@@ -4,7 +4,6 @@ Land Intelligence System - Project Structure Verification Script
 This script verifies that all expected files and directories exist.
 """
 
-import os
 from pathlib import Path
 from typing import List, Tuple
 

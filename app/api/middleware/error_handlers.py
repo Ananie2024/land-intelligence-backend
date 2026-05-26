@@ -9,7 +9,6 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 import logging
 import traceback
-from typing import Union, Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ def register_error_handlers(app: FastAPI) -> None:
             JSONResponse with error details
         """
         logger.warning(
-            f"HTTP exception occurred",
+            "HTTP exception occurred",
             extra={
                 "path": request.url.path,
                 "status_code": exc.status_code,
@@ -77,7 +76,7 @@ def register_error_handlers(app: FastAPI) -> None:
             })
         
         logger.warning(
-            f"Validation error occurred",
+            "Validation error occurred",
             extra={
                 "path": request.url.path,
                 "errors": errors,
@@ -111,7 +110,7 @@ def register_error_handlers(app: FastAPI) -> None:
         """
         # Log full traceback
         logger.error(
-            f"Unhandled exception occurred",
+            "Unhandled exception occurred",
             extra={
                 "path": request.url.path,
                 "error_type": type(exc).__name__,

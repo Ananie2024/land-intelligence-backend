@@ -5,7 +5,6 @@ Land Intelligence System
 """
 
 from typing import Optional
-from shapely.geometry import Polygon, MultiPolygon
 from shapely import wkb
 from shapely.geometry.base import BaseGeometry
 
@@ -28,8 +27,7 @@ def detect_overlap(geom1: BaseGeometry, geom2: BaseGeometry) -> bool:
         return False
     
     return geom1.intersects(geom2) and not geom1.touches(geom2)
-
-
+    
 def calculate_intersection_area(geom1: BaseGeometry, geom2: BaseGeometry) -> float:
     """
     Calculate intersection area between two geometries.

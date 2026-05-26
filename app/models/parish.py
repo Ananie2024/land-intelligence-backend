@@ -5,7 +5,7 @@ Phase 2 — Section 3.1
 Land Intelligence System
 """
 
-from sqlalchemy import Column, String, Text, Integer, Boolean
+from sqlalchemy import Column, String, Text, Integer
 from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel

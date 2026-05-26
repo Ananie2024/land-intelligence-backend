@@ -4,7 +4,7 @@ Audit Log Model
 Phase 2 — Section 3.1
 Land Intelligence System
 """
-from sqlalchemy import Column, String, DateTime, JSON, Index, Integer
+from sqlalchemy import Column, String, DateTime, JSON, Index
 from sqlalchemy.dialects.mysql import CHAR
 from sqlalchemy.orm import declared_attr
 from app.models.base import BaseModel

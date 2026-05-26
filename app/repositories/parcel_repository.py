@@ -5,8 +5,8 @@ Phase 2 — Section 3.2
 Land Intelligence System
 """
 
-from typing import Optional, List, Dict, Any
-from sqlalchemy import select, and_
+from typing import Optional, List
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.parcel import Parcel

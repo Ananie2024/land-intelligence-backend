@@ -56,7 +56,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         
         # Log request received
         logger.info(
-            f"Request received",
+            "Request received",
             extra={
                 "correlation_id": correlation_id,
                 "method": request.method,
@@ -75,7 +75,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             
             # Log response
             logger.info(
-                f"Request completed",
+                "Request completed",
                 extra={
                     "correlation_id": correlation_id,
                     "method": request.method,
@@ -96,7 +96,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             
             # Log exception
             logger.error(
-                f"Request failed",
+                "Request failed",
                 extra={
                     "correlation_id": correlation_id,
                     "method": request.method,

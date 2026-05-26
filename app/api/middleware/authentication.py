@@ -6,10 +6,9 @@ Land Intelligence System
 """
 
 from fastapi import Request, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPBearer
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-from typing import Optional, List
 import logging
 
 from app.core.security import verify_token

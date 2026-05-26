@@ -6,7 +6,6 @@ Land Intelligence System
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from typing import AsyncGenerator
 
-from app.models.base import Base  # ← single source of truth, used by alembic too
 from app.core.config import settings
 
 

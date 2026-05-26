@@ -5,7 +5,7 @@ Land Intelligence System
 """
 from sqlalchemy import Column, DateTime, Boolean, func
 from sqlalchemy.dialects.mysql import CHAR
-from sqlalchemy.orm import DeclarativeBase, declared_attr
+from sqlalchemy.orm import DeclarativeBase
 import uuid
 
 

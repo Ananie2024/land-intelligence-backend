@@ -7,7 +7,7 @@ Land Intelligence System
 
 from typing import Optional, List
 from datetime import datetime
-from sqlalchemy import select, desc, and_, or_, func
+from sqlalchemy import select, desc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.qr_code_registry import QRCodeRegistry

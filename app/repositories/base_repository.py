@@ -5,13 +5,11 @@ Land Intelligence System
 """
 
 from typing import Generic, TypeVar, Type, Optional, List, Dict, Any
-from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, func
+from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 import logging
 
-from app.models.base import BaseModel
 from app.core.database import Base
 
 logger = logging.getLogger(__name__)

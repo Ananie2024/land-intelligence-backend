@@ -4,7 +4,7 @@ Phase 1 — Section 2.5
 Land Intelligence System
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
@@ -27,7 +27,7 @@ async def health_check(db: AsyncSession = Depends(get_db)):
         # Execute simple query to verify database connection
         await db.execute(text("SELECT 1"))
         db_status = "healthy"
-    except Exception as e:
+    except Exception:
         # Log error will be handled by middleware
         db_status = "unhealthy"
     

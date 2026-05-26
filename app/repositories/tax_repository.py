@@ -5,8 +5,8 @@ Phase 2 — Section 3.2
 Land Intelligence System
 """
 
-from typing import Optional, List, Dict, Any
-from sqlalchemy import select, desc, and_, func
+from typing import Optional, List
+from sqlalchemy import select, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.tax_record import TaxRecord
