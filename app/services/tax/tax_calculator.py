@@ -8,8 +8,7 @@ Scope: Phase 3 - Backend API & Services
 
 from datetime import date
 from decimal import Decimal
-from typing import Optional
-from uuid import UUID
+from typing import Optional, Union
 
 from app.models.land_use_category import LandUseCategory
 from app.models.parcel import Parcel
@@ -34,7 +33,7 @@ class TaxCalculator:
     async def calculate_tax(
         self,
         parcel: Parcel,
-        assessment_year: int,
+        assessment_year: Union[int, str],
         land_use_category: Optional[LandUseCategory] = None,
         exemptions: Optional[Decimal] = None,
         current_year: Optional[int] = None
@@ -50,11 +49,16 @@ class TaxCalculator:
             current_year: Optional override for current year (defaults to system date)
 
         Returns:
-            Dictionary containing gross_tax, exemptions_applied, and net_tax_due
+            Dictionary containing tax fields aligned with TaxRecord.
         """
         category = land_use_category or parcel.land_use_category
         if not category:
             return {
+                "assessed_value": Decimal("0.00"),
+                "tax_rate_applied": Decimal("0.00"),
+                "base_tax_amount": Decimal("0.00"),
+                "penalties_amount": Decimal("0.00"),
+                "total_amount": Decimal("0.00"),
                 "gross_tax": Decimal("0.00"),
                 "exemptions_applied": Decimal("0.00"),
                 "net_tax_due": Decimal("0.00"),
@@ -62,30 +66,37 @@ class TaxCalculator:
 
         rate = await self._get_tax_rate(category, assessment_year)
         
-        # Safely convert area to Decimal
-        area = Decimal(str(parcel.area_hectares))
+        area = Decimal(str(parcel.area_sqm))
         
-        gross_tax = area * rate
-        gross_tax = gross_tax.quantize(Decimal("0.01"))
+        base_tax_amount = area * rate
+        base_tax_amount = base_tax_amount.quantize(Decimal("0.01"))
         
         exemptions_applied = exemptions or Decimal("0.00")
         exemptions_applied = exemptions_applied.quantize(Decimal("0.01"))
         
-        net_tax_due = gross_tax - exemptions_applied
-        if net_tax_due < Decimal("0.00"):
-            net_tax_due = Decimal("0.00")
-        net_tax_due = net_tax_due.quantize(Decimal("0.01"))
+        total_amount = base_tax_amount - exemptions_applied
+        if total_amount < Decimal("0.00"):
+            total_amount = Decimal("0.00")
+        total_amount = total_amount.quantize(Decimal("0.01"))
+
+        assessed_value = Decimal(str(parcel.valuation or 0)).quantize(Decimal("0.01"))
         
         return {
-            "gross_tax": gross_tax,
+            "assessed_value": assessed_value,
+            "tax_rate_applied": rate,
+            "base_tax_amount": base_tax_amount,
+            "penalties_amount": Decimal("0.00"),
+            "total_amount": total_amount,
+            # Backward-compatible keys for older service code.
+            "gross_tax": base_tax_amount,
             "exemptions_applied": exemptions_applied,
-            "net_tax_due": net_tax_due,
+            "net_tax_due": total_amount,
         }
 
     async def calculate_with_existing_record(
         self,
-        parcel_id: UUID,
-        assessment_year: int,
+        parcel_id: str,
+        assessment_year: Union[int, str],
         current_year: Optional[int] = None
     ) -> Optional[dict]:
         """
@@ -111,14 +122,15 @@ class TaxCalculator:
             "parcel_id": str(tax_record.parcel_id),
             "assessment_year": tax_record.assessment_year,
             "assessed_value": tax_record.assessed_value,
-            "tax_amount": tax_record.tax_amount,
-            "exemptions": tax_record.exemptions,
-            "net_tax_due": tax_record.net_tax_due,
+            "tax_rate_applied": tax_record.tax_rate_applied,
+            "base_tax_amount": tax_record.base_tax_amount,
+            "penalties_amount": tax_record.penalties_amount,
+            "total_amount": tax_record.total_amount,
         }
 
     async def get_current_assessment(
         self,
-        parcel_id: UUID,
+        parcel_id: str,
         current_year: Optional[int] = None
     ) -> Optional[TaxRecord]:
         """
@@ -135,13 +147,13 @@ class TaxCalculator:
             current_year = date.today().year
         
         return await self.tax_repository.get_by_parcel_and_year(
-            parcel_id, current_year
+            parcel_id, str(current_year)
         )
 
     async def _get_tax_rate(
         self,
         land_use_category: LandUseCategory,
-        assessment_year: int
+        assessment_year: Union[int, str]
     ) -> Decimal:
         """
         Get tax rate for a land use category for a given year.
@@ -151,17 +163,10 @@ class TaxCalculator:
             assessment_year: Year for rate determination
 
         Returns:
-            Tax rate as Decimal (amount per hectare)
+            Tax rate as Decimal.
         """
-        rate_schedule = await self.tax_repository.get_rate_schedule(
-            land_use_category.id, assessment_year
-        )
-
-        if rate_schedule:
-            return rate_schedule.rate_per_hectare
-
-        default_rate = land_use_category.default_tax_rate
+        default_rate = land_use_category.base_tax_rate
         if default_rate is None:
             return Decimal("0.00")
         
-        return default_rate
+        return Decimal(str(default_rate))

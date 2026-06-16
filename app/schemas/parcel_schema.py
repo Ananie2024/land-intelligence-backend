@@ -26,7 +26,13 @@ class ParcelBase(BaseModel):
     location_description: Optional[str] = Field(None, description="Text description of location")
     valuation: Optional[float] = Field(None, ge=0, description="Current valuation amount")
     valuation_date: Optional[str] = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$", description="Date of last valuation (YYYY-MM-DD)")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="JSON field for additional attributes")
+    extra_data: Optional[Dict[str, Any]] = Field(
+        None,
+        alias="metadata",
+        description="JSON field for additional attributes",
+    )
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class ParcelCreate(ParcelBase):
@@ -53,8 +59,14 @@ class ParcelUpdate(BaseModel):
     location_description: Optional[str] = Field(None, description="Text description of location")
     valuation: Optional[float] = Field(None, ge=0, description="Current valuation amount")
     valuation_date: Optional[str] = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$", description="Date of last valuation")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="JSON field for additional attributes")
+    extra_data: Optional[Dict[str, Any]] = Field(
+        None,
+        alias="metadata",
+        description="JSON field for additional attributes",
+    )
     is_active: Optional[bool] = Field(None, description="Soft delete flag")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class ParcelResponse(ParcelBase):
@@ -71,7 +83,7 @@ class ParcelResponse(ParcelBase):
     parish_name: Optional[str] = Field(None, description="Parish name (when included)")
     land_use_category_name: Optional[str] = Field(None, description="Land use category name (when included)")
     
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class ParcelListResponse(BaseModel):

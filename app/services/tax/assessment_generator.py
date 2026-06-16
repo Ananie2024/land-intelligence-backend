@@ -10,11 +10,12 @@ import asyncio
 from datetime import date
 from decimal import Decimal
 from typing import Optional
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from app.models.parcel import Parcel
 from app.models.tax_record import TaxRecord
 from app.repositories.tax_repository import TaxRepository
+from app.schemas.tax_schema import TaxRecordCreate
 from app.services.tax.penalty_engine import PenaltyEngine
 from app.services.tax.tax_calculator import TaxCalculator
 
@@ -66,17 +67,17 @@ class AssessmentGenerator:
             exemptions=exemptions
         )
 
-        # Create assessment record
-        tax_record = TaxRecord(
-            id=uuid4(),
+        due_date = self._get_due_date_for_year(assessment_year)
+
+        tax_record = TaxRecordCreate(
             parcel_id=parcel.id,
-            assessment_year=assessment_year,
-            assessed_value=calculation["gross_tax"],
-            tax_amount=calculation["gross_tax"],
-            exemptions=calculation["exemptions_applied"],
-            net_tax_due=calculation["net_tax_due"],
-            assessment_date=date.today(),
-            status="pending"
+            assessment_year=str(assessment_year),
+            assessed_value=float(calculation["assessed_value"]),
+            tax_rate_applied=float(calculation["tax_rate_applied"]),
+            base_tax_amount=float(calculation["base_tax_amount"]),
+            penalties_amount=float(calculation["penalties_amount"]),
+            total_amount=float(calculation["total_amount"]),
+            due_date=due_date,
         )
 
         return await self.tax_repository.create(tax_record)
@@ -146,8 +147,8 @@ class AssessmentGenerator:
                     continue
                 
                 generated_count += 1
-                total_assessed_value += result.assessed_value
-                total_net_due += result.net_tax_due
+                total_assessed_value += Decimal(str(result.assessed_value))
+                total_net_due += Decimal(str(result.total_amount))
 
         return {
             "parish_id": str(parish_id),
@@ -186,7 +187,7 @@ class AssessmentGenerator:
                 parcel_id, assessment_year
             )
             if existing:
-                await self.tax_repository.delete(existing.id)
+                await self.tax_repository.soft_delete(existing.id)
 
             # Generate new assessment within same transaction
             return await self.generate_assessment(parcel, assessment_year, exemptions)
@@ -221,12 +222,20 @@ class AssessmentGenerator:
             "parcel": {
                 "id": str(parcel.id),
                 "parcel_number": parcel.parcel_number,
-                "area_hectares": str(parcel.area_hectares),  # String to preserve precision
+                "area_sqm": parcel.area_sqm,
             },
             "assessment_year": tax_record.assessment_year,
-            "assessment_date": tax_record.assessment_date.isoformat(),
-            "assessed_value": str(tax_record.assessed_value),  # String preserves Decimal
-            "exemptions": str(tax_record.exemptions),  # String preserves Decimal
-            "net_tax_due": str(tax_record.net_tax_due),  # String preserves Decimal
+            "due_date": tax_record.due_date.isoformat(),
+            "assessed_value": str(tax_record.assessed_value),
+            "tax_rate_applied": str(tax_record.tax_rate_applied),
+            "base_tax_amount": str(tax_record.base_tax_amount),
+            "penalties_amount": str(tax_record.penalties_amount),
+            "total_amount": str(tax_record.total_amount),
             "status": tax_record.status,
         }
+
+    def _get_due_date_for_year(self, assessment_year: int) -> date:
+        """
+        Default due date is March 31st of the following year.
+        """
+        return date(int(assessment_year) + 1, 3, 31)

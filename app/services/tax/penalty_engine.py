@@ -45,7 +45,7 @@ class PenaltyEngine:
         Calculate total penalty and interest for an overdue tax record.
 
         Args:
-            tax_record: Tax record with net_tax_due amount
+            tax_record: Tax record with total_amount due
             due_date: Date when payment was due
             current_date: Optional override for calculation date (defaults to today)
             remaining_balance: Optional override for remaining balance (accounts for partial payments)
@@ -56,8 +56,8 @@ class PenaltyEngine:
         if current_date is None:
             current_date = date.today()
 
-        # Use remaining balance if provided, otherwise use full net_tax_due
-        principal = remaining_balance if remaining_balance is not None else tax_record.net_tax_due
+        # Use remaining balance if provided, otherwise use full total_amount.
+        principal = remaining_balance if remaining_balance is not None else Decimal(str(tax_record.total_amount))
         principal = principal.quantize(Decimal("0.01"))
 
         if current_date <= due_date or principal <= Decimal("0.00"):
@@ -119,13 +119,46 @@ class PenaltyEngine:
             paid_amount = await self.tax_repository.get_total_paid_for_assessment(
                 tax_record.id
             )
-            remaining_balance = tax_record.net_tax_due - paid_amount
+            remaining_balance = Decimal(str(tax_record.total_amount)) - Decimal(str(paid_amount))
             if remaining_balance < Decimal("0.00"):
                 remaining_balance = Decimal("0.00")
 
         return await self.calculate_penalty(
             tax_record, due_date, current_date, remaining_balance
         )
+
+    async def calculate_penalty_on_balance(
+        self,
+        remaining_balance: Decimal,
+        due_date: date,
+        current_date: Optional[date] = None,
+    ) -> dict:
+        """
+        Calculate penalty and interest from a balance without a TaxRecord.
+        """
+        if current_date is None:
+            current_date = date.today()
+
+        principal = remaining_balance.quantize(Decimal("0.01"))
+
+        if current_date <= due_date or principal <= Decimal("0.00"):
+            return {
+                "base_penalty": Decimal("0.00"),
+                "interest_accrued": Decimal("0.00"),
+                "total_due": principal,
+            }
+
+        days_overdue = (current_date - due_date).days
+        base_penalty = (principal * self.DEFAULT_PENALTY_RATE).quantize(Decimal("0.01"))
+        interest_accrued = (
+            principal * self.DAILY_INTEREST_RATE * days_overdue
+        ).quantize(Decimal("0.01"))
+
+        return {
+            "base_penalty": base_penalty,
+            "interest_accrued": interest_accrued,
+            "total_due": (principal + base_penalty + interest_accrued).quantize(Decimal("0.01")),
+        }
 
     async def calculate_outstanding_penalty(
         self,
@@ -163,7 +196,7 @@ class PenaltyEngine:
             paid_amount = await self.tax_repository.get_total_paid_for_assessment(
                 record.id
             )
-            remaining_balance = record.net_tax_due - paid_amount
+            remaining_balance = Decimal(str(record.total_amount)) - Decimal(str(paid_amount))
             if remaining_balance < Decimal("0.00"):
                 remaining_balance = Decimal("0.00")
             

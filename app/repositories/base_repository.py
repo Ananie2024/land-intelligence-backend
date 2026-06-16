@@ -10,7 +10,7 @@ from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 import logging
 
-from app.core.database import Base
+from app.models.base import Base
 
 logger = logging.getLogger(__name__)
 

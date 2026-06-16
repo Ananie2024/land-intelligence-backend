@@ -9,7 +9,7 @@ Scope: Phase 3 - Backend API & Services
 from datetime import date
 from decimal import Decimal
 from typing import Optional
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from app.models.tax_payment import TaxPayment
 from app.repositories.tax_repository import TaxRepository
@@ -44,6 +44,7 @@ class PaymentProcessor:
         payment_method: str,
         reference_number: Optional[str] = None,
         payment_date: Optional[date] = None,
+        received_by: str = "system",
         apply_to_penalties_first: bool = True
     ) -> dict:
         """
@@ -91,7 +92,7 @@ class PaymentProcessor:
             )
             
             # Calculate remaining principal
-            remaining_principal = tax_record.net_tax_due - already_paid
+            remaining_principal = Decimal(str(tax_record.total_amount)) - Decimal(str(already_paid))
             if remaining_principal < Decimal("0.00"):
                 remaining_principal = Decimal("0.00")
             
@@ -127,15 +128,16 @@ class PaymentProcessor:
 
             # Create payment record
             payment = TaxPayment(
-                id=uuid4(),
                 tax_record_id=tax_record.id,
-                amount_paid=amount_paid,
+                payment_amount=float(amount_paid),
                 payment_date=payment_date,
                 payment_method=payment_method,
-                reference_number=reference_number,
-                principal_portion=principal_portion,
-                penalty_portion=penalty_portion,
-                status="completed"
+                payment_reference=reference_number,
+                receipt_number=self._generate_receipt_number_for_date(payment_date),
+                received_by=received_by,
+                notes=(
+                    f"Principal: {principal_portion}; Penalty: {penalty_portion}"
+                ),
             )
 
             created_payment = await self.tax_repository.create_payment(payment)
@@ -186,7 +188,7 @@ class PaymentProcessor:
 
         receipt = {
             "receipt_id": str(payment.id),
-            "receipt_number": self._generate_receipt_number(payment),
+            "receipt_number": payment.receipt_number,
             "receipt_date": payment.payment_date.isoformat(),
             "parcel": {
                 "id": str(parcel.id),
@@ -194,13 +196,11 @@ class PaymentProcessor:
             },
             "assessment_year": tax_record.assessment_year,
             "payment_details": {
-                "amount_paid": str(payment.amount_paid),
-                "principal_portion": str(payment.principal_portion),
-                "penalty_portion": str(payment.penalty_portion),
+                "payment_amount": str(payment.payment_amount),
                 "payment_method": payment.payment_method,
-                "reference_number": payment.reference_number,
+                "payment_reference": payment.payment_reference,
             },
-            "status": payment.status,
+            "is_reversal": payment.is_reversal,
         }
 
         return receipt
@@ -222,9 +222,9 @@ class PaymentProcessor:
             history.append({
                 "payment_id": str(payment.id),
                 "date": payment.payment_date.isoformat(),
-                "amount": str(payment.amount_paid),
+                "amount": str(payment.payment_amount),
                 "method": payment.payment_method,
-                "reference": payment.reference_number,
+                "reference": payment.payment_reference,
             })
         
         return history
@@ -255,4 +255,14 @@ class PaymentProcessor:
         # Format: RCP-YYYYMMDD-XXXX (where XXXX is last 4 chars of UUID)
         date_str = payment.payment_date.strftime("%Y%m%d")
         short_id = str(payment.id)[-4:].upper()
+        return f"RCP-{date_str}-{short_id}"
+
+    def _generate_receipt_number_for_date(self, payment_date: date) -> str:
+        """
+        Generate a receipt number before the payment UUID exists.
+        """
+        from uuid import uuid4
+
+        date_str = payment_date.strftime("%Y%m%d")
+        short_id = str(uuid4())[-4:].upper()
         return f"RCP-{date_str}-{short_id}"
