@@ -5,8 +5,10 @@ API v1 Router
 Land Intelligence System
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.api.logging_dependencies import correlation_id_logging
+from app.api.auth_dependencies import get_current_user_data
 from app.api.v1.routes import (
     parishes,
     parcels,
@@ -18,9 +20,10 @@ from app.api.v1.routes import (
     backups,
 )
 
-router = APIRouter()
+# Apply logging globally to v1
+router = APIRouter(dependencies=[Depends(correlation_id_logging)])
 
-# Health endpoint
+# Health endpoint (Public but logged)
 @router.get("/health", tags=["system"])
 async def api_health():
     return {
@@ -29,51 +32,59 @@ async def api_health():
     }
 
 
-# Register feature routers
+# Register feature routers (Protected and logged)
 router.include_router(
     parishes.router,
     prefix="/parishes",
-    tags=["Parishes"]
+    tags=["Parishes"],
+    dependencies=[Depends(get_current_user_data)]
 )
 
 router.include_router(
     parcels.router,
     prefix="/parcels",
-    tags=["Parcels"]
+    tags=["Parcels"],
+    dependencies=[Depends(get_current_user_data)]
 )
 
 router.include_router(
     documents.router,
     prefix="/documents",
-    tags=["Documents"]
+    tags=["Documents"],
+    dependencies=[Depends(get_current_user_data)]
 )
 
 router.include_router(
     gis_analysis.router,
     prefix="/gis",
-    tags=["GIS Analysis"]
+    tags=["GIS Analysis"],
+    dependencies=[Depends(get_current_user_data)]
 )
 
 router.include_router(
     tax_calculations.router,
     prefix="/tax",
-    tags=["Tax Calculations"]
+    tags=["Tax Calculations"],
+    dependencies=[Depends(get_current_user_data)]
 )
 
 router.include_router(
     qr_codes.router,
     prefix="/qr",
-    tags=["QR Codes"]
+    tags=["QR Codes"],
+    dependencies=[Depends(get_current_user_data)]
 )
 
 router.include_router(
     physical_locations.router,
     prefix="/locations",
-    tags=["Physical Locations"]
+    tags=["Physical Locations"],
+    dependencies=[Depends(get_current_user_data)]
 )
 
 router.include_router(
     backups.router,
     prefix="/backups",
-    tags=["Backups"]
+    tags=["Backups"],
+    dependencies=[Depends(get_current_user_data)]
 )

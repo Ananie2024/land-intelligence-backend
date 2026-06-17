@@ -7,6 +7,7 @@ Land Intelligence System
 
 from sqlalchemy import Column, String, Text, Integer
 from sqlalchemy.orm import relationship
+from geoalchemy2 import Geometry
 
 from app.models.base import BaseModel
 
@@ -24,6 +25,7 @@ class Parish(BaseModel):
         contact_person: Name of primary contact
         contact_phone: Phone number for parish office
         contact_email: Email address for parish office
+        boundary_wkb: Spatial boundary of the parish (MULTIPOLYGON)
         parcel_count: Cached count of active parcels in this parish
         is_active: Soft delete flag (inherited from BaseModel)
         created_at: Timestamp when record was created (inherited)
@@ -75,6 +77,12 @@ class Parish(BaseModel):
         String(200),
         nullable=True,
         comment="Email address for parish office"
+    )
+    
+    boundary_wkb = Column(
+        Geometry(geometry_type='MULTIPOLYGON', srid=4326),
+        nullable=True,
+        comment="Spatial boundary of the parish (MULTIPOLYGON) in WGS84"
     )
     
     parcel_count = Column(

@@ -41,10 +41,7 @@ class PointerResolver:
         Returns:
             PhysicalLocation if found, None otherwise
         """
-        if not document.physical_location_id:
-            return None
-
-        return await self.location_repository.get(document.physical_location_id)
+        return await self.location_repository.find_by_document(document.id)
 
     async def resolve_with_cabinet(self, document: Document) -> Optional[dict]:
         """
@@ -63,19 +60,26 @@ class PointerResolver:
 
         result = {
             "location_id": str(location.id),
+            "name": location.name,
+            "location_code": location.location_code,
             "building": location.building or "Unknown Building",
-            "room": location.room or "",
-            "notes": location.notes or "",
+            "floor": location.floor or "",
+            "room_number": location.room_number or "",
+            "description": location.description or "",
+            "access_restrictions": location.access_restrictions or "",
         }
 
-        if location.cabinet_id:
-            cabinet = await self.location_repository.get_cabinet(location.cabinet_id)
+        cabinets = await self.location_repository.get_cabinets_by_location(location.id)
+        if cabinets:
+            cabinet = cabinets[0]
             if cabinet:
                 result["cabinet"] = {
                     "cabinet_id": str(cabinet.id),
                     "cabinet_number": cabinet.cabinet_number or "",
-                    "drawer": cabinet.drawer or "",
-                    "folder_reference": cabinet.folder_reference or "",
+                    "cabinet_type": cabinet.cabinet_type or "",
+                    "row_number": cabinet.row_number,
+                    "column_number": cabinet.column_number,
+                    "description": cabinet.description or "",
                 }
 
         return result
@@ -117,12 +121,16 @@ class PointerResolver:
         building = location_data.get("building", "")
         if building and building != "Unknown Building":
             parts.append(building)
-        elif location_data.get("notes"):
-            parts.append(location_data["notes"])
+        elif location_data.get("name"):
+            parts.append(location_data["name"])
         else:
             parts.append("Unspecified Location")
 
-        room = location_data.get("room")
+        floor = location_data.get("floor")
+        if floor:
+            parts.append(f"Floor {floor}")
+
+        room = location_data.get("room_number")
         if room:
             parts.append(f"Room {room}")
 
@@ -132,12 +140,12 @@ class PointerResolver:
             if cabinet_number:
                 parts.append(f"Cabinet {cabinet_number}")
             
-            drawer = cabinet.get("drawer")
-            if drawer:
-                parts.append(f"Drawer {drawer}")
+            row_number = cabinet.get("row_number")
+            if row_number:
+                parts.append(f"Row {row_number}")
             
-            folder_ref = cabinet.get("folder_reference")
-            if folder_ref:
-                parts.append(f"Folder: {folder_ref}")
+            column_number = cabinet.get("column_number")
+            if column_number:
+                parts.append(f"Column {column_number}")
 
         return " > ".join(parts)

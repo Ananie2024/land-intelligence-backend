@@ -27,6 +27,39 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
             db: Async database session
         """
         super().__init__(Document, db)
+
+    async def create(self, schema: DocumentCreate) -> Document:
+        """
+        Create a document, ignoring schema-only metadata fields that are not
+        persisted by the current Document model.
+        """
+        data = schema.model_dump(exclude_none=True)
+        data.pop("metadata", None)
+
+        document = Document(**data)
+        self.db.add(document)
+        await self.db.flush()
+        await self.db.refresh(document)
+        return document
+
+    async def update(self, id: str, schema: DocumentUpdate) -> Optional[Document]:
+        """
+        Update a document, ignoring unsupported metadata payloads.
+        """
+        data = schema.model_dump(exclude_none=True)
+        data.pop("metadata", None)
+
+        document = await self.get(id)
+        if not document:
+            return None
+
+        for field, value in data.items():
+            if hasattr(document, field):
+                setattr(document, field, value)
+
+        await self.db.flush()
+        await self.db.refresh(document)
+        return document
     
     async def get_by_parcel(self, parcel_id: str, skip: int = 0, limit: int = 100) -> List[Document]:
         """
@@ -132,6 +165,23 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
             select(Document).where(
                 Document.file_path == file_path,
                 Document.is_active
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_checksum_and_parcel(
+        self,
+        checksum: str,
+        parcel_id: str,
+    ) -> Optional[Document]:
+        """
+        Get a document by checksum within a parcel.
+        """
+        result = await self.db.execute(
+            select(Document).where(
+                Document.checksum == checksum,
+                Document.parcel_id == parcel_id,
+                Document.is_active,
             )
         )
         return result.scalar_one_or_none()

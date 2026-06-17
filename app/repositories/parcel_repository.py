@@ -66,21 +66,28 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
     
     async def search_by_geometry(self, geometry_wkb: str) -> List[Parcel]:
         """
-        Search parcels by geometry (spatial query).
-        
-        Note: Spatial analysis is handled by GIS service layer.
-        This method returns parcels for client-side spatial filtering.
+        Search parcels by geometry using native MySQL spatial intersection.
         
         Args:
-            geometry_wkb: WKB geometry string for comparison
+            geometry_wkb: WKB hex string for comparison
             
         Returns:
-            List of parcels with matching or overlapping geometry
+            List of parcels intersecting the provided geometry
         """
-        # Base implementation - spatial logic handled by service layer
-        # Returns all active parcels; filtering by geometry done in service
+        # Convert WKB hex string to a format SQLAlchemy/GeoAlchemy2 understands
+        # MySQL's ST_Intersects is called via the .ST_Intersects() method on the column
+        from sqlalchemy import func
+        
+        # We use ST_GeomFromText if it was WKT, but for WKB we can use ST_GeomFromWKB
+        # GeoAlchemy2's functions work well here
         result = await self.db.execute(
-            select(Parcel).where(Parcel.is_active)
+            select(Parcel).where(
+                func.ST_Intersects(
+                    Parcel.geometry_wkb,
+                    func.ST_GeomFromWKB(func.unhex(geometry_wkb), 4326)
+                ),
+                Parcel.is_active
+            )
         )
         return list(result.scalars().all())
     
@@ -183,3 +190,24 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
             Count of active parcels
         """
         return await self.count(filters={"parish_id": parish_id})
+
+    async def get_total_area_by_parish(self, parish_id: str) -> float:
+        """
+        Calculate total area of all parcels in a parish using native spatial functions.
+        
+        Note: MySQL 8.0 ST_Area returns square meters for geographic SRS (SRID 4326).
+        
+        Args:
+            parish_id: UUID of the parish
+            
+        Returns:
+            Total area in square meters
+        """
+        from sqlalchemy import func
+        result = await self.db.execute(
+            select(func.sum(func.ST_Area(Parcel.geometry_wkb))).where(
+                Parcel.parish_id == parish_id,
+                Parcel.is_active
+            )
+        )
+        return result.scalar() or 0.0

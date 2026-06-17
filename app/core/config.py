@@ -19,9 +19,17 @@ class Settings(BaseSettings):
     
     # Security Configuration
     SECRET_KEY: str = Field(...)
+    JWT_ALGORITHM: str = Field(default="HS256")
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60)
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7)
     
+    # CORS Configuration
+    CORS_ORIGINS: list[str] = Field(default=["*"])
+
     # File Storage Configuration
     FILE_STORAGE_PATH: str = Field(default="./file-storage")
+    MAX_UPLOAD_SIZE_MB: int = Field(default=50)
+    ALLOWED_EXTENSIONS: list[str] = Field(default=[".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx", ".xls", ".xlsx"])
     
     # Backup Configuration
     BACKUP_BASE_PATH: str = Field(default="./backups")

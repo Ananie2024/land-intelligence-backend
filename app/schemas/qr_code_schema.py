@@ -18,7 +18,13 @@ class QRCodeBase(BaseModel):
     code_type: str = Field(..., max_length=20, description="Type of entity (parcel, document)")
     data_payload: Dict[str, Any] = Field(..., description="JSON data encoded in QR code")
     expires_at: Optional[datetime] = Field(None, description="Expiration timestamp")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="JSON field for additional attributes")
+    extra_data: Optional[Dict[str, Any]] = Field(
+        None,
+        alias="metadata",
+        description="JSON field for additional attributes",
+    )
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class QRCodeCreate(QRCodeBase):
@@ -36,8 +42,14 @@ class QRCodeUpdate(BaseModel):
     """
     expires_at: Optional[datetime] = Field(None, description="Expiration timestamp")
     is_revoked: Optional[bool] = Field(None, description="Whether QR code has been revoked")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="JSON field for additional attributes")
+    extra_data: Optional[Dict[str, Any]] = Field(
+        None,
+        alias="metadata",
+        description="JSON field for additional attributes",
+    )
     is_active: Optional[bool] = Field(None, description="Soft delete flag")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class QRCodeResponse(QRCodeBase):
@@ -59,7 +71,7 @@ class QRCodeResponse(QRCodeBase):
     parcel_number: Optional[str] = Field(None, description="Parcel number (when included)")
     document_filename: Optional[str] = Field(None, description="Document filename (when included)")
     
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class QRCodeGenerateRequest(BaseModel):

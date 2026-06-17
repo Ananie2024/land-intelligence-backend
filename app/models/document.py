@@ -128,6 +128,12 @@ class Document(BaseModel):
         cascade="all, delete-orphan"
     )
     
+    qr_codes = relationship(
+        "QRCodeRegistry",
+        back_populates="document",
+        cascade="all, delete-orphan"
+    )
+    
     # Indexes for search
     __table_args__ = (
         Index('idx_filename', 'filename'),

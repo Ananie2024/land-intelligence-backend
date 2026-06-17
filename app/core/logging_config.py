@@ -14,6 +14,12 @@ from pythonjsonlogger import jsonlogger
 from app.core.config import settings
 
 
+from contextvars import ContextVar
+
+# Context variable for correlation ID (async-safe)
+correlation_id_ctx: ContextVar[str] = ContextVar("correlation_id", default="")
+
+
 class CustomJsonFormatter(jsonlogger.JsonFormatter):
     """
     Custom JSON formatter that adds correlation ID if present in context.
@@ -25,12 +31,8 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
         log_record['function'] = record.funcName
         log_record['line'] = record.lineno
         
-        # Add correlation_id if available in thread-local storage
-        # This will be populated by logging_middleware
-        from threading import local
-        thread_local = local()
-        if hasattr(thread_local, 'correlation_id'):
-            log_record['correlation_id'] = thread_local.correlation_id
+        # Add correlation_id from contextvars
+        log_record['correlation_id'] = correlation_id_ctx.get()
 
 
 def setup_logging() -> None:
@@ -81,18 +83,13 @@ def setup_logging() -> None:
 
 def get_correlation_id() -> str:
     """
-    Get correlation ID from thread-local storage.
-    Returns empty string if not set.
+    Get correlation ID from contextvars.
     """
-    from threading import local
-    thread_local = local()
-    return getattr(thread_local, 'correlation_id', '')
+    return correlation_id_ctx.get()
 
 
 def set_correlation_id(correlation_id: str) -> None:
     """
-    Set correlation ID in thread-local storage.
+    Set correlation ID in contextvars.
     """
-    from threading import local
-    thread_local = local()
-    thread_local.correlation_id = correlation_id
+    correlation_id_ctx.set(correlation_id)

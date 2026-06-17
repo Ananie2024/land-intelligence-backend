@@ -10,7 +10,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.api.middleware.authentication import get_current_user
+from app.api.auth_dependencies import get_current_user_data
 
 
 async def get_database() -> AsyncSession:
@@ -21,5 +21,5 @@ async def get_database() -> AsyncSession:
         yield db
 
 
-CurrentUser = Depends(get_current_user)
+CurrentUser = Depends(get_current_user_data)
 DatabaseSession = Depends(get_database)

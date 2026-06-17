@@ -28,9 +28,12 @@ class DocumentBase(BaseModel):
 class DocumentCreate(DocumentBase):
     """
     Schema for creating a new Document.
-    Excludes id, timestamps, and file metadata fields (populated by system).
+    Excludes id and timestamps. File metadata is populated by the system.
     """
-    pass
+    file_path: Optional[str] = Field(None, max_length=500, description="Path to file on filesystem")
+    file_size_bytes: Optional[int] = Field(None, ge=0, description="Size of file in bytes")
+    mime_type: Optional[str] = Field(None, max_length=100, description="MIME type of file")
+    checksum: Optional[str] = Field(None, max_length=64, description="SHA-256 checksum for integrity")
 
 
 class DocumentUploadRequest(BaseModel):
@@ -78,6 +81,7 @@ class DocumentResponse(DocumentBase):
     # Optional nested relationship data
     document_type_name: Optional[str] = Field(None, description="Document type name (when included)")
     parcel_number: Optional[str] = Field(None, description="Parcel number (when included)")
+    qr_code_count: int = Field(0, description="Number of associated QR codes")
     
     model_config = ConfigDict(from_attributes=True)
 

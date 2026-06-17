@@ -107,11 +107,14 @@ class DocumentManager:
             parcel_id=metadata.parcel_id,
             document_type_id=metadata.document_type_id,
             filename=filename,
+            file_path=str(file_path),
+            file_size_bytes=file_metadata.get("file_size_bytes", 0),
+            mime_type=file_metadata.get("mime_type", "application/octet-stream"),
+            checksum=file_metadata.get("checksum", ""),
             description=metadata.description,
             document_date=metadata.document_date,
             reference_number=metadata.reference_number,
             page_count=file_metadata.get("page_count"),
-            metadata=file_metadata
         )
         
         try:
@@ -120,15 +123,6 @@ class DocumentManager:
             # Database creation failed - clean up the saved file
             await self.file_handler.delete_file(str(file_path))
             raise e
-        
-        # Update file path after creation
-        document.file_path = str(file_path)
-        document.file_size_bytes = file_metadata.get("file_size_bytes", 0)
-        document.mime_type = file_metadata.get("mime_type", "application/octet-stream")
-        document.checksum = file_metadata.get("checksum", "")
-        
-        await self.document_repo.db.flush()
-        await self.document_repo.db.refresh(document)
         
         return DocumentResponse.model_validate(document)
     
@@ -331,4 +325,4 @@ class DocumentManager:
         if not document:
             return None
         
-        return await self.pointer_resolver.resolve(document)# app/services/document/document_manager.py
+        return await self.pointer_resolver.resolve_with_cabinet(document)

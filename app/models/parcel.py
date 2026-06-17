@@ -9,6 +9,7 @@ from sqlalchemy import Column, String, Text, Float, ForeignKey, JSON
 from sqlalchemy.dialects.mysql import CHAR
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index
+from geoalchemy2 import Geometry
 
 from app.models.base import BaseModel
 
@@ -23,7 +24,7 @@ class Parcel(BaseModel):
         parish_id: Foreign key to parish
         land_use_category_id: Foreign key to land use category
         area_sqm: Area in square meters
-        geometry_wkb: Spatial geometry in WKB format (handled by application)
+        geometry: Spatial geometry (POLYGON) in WGS84 (SRID 4326)
         title_deed_number: Official title deed reference
         owner_name: Name of land owner
         owner_contact: Contact information for owner
@@ -69,9 +70,9 @@ class Parcel(BaseModel):
     )
     
     geometry_wkb = Column(
-        String(10000),  # WKB hex string storage
+        Geometry(geometry_type='POLYGON', srid=4326),
         nullable=True,
-        comment="Spatial geometry in WKB format (hex)"
+        comment="Spatial geometry (POLYGON) in WGS84"
     )
     
     title_deed_number = Column(
@@ -152,7 +153,7 @@ class Parcel(BaseModel):
         Index('idx_parcel_number', 'parcel_number'),
         Index('idx_owner_name', 'owner_name'),
         Index('idx_title_deed', 'title_deed_number'),
-        # Note: Spatial indexes will be added in migration
+        # Note: Spatial index for 'geometry' column
     )
     
     def __repr__(self):

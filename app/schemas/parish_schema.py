@@ -4,9 +4,10 @@ Phase 2 — Section 3.2
 Land Intelligence System
 """
 
-from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict, field_validator
+from typing import Optional, Any
 from datetime import datetime
+import binascii
 
 
 class ParishBase(BaseModel):
@@ -21,6 +22,19 @@ class ParishBase(BaseModel):
     contact_person: Optional[str] = Field(None, max_length=200, description="Name of primary contact person")
     contact_phone: Optional[str] = Field(None, max_length=50, description="Phone number for parish office")
     contact_email: Optional[str] = Field(None, max_length=200, description="Email address for parish office")
+    boundary_wkb: Optional[str] = Field(None, description="Spatial boundary in WKB format (hex)")
+
+    @field_validator("boundary_wkb", mode="before")
+    @classmethod
+    def validate_boundary(cls, v: Any) -> Optional[str]:
+        """Convert GeoAlchemy2 WKBElement to hex string."""
+        if v is None:
+            return None
+        if hasattr(v, "data"):
+            if isinstance(v.data, bytes):
+                return binascii.hexlify(v.data).decode("ascii").upper()
+            return str(v.data)
+        return v
 
 
 class ParishCreate(ParishBase):
@@ -43,6 +57,7 @@ class ParishUpdate(BaseModel):
     contact_person: Optional[str] = Field(None, max_length=200, description="Name of primary contact person")
     contact_phone: Optional[str] = Field(None, max_length=50, description="Phone number for parish office")
     contact_email: Optional[str] = Field(None, max_length=200, description="Email address for parish office")
+    boundary_wkb: Optional[str] = Field(None, description="Spatial boundary in WKB format (hex)")
     parcel_count: Optional[int] = Field(None, ge=0, description="Cached count of active parcels")
     is_active: Optional[bool] = Field(None, description="Soft delete flag")
 
@@ -69,4 +84,4 @@ class ParishListResponse(BaseModel):
     total: int
     page: int
     size: int
-    pages: int# app/schemas/parish_schema.py
+    pages: int

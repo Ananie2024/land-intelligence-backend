@@ -13,8 +13,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.api.v1.endpoints import router as v1_router
-from app.api.middleware.authentication import AuthenticationMiddleware
-from app.api.middleware.logging_middleware import LoggingMiddleware
 from app.api.middleware.error_handlers import register_error_handlers
 from app.core.config import settings
 from app.core.database import engine, get_db
@@ -63,19 +61,11 @@ register_error_handlers(app)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=getattr(settings, "CORS_ORIGINS", []),
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-# ------------------------------------------------------------------
-# Custom Middleware
-# ------------------------------------------------------------------
-
-app.add_middleware(LoggingMiddleware)
-app.add_middleware(AuthenticationMiddleware)
 
 
 # ------------------------------------------------------------------

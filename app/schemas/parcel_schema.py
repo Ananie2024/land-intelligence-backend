@@ -5,9 +5,10 @@ Phase 2 — Section 3.2
 Land Intelligence System
 """
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional, Any, Dict
 from datetime import datetime
+import binascii
 
 
 class ParcelBase(BaseModel):
@@ -31,6 +32,21 @@ class ParcelBase(BaseModel):
         alias="metadata",
         description="JSON field for additional attributes",
     )
+
+    @field_validator("geometry_wkb", mode="before")
+    @classmethod
+    def validate_geometry(cls, v: Any) -> Optional[str]:
+        """Convert GeoAlchemy2 WKBElement to hex string."""
+        if v is None:
+            return None
+        
+        # Handle GeoAlchemy2 WKBElement
+        if hasattr(v, "data"):
+            if isinstance(v.data, bytes):
+                return binascii.hexlify(v.data).decode("ascii").upper()
+            return str(v.data)
+            
+        return v
 
     model_config = ConfigDict(populate_by_name=True)
 

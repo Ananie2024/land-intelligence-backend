@@ -112,4 +112,28 @@ class ParishRepository(BaseRepository[Parish, ParishCreate, ParishUpdate]):
                 Parish.is_active
             ).limit(limit)
         )
-        return list(result.scalars().all())# app/repositories/parish_repository.py
+        return list(result.scalars().all())
+
+    async def find_by_point(self, longitude: float, latitude: float) -> Optional[Parish]:
+        """
+        Find the parish containing a specific geographic point.
+        
+        Args:
+            longitude: Longitude in WGS84
+            latitude: Latitude in WGS84
+            
+        Returns:
+            Parish containing the point, or None if not found
+        """
+        # MySQL ST_Contains expects (polygon, point)
+        # We construct the point using ST_GeomFromText or ST_PointFromText
+        result = await self.db.execute(
+            select(Parish).where(
+                func.ST_Contains(
+                    Parish.boundary_wkb,
+                    func.ST_GeomFromText(f"POINT({longitude} {latitude})", 4326)
+                ),
+                Parish.is_active
+            )
+        )
+        return result.scalar_one_or_none()# app/repositories/parish_repository.py
