@@ -1,11 +1,13 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.models.backup_verification import VerificationStatus
 
 
 class BackupVerificationBase(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
     backup_job_id: str
     verified_by: Optional[str] = None
     status: VerificationStatus = VerificationStatus.PENDING
@@ -17,19 +19,17 @@ class BackupVerificationCreate(BackupVerificationBase):
 
 
 class BackupVerificationUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
     verified_by: Optional[str] = None
     status: Optional[VerificationStatus] = None
     notes: Optional[str] = None
 
-    class Config:
-        from_attributes = True
-
 
 class BackupVerificationInDBBase(BackupVerificationBase):
+    id: str
     verified_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
 
 class BackupVerificationInDB(BackupVerificationInDBBase):

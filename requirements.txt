@@ -19,6 +19,7 @@ aiomysql==0.2.0
 cryptography==42.0.0
 
 # GIS & Spatial Processing
+numpy<2
 shapely==2.0.2
 pyproj==3.6.1
 

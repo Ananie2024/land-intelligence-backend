@@ -32,11 +32,10 @@ venv.bak/
 
 # PyCharm
 .idea/
-
 # VS Code
 .vscode/
 *.code-workspace
-
+project_analysis_and_roadmap.md
 # Environment Variables
 .env
 .env.local

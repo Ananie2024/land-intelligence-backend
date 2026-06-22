@@ -1,10 +1,8 @@
 import enum
-import uuid
-from datetime import datetime, timezone
 from sqlalchemy import Column, String, DateTime
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.mysql import CHAR
 
-from app.core.database import Base
+from app.models.base import BaseModel
 
 
 class VerificationStatus(str, enum.Enum):
@@ -13,12 +11,11 @@ class VerificationStatus(str, enum.Enum):
     FAILED = "FAILED"
 
 
-class BackupVerification(Base):
+class BackupVerification(BaseModel):
     __tablename__ = "backup_verifications"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    backup_job_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    verified_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
+    backup_job_id = Column(CHAR(36), nullable=False, index=True)
+    verified_at = Column(DateTime, nullable=True)
     verified_by = Column(String, nullable=True)
     status = Column(String, default=VerificationStatus.PENDING.value, nullable=False)
     notes = Column(String, nullable=True)

@@ -15,6 +15,8 @@ from app.core.database import get_db
 from app.api.auth_dependencies import get_current_user_id
 from app.repositories.backup_job_repository import BackupJobRepository
 from app.models.backup_job import BackupJob, BackupJobStatus
+from app.schemas.backup_job_schema import BackupJobCreate
+from app.services.backup.backup_orchestrator import BackupOrchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -63,16 +65,17 @@ async def trigger_backup(
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
-    job = BackupJob(
-        job_type=job_type.upper(),
-        status=BackupJobStatus.PENDING.value,
-        tier=tier.lower(),
-        source_path=source_path,
+    orchestrator = BackupOrchestrator(db)
+    job = await orchestrator.create_backup_job(
+        BackupJobCreate(
+            job_type=job_type.upper(),
+            status=BackupJobStatus.PENDING,
+            tier=tier.lower(),
+            source_path=source_path,
+        )
     )
-    db.add(job)
-    await db.flush()
-    await db.refresh(job)
     await db.commit()
+
     logger.info(f"Backup job triggered: {job.id} type={job_type} tier={tier} by user {user_id}")
     return {
         "id": str(job.id),
@@ -80,8 +83,14 @@ async def trigger_backup(
         "status": job.status,
         "tier": job.tier,
         "source_path": job.source_path,
+        "destination_path": job.destination_path,
+        "file_size_bytes": job.file_size_bytes,
+        "file_count": job.file_count,
+        "checksum": job.checksum,
+        "error_message": job.error_message,
         "created_at": job.created_at.isoformat() if job.created_at else None,
-        "message": f"Backup job {job.id} created and queued.",
+        "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+        "message": f"Backup job {job.id} finished with status {job.status}.",
     }
 
 

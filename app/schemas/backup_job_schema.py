@@ -1,13 +1,14 @@
-import uuid
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.backup_job import BackupJobStatus
 
 
 class BackupJobBase(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
     job_type: str
     status: BackupJobStatus = Field(default=BackupJobStatus.PENDING)
     tier: str
@@ -24,6 +25,8 @@ class BackupJobCreate(BackupJobBase):
 
 
 class BackupJobUpdate(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
     job_type: Optional[str] = None
     status: Optional[BackupJobStatus] = None
     tier: Optional[str] = None
@@ -38,13 +41,12 @@ class BackupJobUpdate(BaseModel):
 
 
 class BackupJobInDBBase(BackupJobBase):
-    id: uuid.UUID
+    id: str
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
 
 class BackupJobInDB(BackupJobInDBBase):

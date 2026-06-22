@@ -4,6 +4,8 @@
 
 def import_all_models():
     from app.models.audit_log import AuditLog           # noqa: F401
+    from app.models.backup_job import BackupJob         # noqa: F401
+    from app.models.backup_verification import BackupVerification  # noqa: F401
     from app.models.document import Document             # noqa: F401
     from app.models.document_type import DocumentType   # noqa: F401
     from app.models.land_use_category import LandUseCategory  # noqa: F401

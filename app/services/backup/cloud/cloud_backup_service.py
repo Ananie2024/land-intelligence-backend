@@ -1,7 +1,11 @@
 import logging
-import os
-import asyncio
-from typing import Dict, Any
+from pathlib import Path
+from typing import Any
+
+from app.core.config import settings
+from app.services.backup.cloud.backblaze_b2_provider import BackblazeB2Provider
+from app.services.backup.cloud.google_cloud_storage_provider import GoogleCloudStorageProvider
+from app.services.backup.local.local_backup_service import LocalBackupService
 
 logger = logging.getLogger(__name__)
 
@@ -9,42 +13,54 @@ logger = logging.getLogger(__name__)
 class CloudBackupService:
     def __init__(self, cloud_provider: str):
         self.cloud_provider = cloud_provider
-        logger.info(f"CloudBackupService initialized for {self.cloud_provider}")
+        self.staging_backup_service = LocalBackupService(
+            str(Path(settings.BACKUP_BASE_PATH) / "cloud_staging" / cloud_provider)
+        )
 
-    async def perform_backup(self, source_path: str, job_id: str) -> Dict[str, Any]:
-        logger.info(f"Simulating cloud backup to {self.cloud_provider} for job {job_id} from {source_path}")
-        await asyncio.sleep(2)  # Simulate network latency and upload time
+        if cloud_provider == "google_cloud_storage":
+            self.provider = GoogleCloudStorageProvider()
+        elif cloud_provider == "backblaze_b2":
+            self.provider = BackblazeB2Provider()
+        else:
+            raise ValueError(f"Unsupported cloud provider: {cloud_provider}")
 
-        # In a real scenario, this would involve:
-        # 1. Authenticating with the cloud provider.
-        # 2. Uploading files/directories from source_path to a cloud bucket/container.
-        # 3. Handling chunking, retries, and progress updates.
-        # 4. Calculating actual file size, count, and checksums in the cloud.
+    async def perform_backup(self, source_path: str | None, job_id: str) -> dict[str, Any]:
+        logger.info(
+            "Preparing cloud backup for provider %s, job %s, source %s",
+            self.cloud_provider,
+            job_id,
+            source_path or settings.FILE_STORAGE_PATH,
+        )
+
+        local_result = await self.staging_backup_service.perform_backup(source_path, job_id)
+        if local_result.get("status") != "COMPLETED":
+            return local_result
+
+        archive_path = local_result["destination_path"]
+        destination_key = f"daily/{job_id}/{Path(archive_path).name}"
 
         try:
-            # Simulate success or failure randomly for demonstration
-            if os.path.exists(source_path) and hash(job_id) % 2 == 0: # Half of the time, simulate success
-                simulated_size = 1024 * 1024 * (hash(job_id) % 10 + 1) # 1MB to 10MB
-                simulated_files = hash(job_id) % 20 + 1 # 1 to 20 files
-                cloud_destination = f"gs://{self.cloud_provider}-backups/daily/{job_id}"
-                logger.info(f"Cloud backup successful for job {job_id}")
-                return {
-                    "status": "COMPLETED",
-                    "file_size_bytes": simulated_size,
-                    "file_count": simulated_files,
-                    "destination_path": cloud_destination,
-                    "checksum": f"cloud_checksum_{job_id}"
-                }
-            else:
-                error_message = f"Simulated cloud backup failure for job {job_id}: Source path not found or random failure."
-                logger.error(error_message)
-                return {
-                    "status": "FAILED",
-                    "error_message": error_message
-                }
-        except Exception as e:
-            logger.error(f"Unexpected error during simulated cloud backup for {job_id}: {e}")
+            upload_result = self.provider.upload(archive_path, destination_key)
+            return {
+                "status": upload_result.get("status", "COMPLETED"),
+                "file_size_bytes": local_result.get("file_size_bytes"),
+                "file_count": local_result.get("file_count"),
+                "destination_path": upload_result.get("destination_path"),
+                "checksum": local_result.get("checksum"),
+            }
+        except Exception as exc:
+            logger.error(
+                "Cloud backup upload failed for provider %s and job %s: %s",
+                self.cloud_provider,
+                job_id,
+                exc,
+                exc_info=True,
+            )
             return {
                 "status": "FAILED",
-                "error_message": str(e)
+                "error_message": str(exc),
+                "destination_path": archive_path,
+                "checksum": local_result.get("checksum"),
+                "file_size_bytes": local_result.get("file_size_bytes"),
+                "file_count": local_result.get("file_count"),
             }

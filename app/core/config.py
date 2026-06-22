@@ -33,6 +33,14 @@ class Settings(BaseSettings):
     
     # Backup Configuration
     BACKUP_BASE_PATH: str = Field(default="./backups")
+    GCS_ENABLED: bool = Field(default=False)
+    GCS_PROJECT_ID: str | None = Field(default=None)
+    GCS_BUCKET_NAME: str | None = Field(default=None)
+    GCS_CREDENTIALS_PATH: str | None = Field(default=None)
+    B2_ENABLED: bool = Field(default=False)
+    B2_ACCOUNT_ID: str | None = Field(default=None)
+    B2_APPLICATION_KEY: str | None = Field(default=None)
+    B2_BUCKET_NAME: str | None = Field(default=None)
     
    # Logging Configuration
     LOG_LEVEL: str = Field(default="INFO")
