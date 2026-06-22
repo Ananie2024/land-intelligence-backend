@@ -15,18 +15,20 @@ logger = logging.getLogger(__name__)
 # Security scheme for Swagger/OpenAPI
 reusable_oauth2 = HTTPBearer(auto_error=False)
 
+
 async def get_current_user_data(
     request: Request,
     token: Optional[HTTPAuthorizationCredentials] = Depends(reusable_oauth2)
 ) -> Dict[str, Any]:
     """
     Dependency to validate JWT token and return user data.
-    
-    Replaces AuthenticationMiddleware by performing validation 
+    Replaces AuthenticationMiddleware by performing validation
     as a FastAPI dependency.
     """
     if not token:
-        logger.warning(f"Missing authentication token for path: {request.url.path}")
+        logger.warning(
+            f"Missing authentication token for path: {request.url.path}"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing authentication token",
@@ -34,20 +36,22 @@ async def get_current_user_data(
         )
 
     payload = verify_token(token.credentials)
-    
+
     if not payload:
-        logger.warning(f"Invalid or expired token for path: {request.url.path}")
+        logger.warning(
+            f"Invalid or expired token for path: {request.url.path}"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Attach to request state for backward compatibility if needed, 
+    # Attach to request state for backward compatibility if needed,
     # but preferred way is to use the return value of this dependency.
     request.state.user = payload
     request.state.user_id = payload.get("sub")
-    
+
     return payload
 
 
