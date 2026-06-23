@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.api.auth_dependencies import get_current_user_id
+from app.api.auth_dependencies import get_current_user_id, require_admin, require_client_or_admin, require_parish_access, prevent_viewer_access, get_current_user_from_db
 from app.services.parish.parish_service import ParishService
 from app.schemas.parish_schema import (
     ParishCreate,
@@ -21,6 +21,7 @@ from app.schemas.parish_schema import (
     ParishResponse,
     ParishListResponse,
 )
+from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -69,13 +70,12 @@ async def create_parish(
     
     try:
         parish = await service.create_parish(payload, user_id)
+        return parish
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e),
         )
-    
-    return parish
 
 
 # ---------------------------------------------------------------------------
@@ -120,7 +120,10 @@ async def update_parish(
     payload: ParishUpdate,
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
+    user: User = Depends(get_current_user_from_db),
 ):
+    await require_parish_access(parish_id, user)
+    
     service = ParishService(db)
     
     try:
@@ -154,7 +157,10 @@ async def delete_parish(
     parish_id: str,
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
+    user: User = Depends(get_current_user_from_db),
 ):
+    await require_parish_access(parish_id, user)
+    
     service = ParishService(db)
     deleted = await service.delete_parish(parish_id, user_id)
 

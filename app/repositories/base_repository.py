@@ -120,7 +120,10 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
         try:
             # Convert schema to dict, excluding None values
-            data = schema.model_dump(exclude_none=True)
+            if hasattr(schema, 'model_dump'):
+                data = schema.model_dump(exclude_none=True)
+            else:
+                data = {k: v for k, v in schema.__dict__.items() if v is not None}
             
             # Create model instance
             instance = self.model(**data)
@@ -153,7 +156,11 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 return None
             
             # Update fields
-            update_data = schema.model_dump(exclude_none=True)
+            if hasattr(schema, 'model_dump'):
+                update_data = schema.model_dump(exclude_none=True)
+            else:
+                update_data = {k: v for k, v in schema.__dict__.items() if v is not None}
+            
             for field, value in update_data.items():
                 if hasattr(instance, field):
                     setattr(instance, field, value)

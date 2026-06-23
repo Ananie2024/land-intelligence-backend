@@ -9,4 +9,5 @@ from . import (
     qr_codes,
     physical_locations,
     backups,
+    auth,
 )
