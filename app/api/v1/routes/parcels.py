@@ -6,7 +6,6 @@ Phase 3 — Section 4.2
 Land Intelligence System
 """
 
-import math
 import logging
 from typing import Optional
 
@@ -15,14 +14,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.api.auth_dependencies import get_current_user_id
-from app.repositories.parcel_repository import ParcelRepository
-from app.repositories.parish_repository import ParishRepository
+from app.services.parcel.parcel_service import ParcelService
 from app.schemas.parcel_schema import (
     ParcelCreate,
     ParcelUpdate,
     ParcelResponse,
     ParcelListResponse,
-    ParcelSearchParams,
 )
 
 logger = logging.getLogger(__name__)
@@ -52,43 +49,23 @@ async def list_parcels(
     db: AsyncSession = Depends(get_db),
     _: str = Depends(get_current_user_id),
 ):
-    repo = ParcelRepository(db)
-    skip = (page - 1) * size
+    service = ParcelService(db)
+    
+    filters = {}
+    if owner_name:
+        filters["owner_name"] = owner_name
+    if parcel_number:
+        filters["parcel_number"] = parcel_number
+    if parish_id:
+        filters["parish_id"] = parish_id
+    if land_use_category_id:
+        filters["land_use_category_id"] = land_use_category_id
+    if min_area_sqm is not None:
+        filters["min_area_sqm"] = min_area_sqm
+    if max_area_sqm is not None:
+        filters["max_area_sqm"] = max_area_sqm
 
-    any_filter = any([
-        owner_name, parcel_number, parish_id,
-        land_use_category_id, min_area_sqm, max_area_sqm,
-    ])
-
-    if any_filter:
-        items = await repo.search(
-            owner_name=owner_name,
-            parcel_number=parcel_number,
-            parish_id=parish_id,
-            land_use_category_id=land_use_category_id,
-            min_area_sqm=min_area_sqm,
-            max_area_sqm=max_area_sqm,
-            skip=skip,
-            limit=size,
-        )
-        # Count with same filters for accurate pagination
-        total = await repo.count(filters={
-            k: v for k, v in {
-                "parish_id": parish_id,
-                "land_use_category_id": land_use_category_id,
-            }.items() if v is not None
-        })
-    else:
-        total = await repo.count()
-        items = await repo.list(skip=skip, limit=size, order_by="created_at", descending=True)
-
-    return ParcelListResponse(
-        items=items,
-        total=total,
-        page=page,
-        size=size,
-        pages=max(1, math.ceil(total / size)),
-    )
+    return await service.list_parcels(page=page, size=size, filters=filters)
 
 
 # ---------------------------------------------------------------------------
@@ -107,43 +84,16 @@ async def create_parcel(
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
-    parcel_repo = ParcelRepository(db)
-    parish_repo = ParishRepository(db)
-
-    # Validate parish exists
-    parish = await parish_repo.get(payload.parish_id)
-    if not parish:
+    service = ParcelService(db)
+    
+    try:
+        parcel = await service.create_parcel(payload, user_id)
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Parish '{payload.parish_id}' not found.",
+            detail=str(e),
         )
 
-    # Enforce unique parcel number
-    existing = await parcel_repo.get_by_parcel_number(payload.parcel_number)
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Parcel number '{payload.parcel_number}' already exists.",
-        )
-
-    # Enforce unique title deed if provided
-    if payload.title_deed_number:
-        deed_conflict = await parcel_repo.get_by_title_deed(payload.title_deed_number)
-        if deed_conflict:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Title deed '{payload.title_deed_number}' is already registered.",
-            )
-
-    parcel = await parcel_repo.create(payload)
-
-    # Keep parish parcel count in sync
-    await parish_repo.update_parcel_count(payload.parish_id)
-
-    await db.commit()
-    await db.refresh(parcel)
-
-    logger.info(f"Parcel created: {parcel.id} in parish {payload.parish_id} by user {user_id}")
     return parcel
 
 
@@ -162,8 +112,8 @@ async def get_parcel(
     db: AsyncSession = Depends(get_db),
     _: str = Depends(get_current_user_id),
 ):
-    repo = ParcelRepository(db)
-    parcel = await repo.get(parcel_id)
+    service = ParcelService(db)
+    parcel = await service.get_parcel(parcel_id)
 
     if not parcel:
         raise HTTPException(
@@ -189,8 +139,8 @@ async def get_parcel_by_number(
     db: AsyncSession = Depends(get_db),
     _: str = Depends(get_current_user_id),
 ):
-    repo = ParcelRepository(db)
-    parcel = await repo.get_by_parcel_number(parcel_number)
+    service = ParcelService(db)
+    parcel = await service.get_parcel_by_number(parcel_number)
 
     if not parcel:
         raise HTTPException(
@@ -216,8 +166,8 @@ async def get_parcel_by_deed(
     db: AsyncSession = Depends(get_db),
     _: str = Depends(get_current_user_id),
 ):
-    repo = ParcelRepository(db)
-    parcel = await repo.get_by_title_deed(title_deed_number)
+    service = ParcelService(db)
+    parcel = await service.get_parcel_by_deed(title_deed_number)
 
     if not parcel:
         raise HTTPException(
@@ -245,28 +195,15 @@ async def list_parcels_by_parish(
     db: AsyncSession = Depends(get_db),
     _: str = Depends(get_current_user_id),
 ):
-    parcel_repo = ParcelRepository(db)
-    parish_repo = ParishRepository(db)
-
-    # Validate parish exists
-    parish = await parish_repo.get(parish_id)
-    if not parish:
+    service = ParcelService(db)
+    
+    try:
+        return await service.list_parcels_by_parish(parish_id=parish_id, page=page, size=size)
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Parish '{parish_id}' not found.",
+            detail=str(e),
         )
-
-    skip = (page - 1) * size
-    items = await parcel_repo.get_by_parish(parish_id, skip=skip, limit=size)
-    total = await parcel_repo.count_by_parish(parish_id)
-
-    return ParcelListResponse(
-        items=items,
-        total=total,
-        page=page,
-        size=size,
-        pages=max(1, math.ceil(total / size)),
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -285,27 +222,15 @@ async def update_parcel(
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
-    repo = ParcelRepository(db)
-
-    # Check parcel number uniqueness if being changed
-    if payload.parcel_number is not None:
-        conflict = await repo.get_by_parcel_number(payload.parcel_number)
-        if conflict and conflict.id != parcel_id:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Parcel number '{payload.parcel_number}' is already in use.",
-            )
-
-    # Check title deed uniqueness if being changed
-    if payload.title_deed_number is not None:
-        conflict = await repo.get_by_title_deed(payload.title_deed_number)
-        if conflict and conflict.id != parcel_id:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Title deed '{payload.title_deed_number}' is already registered.",
-            )
-
-    parcel = await repo.update(parcel_id, payload)
+    service = ParcelService(db)
+    
+    try:
+        parcel = await service.update_parcel(parcel_id, payload, user_id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e),
+        )
 
     if not parcel:
         raise HTTPException(
@@ -313,10 +238,6 @@ async def update_parcel(
             detail=f"Parcel '{parcel_id}' not found.",
         )
 
-    await db.commit()
-    await db.refresh(parcel)
-
-    logger.info(f"Parcel updated: {parcel_id} by user {user_id}")
     return parcel
 
 
@@ -335,20 +256,11 @@ async def delete_parcel(
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
-    parcel_repo = ParcelRepository(db)
-    parish_repo = ParishRepository(db)
+    service = ParcelService(db)
+    deleted = await service.delete_parcel(parcel_id, user_id)
 
-    # Fetch first so we have the parish_id for count update
-    parcel = await parcel_repo.get(parcel_id)
-    if not parcel:
+    if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Parcel '{parcel_id}' not found.",
         )
-
-    parish_id = parcel.parish_id
-    await parcel_repo.soft_delete(parcel_id)
-    await parish_repo.update_parcel_count(parish_id)
-
-    await db.commit()
-    logger.info(f"Parcel soft-deleted: {parcel_id} by user {user_id}")

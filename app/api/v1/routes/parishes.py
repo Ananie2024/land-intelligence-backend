@@ -6,7 +6,6 @@ Phase 3 — Section 4.1
 Land Intelligence System
 """
 
-import math
 import logging
 from typing import Optional
 
@@ -15,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.api.auth_dependencies import get_current_user_id
-from app.repositories.parish_repository import ParishRepository
+from app.services.parish.parish_service import ParishService
 from app.schemas.parish_schema import (
     ParishCreate,
     ParishUpdate,
@@ -45,26 +44,9 @@ async def list_parishes(
     db: AsyncSession = Depends(get_db),
     _: str = Depends(get_current_user_id),
 ):
-    repo = ParishRepository(db)
-
-    if name:
-        items = await repo.search_by_name(name, limit=size)
-        total = len(items)
-        # Apply manual offset for searched results
-        start = (page - 1) * size
-        items = items[start: start + size]
-    else:
-        skip = (page - 1) * size
-        total = await repo.count()
-        items = await repo.list(skip=skip, limit=size, order_by="name")
-
-    return ParishListResponse(
-        items=items,
-        total=total,
-        page=page,
-        size=size,
-        pages=max(1, math.ceil(total / size)),
-    )
+    service = ParishService(db)
+    
+    return await service.list_parishes(page=page, size=size, name=name)
 
 
 # ---------------------------------------------------------------------------
@@ -83,21 +65,16 @@ async def create_parish(
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
-    repo = ParishRepository(db)
-
-    # Enforce unique code
-    existing = await repo.get_by_code(payload.code)
-    if existing:
+    service = ParishService(db)
+    
+    try:
+        parish = await service.create_parish(payload, user_id)
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Parish with code '{payload.code}' already exists.",
+            detail=str(e),
         )
-
-    parish = await repo.create(payload)
-    await db.commit()
-    await db.refresh(parish)
-
-    logger.info(f"Parish created: {parish.id} by user {user_id}")
+    
     return parish
 
 
@@ -116,8 +93,8 @@ async def get_parish(
     db: AsyncSession = Depends(get_db),
     _: str = Depends(get_current_user_id),
 ):
-    repo = ParishRepository(db)
-    parish = await repo.get_with_parcel_count(parish_id)
+    service = ParishService(db)
+    parish = await service.get_parish(parish_id)
 
     if not parish:
         raise HTTPException(
@@ -144,18 +121,15 @@ async def update_parish(
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
-    repo = ParishRepository(db)
-
-    # If code is being changed, check it isn't already taken
-    if payload.code is not None:
-        existing = await repo.get_by_code(payload.code)
-        if existing and existing.id != parish_id:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Parish code '{payload.code}' is already in use.",
-            )
-
-    parish = await repo.update(parish_id, payload)
+    service = ParishService(db)
+    
+    try:
+        parish = await service.update_parish(parish_id, payload, user_id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e),
+        )
 
     if not parish:
         raise HTTPException(
@@ -163,10 +137,6 @@ async def update_parish(
             detail=f"Parish '{parish_id}' not found.",
         )
 
-    await db.commit()
-    await db.refresh(parish)
-
-    logger.info(f"Parish updated: {parish_id} by user {user_id}")
     return parish
 
 
@@ -185,17 +155,14 @@ async def delete_parish(
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
-    repo = ParishRepository(db)
-    deleted = await repo.soft_delete(parish_id)
+    service = ParishService(db)
+    deleted = await service.delete_parish(parish_id, user_id)
 
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Parish '{parish_id}' not found.",
         )
-
-    await db.commit()
-    logger.info(f"Parish soft-deleted: {parish_id} by user {user_id}")
 
 
 # ---------------------------------------------------------------------------
@@ -213,8 +180,8 @@ async def refresh_parcel_count(
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
-    repo = ParishRepository(db)
-    parish = await repo.update_parcel_count(parish_id)
+    service = ParishService(db)
+    parish = await service.refresh_parcel_count(parish_id, user_id)
 
     if not parish:
         raise HTTPException(
@@ -222,8 +189,4 @@ async def refresh_parcel_count(
             detail=f"Parish '{parish_id}' not found.",
         )
 
-    await db.commit()
-    await db.refresh(parish)
-
-    logger.info(f"Parish parcel count refreshed: {parish_id} by user {user_id}")
     return parish

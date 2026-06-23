@@ -20,8 +20,8 @@ class EmailNotifier:
         self.smtp_port = settings.SMTP_PORT
         self.smtp_user = settings.SMTP_USER
         self.smtp_password = settings.SMTP_PASSWORD
-        self.sender_email = settings.EMAIL_SENDER or self.smtp_user
-        self.default_recipients = settings.BACKUP_NOTIFICATION_EMAILS or []
+        self.sender_email = settings.EMAIL_SENDER or self.smtp_user or ""
+        self.default_recipients = list(settings.BACKUP_NOTIFICATION_EMAILS or [])
 
     def send_backup_notification(
         self,
@@ -39,6 +39,10 @@ class EmailNotifier:
             logger.warning("No recipients configured for backup notification")
             return {"status": "SKIPPED", "reason": "No recipients"}
 
+        if not self.smtp_server or not self.smtp_user or not self.smtp_password:
+            logger.error("SMTP settings are not fully configured")
+            return {"status": "FAILED", "error_message": "SMTP settings are not fully configured"}
+
         try:
             report = ""
             if include_report:
@@ -48,8 +52,8 @@ class EmailNotifier:
 
             msg = MIMEMultipart("alternative")
             msg["Subject"] = f"Land Intelligence Backup - {getattr(job, 'job_type', 'JOB')} {getattr(job, 'status', 'UNKNOWN')}"
-            msg["From"] = self.sender_email
-            msg["To"] = ", ".join(recipients)
+            msg["From"] = str(self.sender_email)
+            msg["To"] = ", ".join(str(r) for r in recipients)
 
             html_content = f"""
             <html>
@@ -67,13 +71,13 @@ class EmailNotifier:
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 if settings.SMTP_USE_TLS:
                     server.starttls()
-                server.login(self.smtp_user, self.smtp_password)
-                server.sendmail(self.sender_email, recipients, msg.as_string())
+                server.login(str(self.smtp_user), str(self.smtp_password))
+                server.sendmail(str(self.sender_email), [str(r) for r in recipients], msg.as_string())
 
             logger.info("Backup notification email sent successfully to %s", recipients)
             return {
                 "status": "SENT",
-                "recipients": recipients,
+                "recipients": [str(r) for r in recipients],
                 "job_id": getattr(job, "id", None)
             }
 

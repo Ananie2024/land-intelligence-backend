@@ -96,7 +96,8 @@ async def upload_document(
 @router.get("/{document_id}", response_model=DocumentResponse)
 async def get_document(
     document_id: str,
-    doc_manager: DocumentManager = Depends(get_document_manager)
+    doc_manager: DocumentManager = Depends(get_document_manager),
+    user_id: str = Depends(get_current_user_id)
 ):
     """Get document metadata by ID."""
     document = await doc_manager.get_document(document_id)
@@ -111,7 +112,8 @@ async def get_document(
 @router.get("/{document_id}/file")
 async def download_document(
     document_id: str,
-    doc_manager: DocumentManager = Depends(get_document_manager)
+    doc_manager: DocumentManager = Depends(get_document_manager),
+    user_id: str = Depends(get_current_user_id)
 ):
     """Download document file."""
     result = await doc_manager.get_document_with_file(document_id)
@@ -179,7 +181,8 @@ async def search_documents(
     reference_number: Optional[str] = None,
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
-    doc_manager: DocumentManager = Depends(get_document_manager)
+    doc_manager: DocumentManager = Depends(get_document_manager),
+    user_id: str = Depends(get_current_user_id)
 ):
     """Search and list documents with pagination."""
     skip = (page - 1) * size
@@ -209,7 +212,8 @@ async def search_documents(
 @router.get("/{document_id}/physical-location")
 async def get_physical_location(
     document_id: str,
-    doc_manager: DocumentManager = Depends(get_document_manager)
+    doc_manager: DocumentManager = Depends(get_document_manager),
+    user_id: str = Depends(get_current_user_id)
 ):
     """Resolve physical location for a document."""
     location = await doc_manager.resolve_physical_location(document_id)

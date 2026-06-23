@@ -6,80 +6,44 @@ Land Intelligence System
 """
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from app.core.database import get_db
 from app.api.auth_dependencies import get_current_user_id
-from app.repositories.location_repository import LocationRepository
-from app.services.location.physical_finder import PhysicalFinder
-from app.services.location.storage_mapper import StorageMapper
-from app.services.location.location_validator import LocationValidator
+from app.services.location.location_service import LocationService
 from app.schemas.physical_location_schema import (
-    PhysicalLocationCreate,
-    PhysicalLocationUpdate,
-    PhysicalLocationResponse,
-    StorageCabinetCreate,
-    StorageCabinetUpdate,
-    StorageCabinetResponse,
     PhysicalLocationFinderRequest,
     PhysicalLocationFinderResponse,
 )
-from app.models.physical_location import PhysicalLocation
-from app.models.storage_cabinet import StorageCabinet
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# ---------------------------------------------------------------------------
-# Location Endpoints
-# ---------------------------------------------------------------------------
 
 @router.post(
     "/",
-    response_model=PhysicalLocationResponse,
+    response_model=Dict[str, Any],
     status_code=status.HTTP_201_CREATED,
     summary="Create physical location",
     description="Register a new physical archive room, warehouse, or shelf location."
 )
 async def create_location(
-    payload: PhysicalLocationCreate,
+    payload: Dict[str, Any],
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
     try:
-        # Validate unique location code
-        repo = LocationRepository(db)
-        existing = await db.execute(
-            select(PhysicalLocation).where(
-                PhysicalLocation.location_code == payload.location_code,
-                PhysicalLocation.is_active
-            )
-        )
-        if existing.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Location code '{payload.location_code}' is already registered."
-            )
-            
-        # Code format validation
-        if not LocationValidator.validate_location_code(payload.location_code):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Location code must contain only alphanumeric characters, dashes, or underscores."
-            )
-            
-        location = await repo.create(payload)
-        await db.commit()
-        await db.refresh(location)
-        
-        logger.info(f"Physical location created: {location.id} (code: {payload.location_code}) by user {user_id}")
+        service = LocationService(db)
+        location = await service.create_location(payload, user_id)
         return location
-    except HTTPException:
-        raise
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
     except Exception as e:
         logger.error(f"Error creating location: {str(e)}", exc_info=True)
         raise HTTPException(
@@ -90,7 +54,7 @@ async def create_location(
 
 @router.get(
     "/",
-    response_model=List[PhysicalLocationResponse],
+    response_model=List[Dict[str, Any]],
     summary="List physical locations",
     description="List active physical archive locations."
 )
@@ -101,8 +65,8 @@ async def list_locations(
     _: str = Depends(get_current_user_id),
 ):
     try:
-        repo = LocationRepository(db)
-        return await repo.list(skip=skip, limit=limit, order_by="location_code")
+        service = LocationService(db)
+        return await service.list_locations(skip=skip, limit=limit)
     except Exception as e:
         logger.error(f"Error listing locations: {str(e)}")
         raise HTTPException(
@@ -113,7 +77,7 @@ async def list_locations(
 
 @router.get(
     "/{location_id}",
-    response_model=PhysicalLocationResponse,
+    response_model=Dict[str, Any],
     summary="Get physical location",
     description="Fetch details of a single physical location by UUID."
 )
@@ -123,8 +87,8 @@ async def get_location(
     _: str = Depends(get_current_user_id),
 ):
     try:
-        repo = LocationRepository(db)
-        location = await repo.get(location_id)
+        service = LocationService(db)
+        location = await service.get_location(location_id)
         if not location:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -143,52 +107,30 @@ async def get_location(
 
 @router.patch(
     "/{location_id}",
-    response_model=PhysicalLocationResponse,
+    response_model=Dict[str, Any],
     summary="Update physical location",
     description="Partially update physical location parameters."
 )
 async def update_location(
     location_id: str,
-    payload: PhysicalLocationUpdate,
+    payload: Dict[str, Any],
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
     try:
-        repo = LocationRepository(db)
-        
-        # Verify location code uniqueness if modified
-        if payload.location_code is not None:
-            existing = await db.execute(
-                select(PhysicalLocation).where(
-                    PhysicalLocation.location_code == payload.location_code,
-                    PhysicalLocation.is_active
-                )
-            )
-            conflict = existing.scalar_one_or_none()
-            if conflict and str(conflict.id) != location_id:
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail=f"Location code '{payload.location_code}' is already registered."
-                )
-                
-            if not LocationValidator.validate_location_code(payload.location_code):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Location code must contain only alphanumeric characters, dashes, or underscores."
-                )
-                
-        location = await repo.update(location_id, payload)
+        service = LocationService(db)
+        location = await service.update_location(location_id, payload, user_id)
         if not location:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Location with ID '{location_id}' not found."
             )
-            
-        await db.commit()
-        await db.refresh(location)
-        
-        logger.info(f"Physical location updated: {location_id} by user {user_id}")
         return location
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -211,18 +153,13 @@ async def delete_location(
     user_id: str = Depends(get_current_user_id),
 ):
     try:
-        repo = LocationRepository(db)
-        location = await repo.get(location_id)
-        if not location:
+        service = LocationService(db)
+        deleted = await service.delete_location(location_id, user_id)
+        if not deleted:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Location with ID '{location_id}' not found."
             )
-            
-        await repo.soft_delete(location_id)
-        await db.commit()
-        
-        logger.info(f"Physical location deleted: {location_id} by user {user_id}")
     except HTTPException:
         raise
     except Exception as e:
@@ -232,10 +169,6 @@ async def delete_location(
             detail="Failed to delete location."
         )
 
-
-# ---------------------------------------------------------------------------
-# Search and Finder Endpoints
-# ---------------------------------------------------------------------------
 
 @router.post(
     "/find",
@@ -249,12 +182,8 @@ async def locate_document(
     _: str = Depends(get_current_user_id),
 ):
     try:
-        finder = PhysicalFinder(db)
-        res = await finder.find_location(
-            parcel_id=payload.parcel_id,
-            document_id=payload.document_id,
-            reference_number=payload.reference_number
-        )
+        service = LocationService(db)
+        res = await service.locate_document(payload.dict())
         return res
     except Exception as e:
         logger.error(f"Error finding physical document location: {str(e)}", exc_info=True)
@@ -264,45 +193,27 @@ async def locate_document(
         )
 
 
-# ---------------------------------------------------------------------------
-# Cabinet Endpoints
-# ---------------------------------------------------------------------------
-
 @router.post(
     "/cabinets",
-    response_model=StorageCabinetResponse,
+    response_model=Dict[str, Any],
     status_code=status.HTTP_201_CREATED,
     summary="Create cabinet",
     description="Create a storage cabinet under an existing physical location."
 )
 async def create_cabinet(
-    payload: StorageCabinetCreate,
+    payload: Dict[str, Any],
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
     try:
-        repo = LocationRepository(db)
-        
-        # Verify location exists
-        location = await repo.get(payload.physical_location_id)
-        if not location:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Physical location '{payload.physical_location_id}' not found."
-            )
-            
-        # Create cabinet
-        data = payload.model_dump(exclude_none=True)
-        cabinet = StorageCabinet(**data)
-        db.add(cabinet)
-        await db.flush()
-        await db.commit()
-        await db.refresh(cabinet)
-        
-        logger.info(f"Storage cabinet created: {cabinet.id} in location {payload.physical_location_id} by user {user_id}")
+        service = LocationService(db)
+        cabinet = await service.create_cabinet(payload, user_id)
         return cabinet
-    except HTTPException:
-        raise
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
     except Exception as e:
         logger.error(f"Error creating storage cabinet: {str(e)}", exc_info=True)
         raise HTTPException(
@@ -313,7 +224,7 @@ async def create_cabinet(
 
 @router.get(
     "/cabinets/{cabinet_id}",
-    response_model=StorageCabinetResponse,
+    response_model=Dict[str, Any],
     summary="Get cabinet detail",
     description="Retrieve details of a storage cabinet by UUID."
 )
@@ -323,8 +234,8 @@ async def get_cabinet(
     _: str = Depends(get_current_user_id),
 ):
     try:
-        repo = LocationRepository(db)
-        cabinet = await repo.get_cabinet(cabinet_id)
+        service = LocationService(db)
+        cabinet = await service.get_cabinet(cabinet_id)
         if not cabinet:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -343,55 +254,30 @@ async def get_cabinet(
 
 @router.patch(
     "/cabinets/{cabinet_id}",
-    response_model=StorageCabinetResponse,
+    response_model=Dict[str, Any],
     summary="Update cabinet details",
     description="Partially update a cabinet (capacity, location reference, count, coordinates)."
 )
 async def update_cabinet(
     cabinet_id: str,
-    payload: StorageCabinetUpdate,
+    payload: Dict[str, Any],
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
     try:
-        repo = LocationRepository(db)
-        cabinet = await repo.get_cabinet(cabinet_id)
+        service = LocationService(db)
+        cabinet = await service.update_cabinet(cabinet_id, payload, user_id)
         if not cabinet:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Cabinet '{cabinet_id}' not found."
             )
-            
-        if payload.physical_location_id is not None:
-            location = await repo.get(payload.physical_location_id)
-            if not location:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Physical location '{payload.physical_location_id}' not found."
-                )
-                
-        # Validate current count is not exceeding max capacity
-        if payload.current_count is not None or payload.max_capacity is not None:
-            new_count = payload.current_count if payload.current_count is not None else cabinet.current_count
-            new_max = payload.max_capacity if payload.max_capacity is not None else cabinet.max_capacity
-            if new_max is not None and new_count > new_max:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"New count {new_count} cannot exceed cabinet max capacity {new_max}."
-                )
-                
-        # Apply changes
-        data = payload.model_dump(exclude_none=True)
-        for field, value in data.items():
-            if hasattr(cabinet, field):
-                setattr(cabinet, field, value)
-                
-        await db.flush()
-        await db.commit()
-        await db.refresh(cabinet)
-        
-        logger.info(f"Storage cabinet updated: {cabinet_id} by user {user_id}")
         return cabinet
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -404,6 +290,7 @@ async def update_cabinet(
 
 @router.get(
     "/{location_id}/grid",
+    response_model=Dict[str, Any],
     summary="Get grid room map layout",
     description="Retrieve the visual row-column map coordinate grid representation of all cabinets in this location."
 )
@@ -413,18 +300,13 @@ async def get_location_grid(
     _: str = Depends(get_current_user_id),
 ):
     try:
-        repo = LocationRepository(db)
-        location = await repo.get(location_id)
-        if not location:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Physical location '{location_id}' not found."
-            )
-            
-        cabinets = await repo.get_cabinets_by_location(location_id)
-        return StorageMapper.map_cabinet_layout_grid(cabinets)
-    except HTTPException:
-        raise
+        service = LocationService(db)
+        return await service.get_location_grid(location_id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
     except Exception as e:
         logger.error(f"Error mapping cabinet grid for location {location_id}: {str(e)}", exc_info=True)
         raise HTTPException(

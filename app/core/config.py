@@ -41,7 +41,16 @@ class Settings(BaseSettings):
     B2_ACCOUNT_ID: str | None = Field(default=None)
     B2_APPLICATION_KEY: str | None = Field(default=None)
     B2_BUCKET_NAME: str | None = Field(default=None)
-    
+
+    # SMTP / Email Configuration
+    SMTP_SERVER: str = Field(default="localhost")
+    SMTP_PORT: int = Field(default=587)
+    SMTP_USER: str | None = Field(default=None)
+    SMTP_PASSWORD: str | None = Field(default=None)
+    SMTP_USE_TLS: bool = Field(default=True)
+    EMAIL_SENDER: str | None = Field(default=None)
+    BACKUP_NOTIFICATION_EMAILS: list[str] = Field(default_factory=list)
+
    # Logging Configuration
     LOG_LEVEL: str = Field(default="INFO")
     LOG_FILE_PATH: str = Field(default="./logs/app.log")

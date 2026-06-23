@@ -14,7 +14,7 @@ from app.core.logging_config import set_correlation_id
 logger = logging.getLogger(__name__)
 
 
-async def correlation_id_logging(  # E501: line too long
+async def correlation_id_logging(
     request: Request
 ) -> AsyncGenerator[str, None]:
     """

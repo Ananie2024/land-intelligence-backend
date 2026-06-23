@@ -1,5 +1,4 @@
 # app/api/v1/routes/__init__.py
-# app/api/v1/routes/__init__.py
 
 from . import (
     parishes,

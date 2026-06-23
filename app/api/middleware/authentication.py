@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 PUBLIC_PATHS = {
     "/health",
+    "/api/v1/health",
     "/api/docs",
     "/api/redoc",
     "/api/openapi.json",
@@ -44,7 +45,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         path = request.url.path
 
         # Allow public endpoints
-        if any(path.startswith(public) for public in PUBLIC_PATHS):
+        if path in PUBLIC_PATHS:
             return await call_next(request)
 
         auth_header = request.headers.get("Authorization")
