@@ -14,6 +14,8 @@ from sqlalchemy import text
 
 from app.api.v1.endpoints import router as v1_router
 from app.api.middleware.error_handlers import register_error_handlers
+from app.api.middleware.exception_handler import register_exception_handler
+from app.api.middleware.response_middleware import StandardizeResponseMiddleware, PaginationMiddleware
 from app.core.config import settings
 from app.core.database import engine, get_db
 from app.core.logging_config import setup_logging
@@ -53,6 +55,7 @@ app = FastAPI(
 
 # Register before middleware stack
 register_error_handlers(app)
+register_exception_handler(app)
 
 
 # ------------------------------------------------------------------
@@ -66,6 +69,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add response standardization middleware
+app.add_middleware(StandardizeResponseMiddleware)
+app.add_middleware(PaginationMiddleware)
 
 
 # ------------------------------------------------------------------
