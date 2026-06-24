@@ -270,7 +270,7 @@ class TaxService:
         parcel_id: str,
         skip: int = 0,
         limit: int = 100,
-        user_id: str
+        user_id: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Retrieve all historical payment transactions posted for a parcel's assessments.
@@ -281,7 +281,7 @@ class TaxService:
 
         return await self.repo.get_payment_history(parcel_id, skip=skip, limit=limit)
 
-    async def get_tax_record(self, record_id: str, user_id: str) -> Optional[TaxRecord]:
+    async def get_tax_record(self, record_id: str, user_id: Optional[str] = None) -> Optional[TaxRecord]:
         """
         Fetch details of a single tax record by UUID.
         """

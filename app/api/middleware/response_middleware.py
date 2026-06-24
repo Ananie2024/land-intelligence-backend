@@ -7,6 +7,7 @@ Land Intelligence System
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response as StarletteResponse
 from typing import Callable, Any
 import logging
 
@@ -36,12 +37,20 @@ class StandardizeResponseMiddleware(BaseHTTPMiddleware):
         # Don't modify if already in standard format
         if response.status_code == 200:
             try:
-                # Read response body
-                body = b""
-                async for chunk in response.body_iterator:
-                    body += chunk
-                
+                # Read response body safely across response types
                 import json
+                try:
+                    body = await response.body()
+                except AttributeError:
+                    body = b""
+                    async for chunk in response.body_iterator:
+                        body += chunk
+                    response = StarletteResponse(
+                        content=body,
+                        status_code=response.status_code,
+                        headers=dict(response.headers),
+                        media_type=response.media_type,
+                    )
                 data = json.loads(body.decode("utf-8"))
                 
                 # Check if already standardized
@@ -91,11 +100,19 @@ class PaginationMiddleware(BaseHTTPMiddleware):
             return response
         
         try:
-            body = b""
-            async for chunk in response.body_iterator:
-                body += chunk
-            
             import json
+            try:
+                body = await response.body()
+            except AttributeError:
+                body = b""
+                async for chunk in response.body_iterator:
+                    body += chunk
+                response = StarletteResponse(
+                    content=body,
+                    status_code=response.status_code,
+                    headers=dict(response.headers),
+                    media_type=response.media_type,
+                )
             data = json.loads(body.decode("utf-8"))
             
             # Check if response has pagination structure
