@@ -6,7 +6,7 @@ Land Intelligence System
 """
 
 from sqlalchemy import Column, String, ForeignKey, DateTime, Boolean, JSON, Integer
-from sqlalchemy.dialects.mysql import CHAR
+from sqlalchemy import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index
 
@@ -37,16 +37,14 @@ class QRCodeRegistry(BaseModel):
     
     __tablename__ = "qr_code_registry"
     
-    parcel_id = Column(
-        CHAR(36),
+    parcel_id = Column(UUID(as_uuid=True),
         ForeignKey("parcels.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
         comment="Foreign key to parcel (optional)"
     )
     
-    document_id = Column(
-        CHAR(36),
+    document_id = Column(UUID(as_uuid=True),
         ForeignKey("documents.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
@@ -80,15 +78,13 @@ class QRCodeRegistry(BaseModel):
         comment="JSON data encoded in QR code"
     )
     
-    expires_at = Column(
-        DateTime,
+    expires_at = Column(DateTime(timezone=True),
         nullable=True,
         index=True,
         comment="Expiration timestamp (if temporary)"
     )
     
-    last_accessed_at = Column(
-        DateTime,
+    last_accessed_at = Column(DateTime(timezone=True),
         nullable=True,
         comment="Last time this QR was scanned"
     )

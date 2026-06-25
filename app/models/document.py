@@ -6,7 +6,7 @@ Land Intelligence System
 """
 
 from sqlalchemy import Column, String, Text, Integer, ForeignKey, Date
-from sqlalchemy.dialects.mysql import CHAR
+from sqlalchemy import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index
 
@@ -38,16 +38,14 @@ class Document(BaseModel):
     
     __tablename__ = "documents"
     
-    parcel_id = Column(
-        CHAR(36),
+    parcel_id = Column(UUID(as_uuid=True),
         ForeignKey("parcels.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
         comment="Foreign key to parcel (optional)"
     )
     
-    document_type_id = Column(
-        CHAR(36),
+    document_type_id = Column(UUID(as_uuid=True),
         ForeignKey("document_types.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,

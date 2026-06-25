@@ -5,7 +5,7 @@ Phase 2 — Section 3.1
 Land Intelligence System
 """
 from sqlalchemy import Column, String, DateTime, JSON, Index
-from sqlalchemy.dialects.mysql import CHAR
+from sqlalchemy import UUID
 from sqlalchemy.orm import declared_attr
 from app.models.base import BaseModel
 
@@ -24,8 +24,7 @@ class AuditLog(BaseModel):
         comment="Name of the table that was modified"
     )
 
-    record_id = Column(
-        CHAR(36),
+    record_id = Column(UUID(as_uuid=True),
         nullable=False,
         index=True,
         comment="UUID of the record that was modified"
@@ -50,15 +49,13 @@ class AuditLog(BaseModel):
         comment="JSON representation of values after change"
     )
 
-    performed_by = Column(
-        CHAR(36),
+    performed_by = Column(UUID(as_uuid=True),
         nullable=False,
         index=True,
         comment="User ID who performed the action"
     )
 
-    performed_at = Column(
-        DateTime,
+    performed_at = Column(DateTime(timezone=True),
         nullable=False,
         index=True,
         comment="Timestamp when action was performed"

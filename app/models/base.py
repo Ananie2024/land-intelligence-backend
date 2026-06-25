@@ -3,10 +3,8 @@
 Base Model Classes
 Land Intelligence System
 """
-from sqlalchemy import Column, DateTime, Boolean, func
-from sqlalchemy.dialects.mysql import CHAR
+from sqlalchemy import Column, DateTime, Boolean, func, UUID
 from sqlalchemy.orm import DeclarativeBase
-import uuid
 
 
 class Base(DeclarativeBase):
@@ -15,13 +13,13 @@ class Base(DeclarativeBase):
 
 class TimestampMixin:
     created_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
         comment="Timestamp when record was created"
     )
     updated_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
@@ -34,16 +32,16 @@ class SoftDeleteMixin:
         Boolean,
         nullable=False,
         default=True,
-        server_default="1",
+        server_default=func.true(),
         comment="Soft delete flag: True if record is active, False if deleted"
     )
 
 
 class UUIDMixin:
     id = Column(
-        CHAR(36),
+        UUID(as_uuid=True),
         primary_key=True,
-        default=lambda: str(uuid.uuid4()),
+        server_default=func.gen_random_uuid(),
         comment="UUID primary key"
     )
 

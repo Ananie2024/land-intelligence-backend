@@ -26,7 +26,7 @@ class BackupJob(BaseModel):
     file_count = Column(BigInteger, nullable=True)
     checksum = Column(String, nullable=True) # e.g., MD5, SHA256 of the backup manifest
     error_message = Column(String, nullable=True)
-    started_at = Column(DateTime, nullable=True)
-    completed_at = Column(DateTime, nullable=True)
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
     def __repr__(self):
         return f"<BackupJob(id={self.id}, job_type={self.job_type}, status={self.status})>"

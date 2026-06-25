@@ -6,7 +6,7 @@ Land Intelligence System
 """
 
 from sqlalchemy import Column, String, Text, Float, ForeignKey, JSON
-from sqlalchemy.dialects.mysql import CHAR
+from sqlalchemy import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index
 from geoalchemy2 import Geometry
@@ -47,16 +47,14 @@ class Parcel(BaseModel):
         comment="Unique parcel identifier"
     )
     
-    parish_id = Column(
-        CHAR(36),
+    parish_id = Column(UUID(as_uuid=True),
         ForeignKey("parishes.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
         comment="Foreign key to parish"
     )
     
-    land_use_category_id = Column(
-        CHAR(36),
+    land_use_category_id = Column(UUID(as_uuid=True),
         ForeignKey("land_use_categories.id", ondelete="RESTRICT"),
         nullable=True,
         index=True,

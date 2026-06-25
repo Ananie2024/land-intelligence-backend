@@ -3,7 +3,7 @@
 User Repository
 Land Intelligence System
 """
-
+from datetime import datetime
 from typing import Optional, List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession

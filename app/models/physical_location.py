@@ -5,7 +5,7 @@ Land Intelligence System
 """
 
 from sqlalchemy import Column, String, Text, ForeignKey
-from sqlalchemy.dialects.mysql import CHAR
+from sqlalchemy import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index
 
@@ -36,8 +36,7 @@ class PhysicalLocation(BaseModel):
     
     __tablename__ = "physical_locations"
     
-    document_id = Column(
-        CHAR(36),
+    document_id = Column(UUID(as_uuid=True),
         ForeignKey("documents.id", ondelete="SET NULL"),
         nullable=True,
         unique=True,

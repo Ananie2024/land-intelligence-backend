@@ -4,9 +4,11 @@ Phase 1 — Section 2.3
 Land Intelligence System
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from jose import JWTError, jwt
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from passlib.context import CryptContext
 import logging
 
@@ -14,13 +16,16 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Password hashing contexts
+pwd_context = PasswordHasher()
+# Fallback for legacy bcrypt hashes during migration
+legacy_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     Verify a plain password against a hashed password.
+    Supports both Argon2 (current) and bcrypt (legacy) hashes.
     
     Args:
         plain_password: Plain text password
@@ -29,12 +34,30 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         bool: True if password matches
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    if not hashed_password:
+        return False
+    
+    try:
+        # Argon2 hash (current)
+        if hashed_password.startswith('$argon2'):
+            pwd_context.verify(hashed_password, plain_password)
+            return True
+        # Bcrypt hash (legacy migration)
+        elif hashed_password.startswith('$2b$') or hashed_password.startswith('$2a$'):
+            return legacy_context.verify(plain_password, hashed_password)
+        else:
+            logger.warning(f"Unknown password hash format: {hashed_password[:10]}...")
+            return False
+    except VerifyMismatchError:
+        return False
+    except Exception as e:
+        logger.error(f"Password verification error: {str(e)}")
+        return False
 
 
 def get_password_hash(password: str) -> str:
     """
-    Hash a password using bcrypt.
+    Hash a password using Argon2.
     
     Args:
         password: Plain text password
@@ -59,9 +82,9 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
     to_encode = data.copy()
     
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
     
     to_encode.update({"exp": expire, "type": "access"})
     
@@ -84,7 +107,7 @@ def create_refresh_token(data: Dict[str, Any]) -> str:
         str: JWT token string
     """
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.now(timezone.utc) + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
     
     to_encode.update({"exp": expire, "type": "refresh"})
     

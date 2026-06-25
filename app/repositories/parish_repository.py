@@ -125,8 +125,6 @@ class ParishRepository(BaseRepository[Parish, ParishCreate, ParishUpdate]):
         Returns:
             Parish containing the point, or None if not found
         """
-        # MySQL ST_Contains expects (polygon, point)
-        # We construct the point using ST_GeomFromText or ST_PointFromText
         result = await self.db.execute(
             select(Parish).where(
                 func.ST_Contains(

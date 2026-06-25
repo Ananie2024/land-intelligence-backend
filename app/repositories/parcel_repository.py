@@ -66,7 +66,7 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
     
     async def search_by_geometry(self, geometry_wkb: str) -> List[Parcel]:
         """
-        Search parcels by geometry using native MySQL spatial intersection.
+        Search parcels by geometry using PostGIS spatial intersection.
         
         Args:
             geometry_wkb: WKB hex string for comparison
@@ -74,8 +74,6 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
         Returns:
             List of parcels intersecting the provided geometry
         """
-        # Convert WKB hex string to a format SQLAlchemy/GeoAlchemy2 understands
-        # MySQL's ST_Intersects is called via the .ST_Intersects() method on the column
         from sqlalchemy import func
         
         # We use ST_GeomFromText if it was WKT, but for WKB we can use ST_GeomFromWKB
@@ -195,7 +193,6 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
         """
         Calculate total area of all parcels in a parish using native spatial functions.
         
-        Note: MySQL 8.0 ST_Area returns square meters for geographic SRS (SRID 4326).
         
         Args:
             parish_id: UUID of the parish

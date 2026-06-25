@@ -4,13 +4,14 @@
 Database Backup Service
 Land Intelligence System
 
-Produces a gzip-compressed SQL dump of the MySQL database via mysqldump.
-Falls back gracefully when mysqldump is unavailable (test environments).
+Produces a gzip-compressed SQL dump of the PostgreSQL database via pg_dump.
+Falls back gracefully when pg_dump is unavailable (test environments).
 """
 
 import asyncio
 import gzip
 import logging
+import os
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 class DatabaseBackupService:
     """
-    Creates a gzip-compressed mysqldump archive of the application database.
+    Creates a gzip-compressed pg_dump archive of the application database.
 
     Archive is written to:
         <BACKUP_BASE_PATH>/database/<job_id>/<job_id>.sql.gz
@@ -43,22 +44,22 @@ class DatabaseBackupService:
 
         try:
             db_params = self._parse_database_url(settings.DATABASE_URL)
-            cmd = self._build_command(db_params)
+            cmd, env = self._build_command(db_params)
 
             logger.info("Starting database dump for job %s → %s", job_id, archive_path)
 
             loop = asyncio.get_event_loop()
             result = await loop.run_in_executor(
-                None, self._run_mysqldump, cmd, archive_path
+                None, self._run_pg_dump, cmd, archive_path, env
             )
 
             if result["returncode"] != 0:
                 raise RuntimeError(
-                    f"mysqldump exited {result['returncode']}: {result['stderr']}"
+                    f"pg_dump exited {result['returncode']}: {result['stderr']}"
                 )
 
             if not archive_path.is_file() or archive_path.stat().st_size == 0:
-                raise RuntimeError("mysqldump produced an empty or missing archive.")
+                raise RuntimeError("pg_dump produced an empty or missing archive.")
 
             size = archive_path.stat().st_size
             checksum = calculate_sha256(archive_path)
@@ -73,7 +74,7 @@ class DatabaseBackupService:
             }
 
         except FileNotFoundError:
-            logger.warning("mysqldump not on PATH — writing placeholder for job %s.", job_id)
+            logger.warning("pg_dump not on PATH — writing placeholder for job %s.", job_id)
             return self._write_placeholder(destination_dir, job_id)
 
         except Exception as exc:
@@ -85,33 +86,33 @@ class DatabaseBackupService:
         parsed = urlparse(url)
         return {
             "host": parsed.hostname or "127.0.0.1",
-            "port": str(parsed.port or 3306),
-            "user": parsed.username or "root",
+            "port": str(parsed.port or 5432),
+            "user": parsed.username or "postgres",
             "password": parsed.password or "",
             "database": parsed.path.lstrip("/"),
         }
 
     @staticmethod
-    def _build_command(params: dict[str, str]) -> list[str]:
+    def _build_command(params: dict[str, str]) -> tuple[list[str], dict[str, str] | None]:
+        env: dict[str, str] | None = None
         cmd = [
-            "mysqldump",
+            "pg_dump",
             f"--host={params['host']}",
             f"--port={params['port']}",
-            f"--user={params['user']}",
-            "--single-transaction",
-            "--routines",
-            "--triggers",
-            "--add-drop-table",
+            f"--username={params['user']}",
+            "--no-owner",
+            "--format=plain",
+            "--verbose",
         ]
         if params["password"]:
-            cmd.append(f"--password={params['password']}")
+            env = {"PGPASSWORD": params["password"]}
         cmd.append(params["database"])
-        return cmd
+        return cmd, env
 
     @staticmethod
-    def _run_mysqldump(cmd: list[str], archive_path: Path) -> dict[str, Any]:
+    def _run_pg_dump(cmd: list[str], archive_path: Path, env: dict[str, str] | None = None) -> dict[str, Any]:
         try:
-            proc = subprocess.run(cmd, capture_output=True, timeout=600)
+            proc = subprocess.run(cmd, capture_output=True, timeout=600, env={**os.environ, **(env or {})})
             if proc.returncode == 0:
                 with gzip.open(archive_path, "wb") as gz:
                     gz.write(proc.stdout)
@@ -120,7 +121,7 @@ class DatabaseBackupService:
                 "stderr": proc.stderr.decode("utf-8", errors="replace"),
             }
         except subprocess.TimeoutExpired:
-            return {"returncode": -1, "stderr": "mysqldump timed out after 600 s."}
+            return {"returncode": -1, "stderr": "pg_dump timed out after 600 s."}
 
     @staticmethod
     def _write_placeholder(dest_dir: Path, job_id: str) -> dict[str, Any]:
@@ -129,7 +130,7 @@ class DatabaseBackupService:
             f"# Database backup placeholder\n"
             f"# job_id: {job_id}\n"
             f"# created_at: {datetime.now(timezone.utc).isoformat()}\n"
-            f"# mysqldump was not found on PATH.\n",
+            f"# pg_dump was not found on PATH.\n",
             encoding="utf-8",
         )
         return {

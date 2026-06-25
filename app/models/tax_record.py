@@ -6,7 +6,7 @@ Land Intelligence System
 """
 
 from sqlalchemy import Column, String, Float, ForeignKey, Date
-from sqlalchemy.dialects.mysql import CHAR
+from sqlalchemy import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index
 
@@ -38,8 +38,7 @@ class TaxRecord(BaseModel):
     
     __tablename__ = "tax_records"
     
-    parcel_id = Column(
-        CHAR(36),
+    parcel_id = Column(UUID(as_uuid=True),
         ForeignKey("parcels.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

@@ -6,7 +6,7 @@ Land Intelligence System
 """
 
 from sqlalchemy import Column, String, Float, ForeignKey, Date, Boolean, Text
-from sqlalchemy.dialects.mysql import CHAR
+from sqlalchemy import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index
 
@@ -36,8 +36,7 @@ class TaxPayment(BaseModel):
     
     __tablename__ = "tax_payments"
     
-    tax_record_id = Column(
-        CHAR(36),
+    tax_record_id = Column(UUID(as_uuid=True),
         ForeignKey("tax_records.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -98,8 +97,7 @@ class TaxPayment(BaseModel):
         comment="Whether this is a reversal of a previous payment"
     )
     
-    reversed_payment_id = Column(
-        CHAR(36),
+    reversed_payment_id = Column(UUID(as_uuid=True),
         ForeignKey("tax_payments.id", ondelete="SET NULL"),
         nullable=True,
         comment="Reference to reversed payment (if is_reversal=True)"

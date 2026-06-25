@@ -6,7 +6,7 @@ Land Intelligence System
 """
 
 from sqlalchemy import Column, String, Text, Integer, ForeignKey
-from sqlalchemy.dialects.mysql import CHAR
+from sqlalchemy import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index
 
@@ -35,8 +35,7 @@ class StorageCabinet(BaseModel):
     
     __tablename__ = "storage_cabinets"
     
-    physical_location_id = Column(
-        CHAR(36),
+    physical_location_id = Column(UUID(as_uuid=True),
         ForeignKey("physical_locations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
