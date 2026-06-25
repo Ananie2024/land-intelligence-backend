@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.api.auth_dependencies import get_current_user_id
+from app.api.auth_dependencies import get_current_user_id, require_admin
 from app.services.tax.tax_service import TaxService
 from app.schemas.tax_schema import (
     TaxCalculationRequest,
@@ -128,6 +128,7 @@ async def generate_parish_assessments(
     assessment_year: str = Query(..., pattern=r"^\d{4}$", description="Assessment year"),
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
+    _admin: str = Depends(require_admin),
 ):
     try:
         service = TaxService(db)

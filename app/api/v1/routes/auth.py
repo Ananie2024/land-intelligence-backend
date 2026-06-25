@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.services.auth.auth_service import AuthService
 from app.schemas.user_schema import UserCreate, UserLogin, TokenResponse, TokenRefresh, PasswordChange, UserResponse
-from app.api.auth_dependencies import get_current_user_id
+from app.api.auth_dependencies import get_current_user_id, require_admin
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,8 @@ router = APIRouter()
 async def register(
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db),
-    current_user_id: str = Depends(get_current_user_id)
+    current_user_id: str = Depends(get_current_user_id),
+    _admin: str = Depends(require_admin),
 ):
     """
     Register a new user. Requires admin role for creating admin/client accounts.

@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.api.auth_dependencies import get_current_user_id, require_admin, require_client_or_admin, require_parish_access, prevent_viewer_access, get_current_user_from_db
+from app.api.auth_dependencies import get_current_user_id, require_admin, require_parish_access, get_current_user_from_db
 from app.services.parish.parish_service import ParishService
 from app.schemas.parish_schema import (
     ParishCreate,
@@ -65,6 +65,7 @@ async def create_parish(
     payload: ParishCreate,
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
+    _admin: str = Depends(require_admin),
 ):
     service = ParishService(db)
     
@@ -158,6 +159,7 @@ async def delete_parish(
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
     user: User = Depends(get_current_user_from_db),
+    _admin: str = Depends(require_admin),
 ):
     await require_parish_access(parish_id, user)
     

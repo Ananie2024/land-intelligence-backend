@@ -18,10 +18,18 @@ from app.api.v1.routes import (
     qr_codes,
     physical_locations,
     backups,
+    auth,
 )
 
 # Apply logging globally to v1
 router = APIRouter(dependencies=[Depends(correlation_id_logging)])
+
+# Auth endpoints (Public)
+router.include_router(
+    auth.router,
+    prefix="/auth",
+    tags=["Auth"],
+)
 
 # Health endpoint (Public but logged)
 @router.get("/health", tags=["system"])

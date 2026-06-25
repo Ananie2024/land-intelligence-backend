@@ -2,6 +2,7 @@ import logging
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 from app.core.config import settings
 
@@ -20,17 +21,24 @@ class DatabaseRestoreService:
             if not backup_file.exists():
                 raise FileNotFoundError(f"Backup file not found: {backup_path}")
 
-            # Basic MySQL restore command (assumes mysqldump format)
+            db_params = urlparse(settings.DATABASE_URL)
+            database = db_params.path.lstrip("/")
+            if not database:
+                database = "land_intelligence"
+
+            hostname = db_params.hostname or "localhost"
+            username = db_params.username or "root"
+            password = db_params.password or ""
+
             cmd = [
-                "mysql",
-                f"--host={settings.DATABASE_URL.split('//')[1].split(':')[0] if 'mysql' in settings.DATABASE_URL else 'localhost'}",
-                f"--user={settings.DATABASE_URL.split('://')[1].split(':')[0] if 'mysql' in settings.DATABASE_URL else 'root'}",
-                f"--password={settings.DATABASE_URL.split(':')[3].split('@')[0] if 'mysql' in settings.DATABASE_URL else ''}",
-                settings.DATABASE_URL.split('/')[-1].split('?')[0] if '?' in settings.DATABASE_URL else 'land_intelligence',
-                f"< {backup_file}"
+                "psql",
+                f"-h={hostname}",
+                f"-U={username}",
+                database,
             ]
 
-            result = subprocess.run(" ".join(cmd), shell=True, capture_output=True, text=True, timeout=300)
+            with open(backup_file, "r", encoding="utf-8") as f:
+                result = subprocess.run(cmd, stdin=f, shell=False, capture_output=True, text=True, timeout=300)
 
             if result.returncode != 0:
                 raise RuntimeError(f"DB restore failed: {result.stderr}")

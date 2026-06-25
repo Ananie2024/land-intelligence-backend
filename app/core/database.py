@@ -12,6 +12,8 @@ from app.models.base import Base
 
 def get_async_database_url() -> str:
     db_url = settings.DATABASE_URL
+    if db_url.startswith("postgresql://"):
+        return db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
     if db_url.startswith("mysql://"):
         return db_url.replace("mysql://", "mysql+aiomysql://", 1)
     return db_url

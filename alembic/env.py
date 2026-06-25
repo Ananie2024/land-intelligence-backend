@@ -14,11 +14,12 @@ from app.models import import_all_models
 import_all_models()
 
 config = context.config
+sync_url = settings.DATABASE_URL
+if sync_url.startswith("postgresql://"):
+    sync_url = sync_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 config.set_main_option(
     "sqlalchemy.url",
-    settings.DATABASE_URL
-        .replace("mysql+aiomysql", "mysql+pymysql")
-        .replace("%", "%%")
+    sync_url.replace("%", "%%")
 )
 
 if config.config_file_name is not None:
@@ -40,13 +41,13 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    sync_url = settings.DATABASE_URL.replace(
-        "mysql+aiomysql", "mysql+pymysql"
-    )
+    sync_url = settings.DATABASE_URL
     configuration = config.get_section(config.config_ini_section)
     if configuration is None:
         raise RuntimeError("Alembic config section not found")
 
+    if sync_url.startswith("postgresql://"):
+        sync_url = sync_url.replace("postgresql://", "postgresql+psycopg2://", 1)
     configuration["sqlalchemy.url"] = sync_url
 
     connectable = engine_from_config(

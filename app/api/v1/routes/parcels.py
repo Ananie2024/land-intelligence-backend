@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.api.auth_dependencies import get_current_user_id
+from app.api.auth_dependencies import get_current_user_id, require_client_or_admin
 from app.services.parcel.parcel_service import ParcelService
 from app.schemas.parcel_schema import (
     ParcelCreate,
@@ -83,6 +83,7 @@ async def create_parcel(
     payload: ParcelCreate,
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
+    _client_or_admin: str = Depends(require_client_or_admin),
 ):
     service = ParcelService(db)
     

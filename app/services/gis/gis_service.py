@@ -85,7 +85,7 @@ class GisAnalysisService:
         """
         Determine if two geometries intersect/overlap, and compute the overlapping area and percentages.
         """
-        geom1 = await self._resolve_geometry(self.db, geom1_wkt, parcel_id_1, "geom1 / parcel_id_1")
+        geom1 = await self._resolve_geometry(geom1_wkt, parcel_id_1, "geom1 / parcel_id_1")
         geom2 = await self._resolve_geometry(geom2_wkt, parcel_id_2, "geom2 / parcel_id_2")
         
         # Geometries must be projected to a metric CRS for area calculations
@@ -121,7 +121,7 @@ class GisAnalysisService:
         """
         Verify if a geometry or parcel contains or intersects a given latitude/longitude point.
         """
-        geom = await self._resolve_geometry(self.db, geom_wkt, parcel_id, "geom / parcel_id")
+        geom = await self._resolve_geometry(geom_wkt, parcel_id, "geom / parcel_id")
         point_tuple = (x, y)
         
         contains = contains_point(geom, point_tuple)
@@ -141,7 +141,7 @@ class GisAnalysisService:
         """
         Overlay a parcel on a zoning district geometry to verify zoning code overlay and compliance area.
         """
-        parcel_geom = await self._resolve_geometry(self.db, None, parcel_id, "parcel_id")
+        parcel_geom = await self._resolve_geometry(None, parcel_id, "parcel_id")
         
         try:
             zoning_geom = wkt.loads(zoning_wkt)

@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.api.auth_dependencies import get_current_user_id
+from app.api.auth_dependencies import get_current_user_id, require_admin
 from app.services.backup_service import BackupService
 
 logger = logging.getLogger(__name__)
@@ -39,6 +39,7 @@ async def trigger_backup(
     source_path: Optional[str] = Query(None, description="Source path to back up"),
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
+    _admin: str = Depends(require_admin),
 ):
     service = BackupService(db)
     result = await service.trigger_backup(job_type=job_type, tier=tier, source_path=source_path, user_id=user_id)
@@ -63,6 +64,7 @@ async def trigger_restore(
     backup_job_id: str = Query(..., description="UUID of the backup job to restore from"),
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
+    _admin: str = Depends(require_admin),
 ):
     service = BackupService(db)
     result = await service.trigger_restore(backup_job_id, user_id)

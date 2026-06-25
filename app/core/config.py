@@ -15,7 +15,15 @@ class Settings(BaseSettings):
     API_PORT: int = Field(default=8000)
     
     # Database Configuration
-    DATABASE_URL: str = Field(...)
+    DATABASE_HOST: str = Field(default="localhost")
+    DATABASE_PORT: int = Field(default=5432)
+    DATABASE_NAME: str = Field(default="land_intelligence_db")
+    DATABASE_USER: str = Field(default="land_admin")
+    DATABASE_PASSWORD: str = Field(default="")
+
+    @property
+    def DATABASE_URL(self) -> str:
+        return f"postgresql://{self.DATABASE_USER}:{self.DATABASE_PASSWORD}@{self.DATABASE_HOST}:{self.DATABASE_PORT}/{self.DATABASE_NAME}"
     
     # Security Configuration
     SECRET_KEY: str = Field(...)

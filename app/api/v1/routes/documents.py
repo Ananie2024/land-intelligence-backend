@@ -7,19 +7,17 @@ Land Intelligence System
 """
 
 import logging
-from typing import List, Optional
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.api.auth_dependencies import get_current_user_data, get_current_user_id
+from app.api.auth_dependencies import get_current_user_id, require_client_or_admin
 from app.schemas.document_schema import (
     DocumentResponse, 
-    DocumentUploadRequest, 
     DocumentUpdate,
     DocumentListResponse,
-    DocumentSearchParams
 )
 from app.services.document.document_manager import DocumentManager
 from app.services.document.file_system_handler import FileSystemHandler
@@ -57,6 +55,7 @@ async def upload_document(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
+    _client_or_admin: str = Depends(require_client_or_admin),
     doc_manager: DocumentManager = Depends(get_document_manager)
 ):
     """
