@@ -1,142 +1,139 @@
 # app/api/middleware/response_middleware.py
 """
-Response Middleware for Standardized API Responses
+Response Middleware
 Land Intelligence System
+
+Standardizes successful JSON responses and detects paginated payloads.
+
+Root cause of the previous Content-Length crash
+------------------------------------------------
+Both middleware classes were reading the response body, wrapping it in a
+larger envelope, then constructing a new JSONResponse while copying the
+*original* headers — including the original (now stale) Content-Length.
+uvicorn validates Content-Length on the way out and raises:
+    RuntimeError: Response content longer than Content-Length
+
+Fix: never forward headers when building a replacement JSONResponse.
+JSONResponse sets its own correct Content-Length automatically.
 """
+
+import json
+import logging
+from typing import Callable
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response as StarletteResponse
-from typing import Callable, Any
-import logging
+
+from app.schemas.api_response import success_response, paginated_response
 
 logger = logging.getLogger(__name__)
 
 
+async def _read_body(response: Response) -> bytes:
+    """
+    Read the full response body regardless of response type.
+    BaseHTTPMiddleware responses expose body via .body() on StreamingResponse
+    variants, or via direct iteration.
+    """
+    if hasattr(response, "body"):
+        return await response.body()
+
+    body = b""
+    async for chunk in response.body_iterator:  # type: ignore[attr-defined]
+        body += chunk
+    return body
+
+
 class StandardizeResponseMiddleware(BaseHTTPMiddleware):
     """
-    Middleware to standardize all API responses.
-    Wraps successful responses with standard format.
+    Wraps successful (2xx) JSON responses in the project's standard envelope:
+
+        {
+            "success": true,
+            "data": <original payload>,
+            "message": "Operation successful",
+            "errors": null,
+            "meta": null,
+            "timestamp": "..."
+        }
+
+    Passes through unchanged:
+    - Non-JSON responses (HTML, files, streaming)
+    - 4xx / 5xx responses (handled by the error handler)
+    - Responses already in standard format (contain both "success" and "timestamp")
     """
-    
+
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        """
-        Process request and standardize response.
-        """
         response = await call_next(request)
-        
-        # Only process JSON responses
-        if not response.headers.get("content-type", "").startswith("application/json"):
+
+        # Only touch successful JSON responses
+        content_type = response.headers.get("content-type", "")
+        if not content_type.startswith("application/json"):
             return response
-        
-        # Don't modify error responses (4xx, 5xx)
         if response.status_code >= 400:
             return response
-        
-        # Don't modify if already in standard format
-        if response.status_code == 200:
-            try:
-                # Read response body safely across response types
-                import json
-                try:
-                    body = await response.body()
-                except AttributeError:
-                    body = b""
-                    async for chunk in response.body_iterator:
-                        body += chunk
-                    response = StarletteResponse(
-                        content=body,
-                        status_code=response.status_code,
-                        headers=dict(response.headers),
-                        media_type=response.media_type,
-                    )
-                data = json.loads(body.decode("utf-8"))
-                
-                # Check if already standardized
-                if isinstance(data, dict) and "success" in data and "timestamp" in data:
-                    return JSONResponse(
-                        content=data,
-                        status_code=response.status_code,
-                        headers=dict(response.headers),
-                        media_type="application/json"
-                    )
-                
-                # Wrap in standardized format
-                from app.schemas.api_response import success_response
-                standardized = success_response(
-                    data=data,
-                    message=None
-                )
-                
-                return JSONResponse(
-                    content=standardized,
-                    status_code=response.status_code,
-                    headers=dict(response.headers),
-                    media_type="application/json"
-                )
-            except Exception as e:
-                logger.warning(f"Failed to standardize response: {str(e)}")
-                return response
-        
-        return response
+
+        try:
+            body = await _read_body(response)
+            data = json.loads(body.decode("utf-8"))
+
+            # Already standardized — return as-is (no header copy)
+            if isinstance(data, dict) and "success" in data and "timestamp" in data:
+                return JSONResponse(content=data, status_code=response.status_code)
+
+            # Wrap in standard envelope
+            standardized = success_response(data=data)
+            return JSONResponse(content=standardized, status_code=response.status_code)
+
+        except Exception as exc:
+            logger.warning("StandardizeResponseMiddleware: failed to wrap response: %s", exc)
+            return response
 
 
 class PaginationMiddleware(BaseHTTPMiddleware):
     """
-    Middleware to detect and wrap paginated responses.
+    Detects paginated payloads — dicts that contain all of
+    { items, total, page, size } — and re-wraps them using the
+    project's paginated_response envelope.
+
+    Must run *before* StandardizeResponseMiddleware in the middleware stack
+    (i.e. added to the app after it, because FastAPI stacks middleware in
+    reverse addition order).
     """
-    
+
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        """
-        Process request and detect pagination patterns.
-        """
         response = await call_next(request)
-        
-        if not response.headers.get("content-type", "").startswith("application/json"):
+
+        content_type = response.headers.get("content-type", "")
+        if not content_type.startswith("application/json"):
             return response
-        
         if response.status_code >= 400:
             return response
-        
+
         try:
-            import json
-            try:
-                body = await response.body()
-            except AttributeError:
-                body = b""
-                async for chunk in response.body_iterator:
-                    body += chunk
-                response = StarletteResponse(
-                    content=body,
-                    status_code=response.status_code,
-                    headers=dict(response.headers),
-                    media_type=response.media_type,
-                )
+            body = await _read_body(response)
             data = json.loads(body.decode("utf-8"))
-            
-            # Check if response has pagination structure
-            if isinstance(data, dict) and all(k in data for k in ["items", "total", "page", "size"]):
-                # This looks like a paginated response, wrap it
-                from app.schemas.api_response import paginated_response
+
+            # Already fully standardized — leave it alone
+            if isinstance(data, dict) and "success" in data and "timestamp" in data:
+                return JSONResponse(content=data, status_code=response.status_code)
+
+            # Paginated payload detection
+            if isinstance(data, dict) and all(
+                k in data for k in ("items", "total", "page", "size")
+            ):
                 standardized = paginated_response(
-                    data=data.get("items", []),
-                    page=data.get("page", 1),
-                    size=data.get("size", 20),
-                    total=data.get("total", 0),
-                    message=None
+                    data=data["items"],
+                    page=data["page"],
+                    size=data["size"],
+                    total=data["total"],
                 )
-                # Remove original keys that are now in meta
-                standardized_data = {k: v for k, v in data.items() if k not in ["items", "total", "page", "size", "pages"]}
-                standardized["data"] = standardized_data
-                
                 return JSONResponse(
-                    content=standardized,
-                    status_code=response.status_code,
-                    headers=dict(response.headers),
-                    media_type="application/json"
+                    content=standardized, status_code=response.status_code
                 )
-        except Exception as e:
-            logger.warning(f"Failed to process pagination: {str(e)}")
-        
+
+        except Exception as exc:
+            logger.warning("PaginationMiddleware: failed to process response: %s", exc)
+
         return response
