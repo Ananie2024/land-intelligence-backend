@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     DATABASE_HOST: str = Field(default="localhost")
     DATABASE_PORT: int = Field(default=5432)
     DATABASE_NAME: str = Field(default="land_intelligence_db")
-    DATABASE_USER: str = Field(default="land_admin")
+    DATABASE_USER: str = Field(default="land_user")
     DATABASE_PASSWORD: str = Field(default="")
 
     @property
