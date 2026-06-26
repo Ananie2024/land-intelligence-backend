@@ -3,7 +3,7 @@
 Application Settings
 Land Intelligence System
 """
-
+from urllib.parse import quote_plus
 from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -73,6 +73,11 @@ class Settings(BaseSettings):
     ALLOWED_EXTENSIONS: list[str] = Field(
         default=[".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx", ".xls", ".xlsx"]
     )
+
+    # ------------------------------------------------------------------
+    # Redis (used for token blacklist and caching)
+    # ------------------------------------------------------------------
+    REDIS_URL: str = Field(default="redis://localhost:6379/0")
 
     # ------------------------------------------------------------------
     # Backup

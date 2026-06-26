@@ -34,20 +34,16 @@ async def generate_parcel_qr(
     user_id: str = Depends(get_current_user_id),
 ):
     """Generate a Digital Testimony QR code for a parcel."""
-    service = QRCodeService(
-        db=db,
-        qr_repo=None,  # Will be initialized in service
-        parcel_repo=None,
-        document_repo=None,
-    )
-    
     from app.repositories.qr_registry_repository import QRRegistryRepository
     from app.repositories.parcel_repository import ParcelRepository
     from app.repositories.document_repository import DocumentRepository
     
-    service.qr_repo = QRRegistryRepository(db)
-    service.parcel_repo = ParcelRepository(db)
-    service.document_repo = DocumentRepository(db)
+    service = QRCodeService(
+        db=db,
+        qr_repo=QRRegistryRepository(db),
+        parcel_repo=ParcelRepository(db),
+        document_repo=DocumentRepository(db),
+    )
     
     try:
         qr_entry = await service.generate_parcel_qr(parcel_id, expires_days, user_id)

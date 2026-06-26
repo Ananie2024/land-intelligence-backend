@@ -82,7 +82,7 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
             select(Parcel).where(
                 func.ST_Intersects(
                     Parcel.geometry_wkb,
-                    func.ST_GeomFromWKB(func.unhex(geometry_wkb), 4326)
+                    func.ST_GeomFromWKB(func.decode(geometry_wkb, 'hex'), 4326)
                 ),
                 Parcel.is_active
             )

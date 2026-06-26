@@ -5,7 +5,7 @@ Phase 2 — Section 3.1
 Land Intelligence System
 """
 
-from sqlalchemy import Column, String, Float, ForeignKey, Date, Boolean, Text
+from sqlalchemy import Column, String, Numeric, ForeignKey, Date, Boolean, Text
 from sqlalchemy import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index
@@ -44,7 +44,7 @@ class TaxPayment(BaseModel):
     )
     
     payment_amount = Column(
-        Float,
+        Numeric(15, 2),
         nullable=False,
         comment="Amount paid in this transaction"
     )

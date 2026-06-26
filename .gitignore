@@ -101,6 +101,8 @@ gis-data/
 poetry.lock
 Pipfile.lock
 
+hash_gen.py
+
 # Encryption keys (NEVER commit)
 *.key
 *.pem

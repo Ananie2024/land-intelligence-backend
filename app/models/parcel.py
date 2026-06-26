@@ -5,7 +5,7 @@ Phase 2 — Section 3.1
 Land Intelligence System
 """
 
-from sqlalchemy import Column, String, Text, Float, ForeignKey, JSON
+from sqlalchemy import Column, String, Text, Float, ForeignKey, JSON, Date
 from sqlalchemy import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index
@@ -105,7 +105,7 @@ class Parcel(BaseModel):
     )
     
     valuation_date = Column(
-        String(10),  # ISO date YYYY-MM-DD
+        Date,
         nullable=True,
         comment="Date of last valuation"
     )

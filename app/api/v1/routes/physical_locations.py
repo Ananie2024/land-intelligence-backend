@@ -16,6 +16,10 @@ from app.services.location.location_service import LocationService
 from app.schemas.physical_location_schema import (
     PhysicalLocationFinderRequest,
     PhysicalLocationFinderResponse,
+    PhysicalLocationCreate,
+    PhysicalLocationUpdate,
+    StorageCabinetCreate,
+    StorageCabinetUpdate,
 )
 
 logger = logging.getLogger(__name__)
@@ -31,7 +35,7 @@ router = APIRouter()
     description="Register a new physical archive room, warehouse, or shelf location."
 )
 async def create_location(
-    payload: Dict[str, Any],
+    payload: PhysicalLocationCreate,
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -113,7 +117,7 @@ async def get_location(
 )
 async def update_location(
     location_id: str,
-    payload: Dict[str, Any],
+    payload: PhysicalLocationUpdate,
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -183,7 +187,7 @@ async def locate_document(
 ):
     try:
         service = LocationService(db)
-        res = await service.locate_document(payload.dict())
+        res = await service.locate_document(payload.model_dump())
         return res
     except Exception as e:
         logger.error(f"Error finding physical document location: {str(e)}", exc_info=True)
@@ -201,7 +205,7 @@ async def locate_document(
     description="Create a storage cabinet under an existing physical location."
 )
 async def create_cabinet(
-    payload: Dict[str, Any],
+    payload: StorageCabinetCreate,
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -260,7 +264,7 @@ async def get_cabinet(
 )
 async def update_cabinet(
     cabinet_id: str,
-    payload: Dict[str, Any],
+    payload: StorageCabinetUpdate,
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):

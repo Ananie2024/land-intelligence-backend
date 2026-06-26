@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.api.auth_dependencies import get_current_user_id, require_client_or_admin
+from app.api.auth_dependencies import get_current_user_id, require_client_or_admin, prevent_viewer_access
 from app.services.parcel.parcel_service import ParcelService
 from app.schemas.parcel_schema import (
     ParcelCreate,
@@ -222,6 +222,7 @@ async def update_parcel(
     payload: ParcelUpdate,
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
+    _non_viewer: str = Depends(prevent_viewer_access),
 ):
     service = ParcelService(db)
     
@@ -256,6 +257,7 @@ async def delete_parcel(
     parcel_id: str,
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
+    _non_viewer: str = Depends(prevent_viewer_access),
 ):
     service = ParcelService(db)
     deleted = await service.delete_parcel(parcel_id, user_id)

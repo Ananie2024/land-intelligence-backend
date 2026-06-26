@@ -5,7 +5,7 @@ Phase 2 — Section 3.1
 Land Intelligence System
 """
 
-from sqlalchemy import Column, String, Float, ForeignKey, Date
+from sqlalchemy import Column, String, Numeric, ForeignKey, Date
 from sqlalchemy import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index
@@ -53,42 +53,42 @@ class TaxRecord(BaseModel):
     )
     
     assessed_value = Column(
-        Float,
+        Numeric(15, 2),
         nullable=False,
-        default=0.0,
-        server_default="0.0",
+        default=0.00,
+        server_default="0.00",
         comment="Assessed value of parcel for tax purposes"
     )
     
     tax_rate_applied = Column(
-        Float,
+        Numeric(15, 2),
         nullable=False,
-        default=0.0,
-        server_default="0.0",
+        default=0.00,
+        server_default="0.00",
         comment="Tax rate applied for this assessment"
     )
     
     base_tax_amount = Column(
-        Float,
+        Numeric(15, 2),
         nullable=False,
-        default=0.0,
-        server_default="0.0",
+        default=0.00,
+        server_default="0.00",
         comment="Base tax amount calculated"
     )
     
     penalties_amount = Column(
-        Float,
+        Numeric(15, 2),
         nullable=False,
-        default=0.0,
-        server_default="0.0",
+        default=0.00,
+        server_default="0.00",
         comment="Penalties amount if any"
     )
     
     total_amount = Column(
-        Float,
+        Numeric(15, 2),
         nullable=False,
-        default=0.0,
-        server_default="0.0",
+        default=0.00,
+        server_default="0.00",
         comment="Total tax amount due (base + penalties)"
     )
     

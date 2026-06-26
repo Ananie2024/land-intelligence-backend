@@ -4,7 +4,7 @@ User Model
 Land Intelligence System
 """
 
-from sqlalchemy import Column, String, Boolean, DateTime, Enum, UUID, func
+from sqlalchemy import Column, String, Boolean, DateTime, Enum, UUID, Integer, func
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
@@ -36,7 +36,7 @@ class User(BaseModel):
     parish_id = Column(UUID(as_uuid=True), nullable=True)  # For clients, links to their parish
     is_verified = Column(Boolean, default=False)
     last_login = Column(DateTime(timezone=True), nullable=True)
-    failed_login_attempts = Column(String(10), default="0")
+    failed_login_attempts = Column(Integer, default=0, server_default="0")
     locked_until = Column(DateTime(timezone=True), nullable=True)
     # created_at, updated_at, is_active inherited from TimestampMixin/SoftDeleteMixin
 

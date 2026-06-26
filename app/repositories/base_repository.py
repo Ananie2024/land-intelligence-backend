@@ -6,8 +6,7 @@ Land Intelligence System
 
 from typing import Generic, TypeVar, Type, Optional, List, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, cast
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 import logging
 
@@ -29,7 +28,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         try:
             result = await self.db.execute(
                 select(self.model).where(
-                    self.model.id == cast(id, UUID),
+                    self.model.id == id,
                     self.model.is_active
                 )
             )
@@ -172,7 +171,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         try:
             result = await self.db.execute(
                 select(func.count()).select_from(self.model).where(
-                    self.model.id == cast(id, UUID),
+                    self.model.id == id,
                     self.model.is_active
                 )
             )

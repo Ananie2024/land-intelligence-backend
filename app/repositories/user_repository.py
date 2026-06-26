@@ -7,7 +7,6 @@ from datetime import datetime
 from typing import Optional, List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models.user import User, UserRole
 from app.repositories.base_repository import BaseRepository
 
@@ -55,7 +54,7 @@ class UserRepository(BaseRepository[User, None, None]):
         """Increment failed login attempts counter"""
         user = await self.get(user_id)
         if user:
-            user.failed_login_attempts = str(int(user.failed_login_attempts) + 1)
+            user.failed_login_attempts = int(user.failed_login_attempts) + 1
             await self.db.flush()
             await self.db.refresh(user)
         return user
@@ -64,7 +63,7 @@ class UserRepository(BaseRepository[User, None, None]):
         """Reset failed login attempts counter"""
         user = await self.get(user_id)
         if user:
-            user.failed_login_attempts = "0"
+            user.failed_login_attempts = 0
             user.locked_until = None
             user.last_login = datetime.utcnow()
             await self.db.flush()

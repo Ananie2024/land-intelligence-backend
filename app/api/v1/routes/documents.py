@@ -13,7 +13,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.api.auth_dependencies import get_current_user_id, require_client_or_admin
+from app.api.auth_dependencies import get_current_user_id, require_client_or_admin, prevent_viewer_access
 from app.schemas.document_schema import (
     DocumentResponse, 
     DocumentUpdate,
@@ -139,6 +139,7 @@ async def update_document(
     document_id: str,
     update_data: DocumentUpdate,
     user_id: str = Depends(get_current_user_id),
+    _non_viewer: str = Depends(prevent_viewer_access),
     doc_manager: DocumentManager = Depends(get_document_manager)
 ):
     """Update document metadata."""
@@ -156,6 +157,7 @@ async def delete_document(
     document_id: str,
     hard_delete: bool = Query(False, description="Permanently delete file and record"),
     user_id: str = Depends(get_current_user_id),
+    _non_viewer: str = Depends(prevent_viewer_access),
     doc_manager: DocumentManager = Depends(get_document_manager)
 ):
     """Delete a document."""

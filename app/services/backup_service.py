@@ -133,15 +133,12 @@ class BackupService:
                 f"Cannot restore from backup with status '{backup_job.status}'. Only completed backups can be restored."
             )
 
-        restore_job = BackupJob(
-            job_type="RESTORE",
-            status=BackupJobStatus.PENDING.value,
-            tier=backup_job.tier,
-            source_path=backup_job.destination_path,
-        )
-        self.db.add(restore_job)
-        await self.db.flush()
-        await self.db.refresh(restore_job)
+        restore_job = await self.backup_job_repo.create_by_dict({
+            "job_type": "RESTORE",
+            "status": BackupJobStatus.PENDING.value,
+            "tier": backup_job.tier,
+            "source_path": backup_job.destination_path,
+        })
         await self.db.commit()
         logger.info(f"Restore job triggered: {restore_job.id} from backup {backup_job_id} by user {user_id}")
         return {

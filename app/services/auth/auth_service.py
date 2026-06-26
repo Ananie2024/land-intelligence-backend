@@ -19,6 +19,7 @@ from app.core.security import (
 )
 from app.schemas.user_schema import UserLogin, TokenResponse, UserResponse
 from app.core.config import settings
+from app.core.token_blacklist import blacklist_token
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ class AuthService:
             await self.user_repo.increment_failed_login(str(user.id))
             
             # Lock account after 5 failed attempts
-            failed_attempts = int(str(user.failed_login_attempts)) if user.failed_login_attempts else 0
+            failed_attempts = user.failed_login_attempts
             if failed_attempts + 1 >= 5:
                 await self.user_repo.lock_user(str(user.id), lock_minutes=30)
                 logger.warning(f"Account locked due to multiple failed attempts: {login_data.username}")
@@ -157,9 +158,17 @@ class AuthService:
     async def logout(self, token: str) -> bool:
         """
         Invalidate token by adding to blacklist.
-        TODO: Implement token blacklist using Redis
         """
-        logger.info(f"Logout requested for token: {token[:20]}...")
+        from app.core.security import verify_token
+        payload = verify_token(token)
+        if payload:
+            jti = payload.get("jti")
+            exp = payload.get("exp")
+            if jti and exp:
+                from datetime import datetime, timezone
+                expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
+                await blacklist_token(jti, expires_at)
+                logger.info(f"Token revoked for user: {payload.get('sub')}")
         return True
 
     async def change_password(self, user_id: str, current_password: str, new_password: str) -> bool:

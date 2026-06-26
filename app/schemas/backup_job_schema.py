@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 from app.models.backup_job import BackupJobStatus
 
@@ -10,7 +10,7 @@ class BackupJobBase(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     job_type: str
-    status: BackupJobStatus = Field(default=BackupJobStatus.PENDING)
+    status: BackupJobStatus = BackupJobStatus.PENDING
     tier: str
     source_path: Optional[str] = None
     destination_path: Optional[str] = None

@@ -187,6 +187,7 @@ async def refresh_parcel_count(
     parish_id: str,
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
+    _admin: str = Depends(require_admin),
 ):
     service = ParishService(db)
     parish = await service.refresh_parcel_count(parish_id, user_id)

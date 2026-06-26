@@ -23,6 +23,8 @@ from app.repositories.parcel_repository import ParcelRepository
 from app.repositories.parish_repository import ParishRepository
 from app.services.tax.tax_calculator import TaxCalculator
 from app.services.tax.penalty_engine import PenaltyEngine
+from app.services.tax.payment_processor import PaymentProcessor
+from app.services.tax.assessment_generator import AssessmentGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,8 @@ class TaxService:
         self.parish_repo = ParishRepository(db)
         self.tax_calculator = TaxCalculator(self.repo)
         self.penalty_engine = PenaltyEngine(self.repo)
+        self.payment_processor = PaymentProcessor(self.repo, self.penalty_engine)
+        self.assessment_generator = AssessmentGenerator(self.repo, self.tax_calculator, self.penalty_engine)
 
     async def calculate_tax(
         self,
@@ -131,17 +135,10 @@ class TaxService:
         if existing:
             raise ValueError(f"Tax assessment record already exists for parcel '{parcel_id}' and year '{assessment_year}'.")
 
-        record = await self.repo.create({
-            "parcel_id": parcel_id,
-            "assessment_year": assessment_year,
-            "assessed_value": Decimal("0.00"),
-            "tax_rate_applied": Decimal("0.00"),
-            "base_tax_amount": Decimal("0.00"),
-            "penalties_amount": Decimal("0.00"),
-            "total_amount": Decimal("0.00"),
-            "due_date": date(int(assessment_year) + 1, 3, 31),
-        })
-        return record
+        return await self.assessment_generator.generate_assessment(
+            parcel=parcel,
+            assessment_year=int(assessment_year)
+        )
 
     async def generate_parish_assessments(
         self,
@@ -177,16 +174,10 @@ class TaxService:
                 if parcel_id in existing_map:
                     skipped += 1
                     continue
-                await self.repo.create({
-                    "parcel_id": parcel_id,
-                    "assessment_year": assessment_year,
-                    "assessed_value": Decimal("0.00"),
-                    "tax_rate_applied": Decimal("0.00"),
-                    "base_tax_amount": Decimal("0.00"),
-                    "penalties_amount": Decimal("0.00"),
-                    "total_amount": Decimal("0.00"),
-                    "due_date": date(int(assessment_year) + 1, 3, 31),
-                })
+                await self.assessment_generator.generate_assessment(
+                    parcel=parcel,
+                    assessment_year=int(assessment_year)
+                )
                 generated += 1
 
         return {
@@ -213,7 +204,7 @@ class TaxService:
         if not record:
             raise ValueError(f"Tax record with ID '{tax_record_id}' not found.")
 
-        res = await self._record_payment(
+        res = await self.payment_processor.record_payment(
             parcel_id=UUID(record.parcel_id),
             assessment_year=int(record.assessment_year),
             amount_paid=Decimal(str(payment_amount)),
@@ -228,39 +219,6 @@ class TaxService:
 
         await self.db.commit()
         return res
-
-    async def _record_payment(
-        self,
-        parcel_id: UUID,
-        assessment_year: int,
-        amount_paid: Decimal,
-        payment_method: str,
-        reference_number: str,
-        payment_date: date,
-        received_by: str
-    ) -> Dict[str, Any]:
-        tax_record = await self.repo.get_by_parcel_and_year(
-            parcel_id=str(parcel_id), year=assessment_year
-        )
-        if not tax_record:
-            raise ValueError("Tax record not found for payment")
-
-        payment = TaxPayment(
-            tax_record_id=tax_record.id,
-            payment_amount=float(amount_paid),
-            payment_date=payment_date,
-            payment_method=payment_method,
-            payment_reference=reference_number,
-            receipt_number=f"RCPT-{payment_date.isoformat()}-{tax_record.id}",
-            received_by=received_by,
-        )
-        created_payment = await self.repo.create_payment(payment)
-
-        total_paid = await self.repo.get_total_paid_for_assessment(tax_record.id)
-        if total_paid >= tax_record.total_amount:
-            await self.repo.update_status(tax_record.id, "paid")
-
-        return {"success": True, "payment_id": str(created_payment.id)}
 
     async def get_outstanding_tax(
         self,
