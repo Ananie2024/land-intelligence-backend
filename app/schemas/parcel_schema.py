@@ -7,7 +7,7 @@ Land Intelligence System
 
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional, Any, Dict
-from datetime import datetime
+from datetime import datetime, date
 import binascii
 
 
@@ -39,31 +39,22 @@ class ParcelBase(BaseModel):
         """Convert GeoAlchemy2 WKBElement to hex string."""
         if v is None:
             return None
-        
-        # Handle GeoAlchemy2 WKBElement
         if hasattr(v, "data"):
             if isinstance(v.data, bytes):
                 return binascii.hexlify(v.data).decode("ascii").upper()
             return str(v.data)
-            
         return v
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class ParcelCreate(ParcelBase):
-    """
-    Schema for creating a new Parcel.
-    Excludes id, timestamps, and relationship fields.
-    """
+    """Schema for creating a new Parcel."""
     pass
 
 
 class ParcelUpdate(BaseModel):
-    """
-    Schema for updating an existing Parcel.
-    All fields are optional for partial updates.
-    """
+    """Schema for updating an existing Parcel. All fields are optional for partial updates."""
     parcel_number: Optional[str] = Field(None, max_length=50, description="Unique parcel identifier")
     parish_id: Optional[str] = Field(None, description="Foreign key to parish")
     land_use_category_id: Optional[str] = Field(None, description="Foreign key to land use category")
@@ -86,26 +77,19 @@ class ParcelUpdate(BaseModel):
 
 
 class ParcelResponse(ParcelBase):
-    """
-    Schema for returning Parcel data to API client.
-    Includes id, timestamps, and relationship fields.
-    """
+    """Schema for returning Parcel data to API client."""
     id: str = Field(..., description="UUID primary key")
     is_active: bool = Field(..., description="Soft delete flag")
     created_at: datetime = Field(..., description="Timestamp when record was created")
     updated_at: datetime = Field(..., description="Timestamp when record was last updated")
-    
-    # Optional nested relationship data
     parish_name: Optional[str] = Field(None, description="Parish name (when included)")
     land_use_category_name: Optional[str] = Field(None, description="Land use category name (when included)")
-    
+
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class ParcelListResponse(BaseModel):
-    """
-    Schema for paginated parcel list response.
-    """
+    """Schema for paginated parcel list response."""
     items: list[ParcelResponse]
     total: int
     page: int
@@ -114,9 +98,7 @@ class ParcelListResponse(BaseModel):
 
 
 class ParcelSearchParams(BaseModel):
-    """
-    Schema for parcel search/filter parameters.
-    """
+    """Schema for parcel search/filter parameters."""
     parish_id: Optional[str] = Field(None, description="Filter by parish")
     land_use_category_id: Optional[str] = Field(None, description="Filter by land use category")
     owner_name: Optional[str] = Field(None, max_length=500, description="Filter by owner name (partial match)")
@@ -127,3 +109,19 @@ class ParcelSearchParams(BaseModel):
     is_active: Optional[bool] = Field(True, description="Filter by active status")
     page: int = Field(1, ge=1, description="Page number")
     size: int = Field(20, ge=1, le=100, description="Items per page")
+
+
+class ParcelOwnershipHistoryResponse(BaseModel):
+    """Schema for ownership history entry."""
+    id: str = Field(..., description="UUID primary key")
+    parcel_id: str = Field(..., description="Parcel UUID")
+    owner_name: str = Field(..., description="Owner name at time of record")
+    owner_contact: Optional[str] = Field(None, description="Owner contact information")
+    transfer_date: date = Field(..., description="Date of ownership transfer")
+    document_reference: Optional[str] = Field(None, description="Supporting document reference")
+    notes: Optional[str] = Field(None, description="Additional notes")
+    is_active: bool = Field(..., description="Soft delete flag")
+    created_at: datetime = Field(..., description="Timestamp when record was created")
+    updated_at: datetime = Field(..., description="Timestamp when record was last updated")
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)

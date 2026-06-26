@@ -125,7 +125,6 @@ class Parcel(BaseModel):
     
     land_use_category = relationship(
         "LandUseCategory",
-        back_populates="parcels"
     )
     
     documents = relationship(
@@ -144,6 +143,13 @@ class Parcel(BaseModel):
         "QRCodeRegistry",
         back_populates="parcel",
         cascade="all, delete-orphan"
+    )
+    
+    ownership_history = relationship(
+        "ParcelOwnershipHistory",
+        back_populates="parcel",
+        cascade="all, delete-orphan",
+        order_by="desc(ParcelOwnershipHistory.transfer_date)"
     )
     
     # Indexes for spatial and text search

@@ -20,6 +20,7 @@ from app.schemas.parcel_schema import (
     ParcelUpdate,
     ParcelResponse,
     ParcelListResponse,
+    ParcelOwnershipHistoryResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -50,12 +51,10 @@ async def list_parcels(
     _: str = Depends(get_current_user_id),
 ):
     service = ParcelService(db)
-    
+
     filters = {}
     if owner_name:
         filters["owner_name"] = owner_name
-    if parcel_number:
-        filters["parcel_number"] = parcel_number
     if parish_id:
         filters["parish_id"] = parish_id
     if land_use_category_id:
@@ -86,7 +85,7 @@ async def create_parcel(
     _client_or_admin: str = Depends(require_client_or_admin),
 ):
     service = ParcelService(db)
-    
+
     try:
         parcel = await service.create_parcel(payload, user_id)
     except ValueError as e:
@@ -197,7 +196,7 @@ async def list_parcels_by_parish(
     _: str = Depends(get_current_user_id),
 ):
     service = ParcelService(db)
-    
+
     try:
         return await service.list_parcels_by_parish(parish_id=parish_id, page=page, size=size)
     except ValueError as e:
@@ -225,7 +224,7 @@ async def update_parcel(
     _non_viewer: str = Depends(prevent_viewer_access),
 ):
     service = ParcelService(db)
-    
+
     try:
         parcel = await service.update_parcel(parcel_id, payload, user_id)
     except ValueError as e:
@@ -267,3 +266,23 @@ async def delete_parcel(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Parcel '{parcel_id}' not found.",
         )
+
+
+# ---------------------------------------------------------------------------
+# GET /parcels/{parcel_id}/ownership-history
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/{parcel_id}/ownership-history",
+    response_model=list[ParcelOwnershipHistoryResponse],
+    summary="Get parcel ownership history",
+    description="Return the ownership history records for a specific parcel.",
+)
+async def get_parcel_ownership_history(
+    parcel_id: str,
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user_id),
+):
+    service = ParcelService(db)
+    history = await service.get_ownership_history(parcel_id)
+    return history
