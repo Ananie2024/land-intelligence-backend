@@ -6,7 +6,7 @@ Land Intelligence System
 
 import logging
 from typing import Dict, Any, Optional, Tuple
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.repositories.qr_registry_repository import QRRegistryRepository
 from app.repositories.document_repository import DocumentRepository
@@ -65,6 +65,37 @@ class VerificationService:
                 message="QR code not found in registry"
             )
             
+        # Signature Check
+        payload = qr_entry.data_payload
+        if not payload or "sig" not in payload:
+            return QRCodeVerifyResponse(
+                is_valid=False,
+                code=qr_string,
+                code_type=qr_entry.code_type or "UNKNOWN",
+                is_revoked=bool(qr_entry.is_revoked),
+                message="Invalid or missing signature in payload"
+            )
+
+        import hmac
+        import hashlib
+        import json
+        from app.core.config import settings
+
+        payload_copy = dict(payload)
+        sig = payload_copy.pop("sig")
+        serialized = json.dumps(payload_copy, sort_keys=True)
+        key = settings.SECRET_KEY.encode('utf-8')
+        expected_sig = hmac.new(key, serialized.encode('utf-8'), hashlib.sha256).hexdigest()
+
+        if not hmac.compare_digest(sig, expected_sig):
+            return QRCodeVerifyResponse(
+                is_valid=False,
+                code=qr_string,
+                code_type=qr_entry.code_type or "UNKNOWN",
+                is_revoked=bool(qr_entry.is_revoked),
+                message="Signature verification failed"
+            )
+            
         # 2. Status Checks (Revoked/Expired/Active)
         if not qr_entry.is_active:
             return QRCodeVerifyResponse(
@@ -84,7 +115,7 @@ class VerificationService:
                 message="QR code has been revoked"
             )
             
-        if qr_entry.expires_at and qr_entry.expires_at < datetime.utcnow():
+        if qr_entry.expires_at and qr_entry.expires_at < datetime.now(timezone.utc):
             return QRCodeVerifyResponse(
                 is_valid=False,
                 code=qr_string,

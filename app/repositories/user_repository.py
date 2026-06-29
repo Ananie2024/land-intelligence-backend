@@ -3,7 +3,7 @@
 User Repository
 Land Intelligence System
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -65,7 +65,7 @@ class UserRepository(BaseRepository[User, None, None]):
         if user:
             user.failed_login_attempts = 0
             user.locked_until = None
-            user.last_login = datetime.utcnow()
+            user.last_login = datetime.now(timezone.utc)
             await self.db.flush()
             await self.db.refresh(user)
         return user
@@ -75,7 +75,7 @@ class UserRepository(BaseRepository[User, None, None]):
         from datetime import timedelta
         user = await self.get(user_id)
         if user:
-            user.locked_until = datetime.utcnow() + timedelta(minutes=lock_minutes)
+            user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=lock_minutes)
             await self.db.flush()
             await self.db.refresh(user)
         return user
@@ -85,4 +85,4 @@ class UserRepository(BaseRepository[User, None, None]):
         user = await self.get(user_id)
         if not user or not user.locked_until:
             return False
-        return user.locked_until > datetime.utcnow()
+        return user.locked_until > datetime.now(timezone.utc)

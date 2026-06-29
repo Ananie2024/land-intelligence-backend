@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.api.auth_dependencies import get_current_user_id, require_admin
-from app.services.backup_service import BackupService
+from app.services.backup.backup_orchestrator import BackupOrchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +27,8 @@ async def list_backups(
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
-    service = BackupService(db)
-    result = await service.list_backups(status_filter=status_filter, page=page, size=size)
+    orchestrator = BackupOrchestrator(db)
+    result = await orchestrator.list_backups(status_filter=status_filter, page=page, size=size)
     return result
 
 
@@ -41,8 +41,8 @@ async def trigger_backup(
     user_id: str = Depends(get_current_user_id),
     _admin: str = Depends(require_admin),
 ):
-    service = BackupService(db)
-    result = await service.trigger_backup(job_type=job_type, tier=tier, source_path=source_path, user_id=user_id)
+    orchestrator = BackupOrchestrator(db)
+    result = await orchestrator.trigger_backup(job_type=job_type, tier=tier, source_path=source_path, user_id=user_id)
     return result
 
 
@@ -52,8 +52,8 @@ async def get_backup_job(
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
-    service = BackupService(db)
-    job = await service.get_backup_job(job_id)
+    orchestrator = BackupOrchestrator(db)
+    job = await orchestrator.get_backup_job(job_id)
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Backup job '{job_id}' not found.")
     return job
@@ -66,8 +66,8 @@ async def trigger_restore(
     user_id: str = Depends(get_current_user_id),
     _admin: str = Depends(require_admin),
 ):
-    service = BackupService(db)
-    result = await service.trigger_restore(backup_job_id, user_id)
+    orchestrator = BackupOrchestrator(db)
+    result = await orchestrator.trigger_restore(backup_job_id, user_id)
     return result
 
 
@@ -77,8 +77,8 @@ async def get_restore_job(
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
-    service = BackupService(db)
-    job = await service.get_restore_job(job_id)
+    orchestrator = BackupOrchestrator(db)
+    job = await orchestrator.get_restore_job(job_id)
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Restore job '{job_id}' not found.")
     return job

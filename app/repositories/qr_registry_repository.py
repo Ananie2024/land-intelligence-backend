@@ -6,7 +6,7 @@ Land Intelligence System
 """
 
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import select, desc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -94,7 +94,7 @@ class QRRegistryRepository(BaseRepository[QRCodeRegistry, QRCodeCreate, QRCodeUp
         Returns:
             QR code registry entry if valid, None otherwise
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         
         result = await self.db.execute(
             select(QRCodeRegistry).where(
@@ -138,7 +138,7 @@ class QRRegistryRepository(BaseRepository[QRCodeRegistry, QRCodeCreate, QRCodeUp
         """
         entry = await self.get_by_code(qr_string)
         if entry:
-            entry.last_accessed_at = datetime.utcnow()
+            entry.last_accessed_at = datetime.now(timezone.utc)
             entry.access_count += 1
             await self.db.flush()
             await self.db.refresh(entry)
@@ -154,7 +154,7 @@ class QRRegistryRepository(BaseRepository[QRCodeRegistry, QRCodeCreate, QRCodeUp
         Returns:
             List of active QR code registry entries
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         
         result = await self.db.execute(
             select(QRCodeRegistry).where(
@@ -176,7 +176,7 @@ class QRRegistryRepository(BaseRepository[QRCodeRegistry, QRCodeCreate, QRCodeUp
         Returns:
             Number of expired codes cleaned up
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         
         result = await self.db.execute(
             select(QRCodeRegistry).where(

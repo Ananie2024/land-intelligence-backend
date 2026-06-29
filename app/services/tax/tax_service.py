@@ -16,7 +16,9 @@ from sqlalchemy.sql import desc
 
 from app.models.parcel import Parcel
 from app.models.land_use_category import LandUseCategory
+from app.repositories.land_use_category_repository import LandUseCategoryRepository
 from app.models.tax_record import TaxRecord
+from app.models.enums import TaxRecordStatus
 from app.models.tax_payment import TaxPayment
 from app.repositories.tax_repository import TaxRepository
 from app.repositories.parcel_repository import ParcelRepository
@@ -39,6 +41,7 @@ class TaxService:
         self.repo = TaxRepository(db)
         self.parcel_repo = ParcelRepository(db)
         self.parish_repo = ParishRepository(db)
+        self.land_use_repo = LandUseCategoryRepository(db)
         self.tax_calculator = TaxCalculator(self.repo)
         self.penalty_engine = PenaltyEngine(self.repo)
         self.payment_processor = PaymentProcessor(self.repo, self.penalty_engine)
@@ -61,25 +64,13 @@ class TaxService:
         override_category = None
         category_name = "Unassigned"
         if land_use_category_id:
-            result = await self.db.execute(
-                select(LandUseCategory).where(
-                    LandUseCategory.id == land_use_category_id,
-                    LandUseCategory.is_active
-                )
-            )
-            override_category = result.scalar_one_or_none()
+            override_category = await self.land_use_repo.get(land_use_category_id)
             if not override_category:
                 raise ValueError(f"Land use category override '{land_use_category_id}' not found.")
             category_name = override_category.name
         else:
             if parcel.land_use_category_id:
-                result = await self.db.execute(
-                    select(LandUseCategory).where(
-                        LandUseCategory.id == parcel.land_use_category_id,
-                        LandUseCategory.is_active
-                    )
-                )
-                cat = result.scalar_one_or_none()
+                cat = await self.land_use_repo.get(str(parcel.land_use_category_id))
                 if cat:
                     category_name = cat.name
 
@@ -234,16 +225,20 @@ class TaxService:
 
         records = await self.repo.get_all_assessments_for_parcel(parcel_id)
 
+        # Fetch all payment totals in one query to avoid N+1
+        record_ids = [str(record.id) for record in records if record.status != TaxRecordStatus.PAID]
+        payments_map = await self.repo.get_payments_for_records(record_ids)
+
         total_outstanding = 0.0
         overdue_amount = 0.0
         upcoming_amount = 0.0
         today = date.today()
 
         for record in records:
-            if record.status == "paid":
+            if record.status == TaxRecordStatus.PAID:
                 continue
 
-            total_paid = await self.repo.get_total_paid_for_assessment(record.id)
+            total_paid = payments_map.get(str(record.id), 0.0)
 
             penalty = Decimal("0.00")
             if today > record.due_date:

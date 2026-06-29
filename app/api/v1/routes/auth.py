@@ -5,7 +5,8 @@ Land Intelligence System
 """
 
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from app.core.rate_limit import limiter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -39,7 +40,9 @@ router = APIRouter()
     summary="Register new user",
     description="Create a new user account. Requires admin role.",
 )
+@limiter.limit("10/minute")
 async def register(
+    request: Request,
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db),
     _admin=Depends(require_admin),
@@ -62,7 +65,9 @@ async def register(
     summary="User login",
     description="Authenticate and receive JWT access + refresh tokens.",
 )
+@limiter.limit("10/minute")
 async def login(
+    request: Request,
     login_data: UserLogin,
     db: AsyncSession = Depends(get_db),
 ):

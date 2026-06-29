@@ -6,7 +6,7 @@ Land Intelligence System
 
 from pydantic import BaseModel
 from typing import Optional, Any, Dict, List, Generic, TypeVar
-from datetime import datetime
+from datetime import datetime, timezone
 
 T = TypeVar("T")
 
@@ -49,7 +49,7 @@ class APIResponse(BaseModel, Generic[T]):
 
     def __init__(self, **data: Any):
         if "timestamp" not in data:
-            data["timestamp"] = datetime.utcnow().isoformat()
+            data["timestamp"] = datetime.now(timezone.utc).isoformat()
         super().__init__(**data)
 
     class Config:
@@ -77,7 +77,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
 
     def __init__(self, **data: Any):
         if "timestamp" not in data:
-            data["timestamp"] = datetime.utcnow().isoformat()
+            data["timestamp"] = datetime.now(timezone.utc).isoformat()
         super().__init__(**data)
 
 
@@ -113,7 +113,7 @@ def success_response(
         "message": message,
         "errors": None,
         "meta": meta,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
     return response
 
@@ -132,7 +132,7 @@ def error_response(
         "message": message,
         "errors": errors or [{"message": message}],
         "meta": None,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
     return response
 
@@ -160,5 +160,5 @@ def paginated_response(
             "total": total,
             "pages": pages
         },
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }

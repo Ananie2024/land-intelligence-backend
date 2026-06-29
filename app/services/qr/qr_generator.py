@@ -66,8 +66,20 @@ class QRGenerator:
             unique_id = str(uuid.uuid4())
             qr_code_str = f"{prefix}_{unique_id[:8].upper()}_{datetime.now().strftime('%Y%m%d')}"
             
-            # Prepare data payload (JSON)
-            payload = json.dumps(data)
+            # Prepare data payload (JSON) with sorted keys for deterministic serialization
+            payload = json.dumps(data, sort_keys=True)
+            
+            # Compute HMAC-SHA256 signature
+            import hmac
+            import hashlib
+            key = settings.SECRET_KEY.encode('utf-8')
+            signature = hmac.new(key, payload.encode('utf-8'), hashlib.sha256).hexdigest()
+            
+            # Add signature as 'sig' field
+            data["sig"] = signature
+            
+            # Re-serialize payload containing signature
+            payload = json.dumps(data, sort_keys=True)
             
             # Configure QR generator
             qr = qrcode.QRCode(

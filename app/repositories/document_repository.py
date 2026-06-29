@@ -6,7 +6,7 @@ Land Intelligence System
 """
 
 from typing import Optional, List
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.document import Document
@@ -237,3 +237,21 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
         
         result = await self.db.execute(query)
         return list(result.scalars().all())
+
+    async def count_by_parcel(self, parcel_id: str) -> int:
+        """
+        Count active documents for a specific parcel.
+
+        Args:
+            parcel_id: UUID of the parcel
+
+        Returns:
+            Total count of documents for the parcel
+        """
+        result = await self.db.execute(
+            select(func.count(Document.id)).where(
+                Document.parcel_id == parcel_id,
+                Document.is_active,
+            )
+        )
+        return int(result.scalar_one() or 0)

@@ -5,12 +5,14 @@ Phase 2 — Section 3.1
 Land Intelligence System
 """
 
-from sqlalchemy import Column, String, Numeric, ForeignKey, Date
+from sqlalchemy import Column, String, Numeric, ForeignKey, Date, Integer
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index
 
 from app.models.base import BaseModel
+from app.models.enums import TaxRecordStatus
 
 
 class TaxRecord(BaseModel):
@@ -20,13 +22,13 @@ class TaxRecord(BaseModel):
     Attributes:
         id: UUID primary key (inherited from BaseModel)
         parcel_id: Foreign key to parcel
-        assessment_year: Year of tax assessment (e.g., "2024")
+        assessment_year: Year of tax assessment (e.g., 2024)
         assessed_value: Assessed value of parcel for tax purposes
         tax_rate_applied: Tax rate applied for this assessment
         base_tax_amount: Base tax amount calculated
         penalties_amount: Penalties amount if any
         total_amount: Total tax amount due (base + penalties)
-        status: Status of tax record (e.g., "pending", "paid", "overdue")
+        status: Status of tax record (pending, paid, overdue, cancelled)
         due_date: Due date for payment
         paid_date: Date when fully paid (if applicable)
         payment_reference: Reference for full payment
@@ -46,10 +48,10 @@ class TaxRecord(BaseModel):
     )
     
     assessment_year = Column(
-        String(4),  # YYYY format
+        Integer,
         nullable=False,
         index=True,
-        comment="Year of tax assessment (e.g., '2024')"
+        comment="Year of tax assessment (e.g., 2024)"
     )
     
     assessed_value = Column(
@@ -93,9 +95,9 @@ class TaxRecord(BaseModel):
     )
     
     status = Column(
-        String(20),
+        SQLEnum(TaxRecordStatus),
         nullable=False,
-        default="pending",
+        default=TaxRecordStatus.PENDING,
         server_default="pending",
         index=True,
         comment="Status of tax record (pending, paid, overdue)"

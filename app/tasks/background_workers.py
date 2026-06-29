@@ -11,6 +11,7 @@ Available tasks
 ---------------
 trigger_full_local_backup       — run a complete local 3-in-1 backup
 trigger_backup_for_tier         — run a backup for a specific tier
+trigger_restore_backup          — process a restore job from a completed backup
 check_latest_backup_integrity   — verify the most recent completed backup
 retry_failed_backup_jobs        — re-queue failed jobs up to max retries
 """
@@ -79,6 +80,50 @@ async def _run_full_local_backup() -> dict[str, Any]:
 
     logger.info("Full local backup task finished for job %s: %s", job_id, result.get("status"))
     return {"job_id": job_id, "status": result.get("status")}
+
+
+async def _run_restore_backup(job_id: str) -> dict[str, Any]:
+    from app.core.database import AsyncSessionLocal
+    from app.services.backup.backup_orchestrator import BackupOrchestrator
+    from app.repositories.backup_job_repository import BackupJobRepository
+    from app.schemas.backup_job_schema import BackupJobUpdate
+    from app.models.backup_job import BackupJobStatus
+    from datetime import datetime, timezone
+
+    async with AsyncSessionLocal() as db:
+        repo = BackupJobRepository(db)
+        job = await repo.get(job_id)
+        if not job:
+            return {"job_id": job_id, "status": "FAILED", "error_message": "Job not found"}
+
+        update_start = BackupJobUpdate(
+            status=BackupJobStatus.IN_PROGRESS,
+            started_at=datetime.now(timezone.utc),
+        )
+        await repo.update(job_id, update_start)
+        await db.commit()
+
+    try:
+        orchestrator = BackupOrchestrator(db)
+        result = await orchestrator.restore_from_backup(job_id)
+        status = result.get("status", "FAILED")
+    except Exception as exc:
+        logger.error("Restore job %s failed: %s", job_id, exc, exc_info=True)
+        status = "FAILED"
+        result = {"error_message": str(exc)}
+
+    async with AsyncSessionLocal() as db:
+        repo = BackupJobRepository(db)
+        update_end = BackupJobUpdate(
+            status=BackupJobStatus(status),
+            completed_at=datetime.now(timezone.utc),
+            error_message=result.get("error_message"),
+        )
+        await repo.update(job_id, update_end)
+        await db.commit()
+
+    logger.info("Restore task finished for job %s: %s", job_id, status)
+    return {"job_id": job_id, "status": status}
 
 
 async def _check_latest_integrity() -> dict[str, Any]:
@@ -189,6 +234,24 @@ def trigger_backup_for_tier(self, tier: str, source_path: str | None = None) -> 
         return asyncio.run(_run())
     except Exception as exc:
         logger.error("trigger_backup_for_tier(%s) failed: %s", tier, exc, exc_info=True)
+        raise self.retry(exc=exc)
+
+
+@celery_app.task(
+    name="app.tasks.background_workers.trigger_restore_backup",
+    bind=True,
+    max_retries=2,
+    default_retry_delay=300,
+    queue="backup",
+)
+def trigger_restore_backup(self, job_id: str) -> dict[str, Any]:
+    """
+    Celery task: process a restore job from a completed backup.
+    """
+    try:
+        return asyncio.run(_run_restore_backup(job_id))
+    except Exception as exc:
+        logger.error("trigger_restore_backup(%s) failed: %s", job_id, exc, exc_info=True)
         raise self.retry(exc=exc)
 
 

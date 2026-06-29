@@ -7,7 +7,7 @@ Land Intelligence System
 
 import math
 import logging
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Optional, List, Any, Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,7 +47,7 @@ class ParcelService:
             old_value=old_value,
             new_value=new_value,
             performed_by=user_id,
-            performed_at=datetime.utcnow(),
+            performed_at=datetime.now(timezone.utc),
         )
         self.db.add(entry)
 

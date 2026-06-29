@@ -7,10 +7,13 @@ Scope: Phase 3 - Backend API & Services
 """
 
 import asyncio
+import logging
 from datetime import date
 from decimal import Decimal
 from typing import Optional
 from uuid import UUID
+
+logger = logging.getLogger(__name__)
 
 from app.models.parcel import Parcel
 from app.models.tax_record import TaxRecord
@@ -128,6 +131,7 @@ class AssessmentGenerator:
         skipped_count = len([p for p in parcels if p.id in existing_map])
         total_assessed_value = Decimal("0.00")
         total_net_due = Decimal("0.00")
+        failed = []
 
         # Process in chunks to avoid overwhelming the database
         for i in range(0, len(parcels_to_generate), chunk_size):
@@ -143,7 +147,10 @@ class AssessmentGenerator:
             
             for result in results:
                 if isinstance(result, Exception):
-                    # Log exception but continue with other assessments
+                    failed.append(result)
+                    logger.error(
+                        f"Assessment generation failed for chunk in parish {parish_id}: {result}"
+                    )
                     continue
                 
                 generated_count += 1
@@ -155,6 +162,8 @@ class AssessmentGenerator:
             "assessment_year": assessment_year,
             "generated_count": generated_count,
             "skipped_count": skipped_count,
+            "failed_count": len(failed),
+            "failed": [str(e) for e in failed],
             "total_assessed_value": total_assessed_value.quantize(Decimal("0.01")),
             "total_net_due": total_net_due.quantize(Decimal("0.01")),
         }

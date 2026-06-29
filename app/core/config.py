@@ -4,7 +4,7 @@ Application Settings
 Land Intelligence System
 """
 from urllib.parse import quote_plus
-from pydantic import Field, computed_field
+from pydantic import Field, computed_field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -53,6 +53,13 @@ class Settings(BaseSettings):
     # Security
     # ------------------------------------------------------------------
     SECRET_KEY: str = Field(...)
+
+    @field_validator("SECRET_KEY", mode="before")
+    @classmethod
+    def validate_secret_key(cls, value: str) -> str:
+        if len(value) < 32:
+            raise ValueError("SECRET_KEY must be at least 32 characters long")
+        return value
     JWT_ALGORITHM: str = Field(default="HS256")
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60)
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7)

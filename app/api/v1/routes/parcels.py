@@ -90,7 +90,7 @@ async def create_parcel(
         parcel = await service.create_parcel(payload, user_id)
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e),
         )
 
@@ -174,7 +174,7 @@ async def list_parcels_by_parish(
         return await service.list_parcels_by_parish(parish_id=parish_id, page=page, size=size)
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e),
         )
 

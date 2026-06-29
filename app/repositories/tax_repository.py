@@ -6,13 +6,14 @@ Land Intelligence System
 """
 
 from contextlib import asynccontextmanager
-from typing import Optional, List, Sequence, Union
+from typing import Optional, List, Sequence, Union, Dict
 
 from sqlalchemy import select, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.parcel import Parcel
 from app.models.tax_record import TaxRecord
+from app.models.enums import TaxRecordStatus
 from app.models.tax_payment import TaxPayment
 from app.repositories.base_repository import BaseRepository
 from app.schemas.tax_schema import TaxRecordCreate, TaxRecordUpdate
@@ -97,7 +98,7 @@ class TaxRepository(BaseRepository[TaxRecord, TaxRecordCreate, TaxRecordUpdate])
             select(TaxRecord).where(
                 TaxRecord.parcel_id == str(parcel_id),
                 TaxRecord.is_active,
-                TaxRecord.status != "paid"
+                TaxRecord.status != TaxRecordStatus.PAID
             )
         )
         tax_records = result.scalars().all()
@@ -199,7 +200,7 @@ class TaxRepository(BaseRepository[TaxRecord, TaxRecordCreate, TaxRecordUpdate])
         result = await self.db.execute(
             select(TaxRecord).where(
                 TaxRecord.is_active,
-                TaxRecord.status == "pending",
+                TaxRecord.status == TaxRecordStatus.PENDING,
                 TaxRecord.due_date < today
             )
         )
@@ -309,6 +310,35 @@ class TaxRepository(BaseRepository[TaxRecord, TaxRecordCreate, TaxRecordUpdate])
             )
         )
         return result.scalar_one() or 0.0
+
+    async def get_payments_for_records(self, tax_record_ids: List[str]) -> Dict[str, float]:
+        """
+        Aggregate total paid amount per tax record in a single query.
+
+        Args:
+            tax_record_ids: List of tax record UUIDs
+
+        Returns:
+            Dict mapping tax_record_id (str) -> total_paid (float)
+        """
+        if not tax_record_ids:
+            return {}
+
+        result = await self.db.execute(
+            select(
+                TaxPayment.tax_record_id,
+                func.sum(TaxPayment.payment_amount).label("total_paid")
+            )
+            .where(
+                TaxPayment.tax_record_id.in_([str(rid) for rid in tax_record_ids]),
+                TaxPayment.is_active,
+                TaxPayment.is_reversal.is_(False),
+            )
+            .group_by(TaxPayment.tax_record_id)
+        )
+        rows = result.all()
+        return {str(row.tax_record_id): float(row.total_paid or 0.0) for row in rows}
+
 
     async def create_payment(self, payment: TaxPayment) -> TaxPayment:
         """

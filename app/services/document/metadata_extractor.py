@@ -9,7 +9,7 @@ import hashlib
 import os
 import mimetypes
 from typing import BinaryIO, Dict, Any, Optional, Tuple
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Optional import for magic bytes detection
@@ -87,7 +87,7 @@ class MetadataExtractor:
                 "mime_type": mime_type,
                 "checksum": checksum,
                 "filename": filename,
-                "extracted_at": datetime.utcnow().isoformat()
+                "extracted_at": datetime.now(timezone.utc).isoformat()
             }
             
             # Add type-specific metadata

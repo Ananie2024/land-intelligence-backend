@@ -5,6 +5,7 @@ Phase 3 - Section 4.1
 Land Intelligence System
 """
 
+import asyncio
 import re
 import aiofiles
 import os
@@ -50,9 +51,10 @@ class FileSystemHandler:
             # If 'file' is already at the end, seek to start
             if hasattr(file, 'seek'):
                 file.seek(0)
-            
+
+            loop = asyncio.get_event_loop()
             while True:
-                chunk = file.read(1024 * 1024)  # 1MB chunks
+                chunk = await loop.run_in_executor(None, file.read, 1024 * 1024)
                 if not chunk:
                     break
                 await out_file.write(chunk)

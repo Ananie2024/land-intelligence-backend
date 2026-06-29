@@ -13,6 +13,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.exceptions import DomainValidationError
 from app.api.auth_dependencies import get_current_user_id, require_client_or_admin, prevent_viewer_access
 from app.schemas.document_schema import (
     DocumentResponse, 
@@ -78,10 +79,10 @@ async def upload_document(
             metadata=metadata,
             user_id=user_id
         )
-    except ValueError as e:
+    except DomainValidationError as e:
         logger.warning(f"Document upload validation failed: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e)
         )
     except Exception as e:
@@ -100,6 +101,7 @@ async def search_documents(
     reference_number: Optional[str] = None,
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
     doc_manager: DocumentManager = Depends(get_document_manager),
     user_id: str = Depends(get_current_user_id)
 ):
@@ -117,14 +119,20 @@ async def search_documents(
         limit=size
     )
     
-    # We'd need a separate count method for true pagination response
-    # For now, we return the list. In a real scenario, we'd wrap this.
+    total = 0
+    if parcel_id:
+        repo = DocumentRepository(db)
+        total = await repo.count_by_parcel(parcel_id)
+    else:
+        total = len(documents)
+    
+    pages = (total + size - 1) // size if size else 1
     return DocumentListResponse(
         items=documents,
-        total=len(documents), # Simplified
+        total=total,
         page=page,
         size=size,
-        pages=1 # Simplified
+        pages=pages
     )
 
 
@@ -142,6 +150,17 @@ async def get_document(
             detail=f"Document {document_id} not found"
         )
     return document
+
+
+async def _file_stream_generator(file_stream):
+    try:
+        while True:
+            chunk = await file_stream.read(1024 * 1024)
+            if not chunk:
+                break
+            yield chunk
+    finally:
+        await file_stream.close()
 
 
 @router.get("/{document_id}/file")
@@ -162,7 +181,7 @@ async def download_document(
     
     # aiofiles stream needs to be used in StreamingResponse
     return StreamingResponse(
-        file_stream,
+        _file_stream_generator(file_stream),
         media_type=document.mime_type,
         headers={
             "Content-Disposition": f'attachment; filename="{document.filename}"'

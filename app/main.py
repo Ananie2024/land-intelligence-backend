@@ -19,6 +19,9 @@ from app.api.middleware.response_middleware import StandardizeResponseMiddleware
 from app.core.config import settings
 from app.core.database import engine, get_db
 from app.core.logging_config import setup_logging
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+from app.core.rate_limit import limiter
 
 
 # ------------------------------------------------------------------
@@ -47,6 +50,9 @@ app = FastAPI(
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 # ------------------------------------------------------------------
@@ -111,16 +117,18 @@ async def health_check():
 
     db_status = "unhealthy"
 
+    db_gen = get_db()
     try:
-        async for db in get_db():
+        async for db in db_gen:
             await db.execute(text("SELECT 1"))
             db_status = "healthy"
             break
-
     except Exception as e:
         logger.error(
             f"Database health check failed: {str(e)}"
         )
+    finally:
+        await db_gen.aclose()
 
     return {
         "status": (

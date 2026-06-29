@@ -7,7 +7,7 @@ Land Intelligence System
 
 import logging
 from typing import Optional, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -58,7 +58,7 @@ class QRCodeService:
         payload = await self.testimony_builder.build_parcel_payload(parcel)
         qr_string, file_path = self.qr_generator.generate(payload, prefix="PRC")
 
-        expires_at = datetime.utcnow() + timedelta(days=expires_days) if expires_days else None
+        expires_at = datetime.now(timezone.utc) + timedelta(days=expires_days) if expires_days else None
 
         qr_entry_data = QRCodeCreate(
             parcel_id=parcel_id,

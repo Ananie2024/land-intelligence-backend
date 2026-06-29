@@ -80,6 +80,11 @@ desktop.ini
 htmlcov/
 .tox/
 
+# Celery Beat Scheduler files (binary, generated)
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
+
 # MyPy
 .mypy_cache/
 .dmypy.json
@@ -102,6 +107,13 @@ poetry.lock
 Pipfile.lock
 
 hash_gen.py
+
+# Scaffold/setup scripts (don't commit utility scripts)
+create_files.sh
+create_files1.sh
+create_config_files.sh
+create_structure.sh
+create_gitkeep_files.sh
 
 # Encryption keys (NEVER commit)
 *.key

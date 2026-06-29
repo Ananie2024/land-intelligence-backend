@@ -6,7 +6,8 @@ Land Intelligence System
 
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
-from jose import JWTError, jwt
+import jwt
+from jwt import ExpiredSignatureError, InvalidTokenError
 from uuid import uuid4
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -133,7 +134,10 @@ def verify_token(token: str) -> Optional[Dict[str, Any]]:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         return payload
-    except JWTError as e:
+    except ExpiredSignatureError as e:
+        logger.warning(f"Token verification failed: {str(e)}")
+        return None
+    except InvalidTokenError as e:
         logger.warning(f"Token verification failed: {str(e)}")
         return None
     except Exception as e:

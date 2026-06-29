@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -159,7 +159,7 @@ class BackupOrchestrator:
         return await self.backup_job_repo.get(job_id)
 
     async def list_backup_jobs(
-        self, 
+        self,
         status: Optional[BackupJobStatus] = None,
         job_type: Optional[str] = None,
         tier: Optional[str] = None,
@@ -171,3 +171,130 @@ class BackupOrchestrator:
         if job_type: filters["job_type"] = job_type
         if tier: filters["tier"] = tier
         return await self.backup_job_repo.list(filters=filters, skip=skip, limit=limit)
+
+    async def list_backups(
+        self,
+        status_filter: Optional[str] = None,
+        page: int = 1,
+        size: int = 20
+    ) -> List[Dict[str, Any]]:
+        skip = (page - 1) * size
+        filters: Dict[str, Any] = {}
+        if status_filter:
+            filters["status"] = status_filter
+        jobs = await self.backup_job_repo.list(filters=filters, skip=skip, limit=size, order_by="created_at", descending=True)
+        result = []
+        for job in jobs:
+            result.append({
+                "id": str(job.id),
+                "job_type": job.job_type,
+                "status": job.status,
+                "tier": job.tier,
+                "source_path": job.source_path,
+                "destination_path": job.destination_path,
+                "file_size_bytes": job.file_size_bytes,
+                "file_count": job.file_count,
+                "checksum": job.checksum,
+                "error_message": job.error_message,
+                "started_at": job.started_at.isoformat() if job.started_at else None,
+                "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+                "created_at": job.created_at.isoformat() if job.created_at else None,
+            })
+        return result
+
+    async def trigger_backup(
+        self,
+        job_type: str,
+        tier: str,
+        source_path: Optional[str],
+        user_id: str
+    ) -> Dict[str, Any]:
+        from app.schemas.backup_job_schema import BackupJobCreate
+        job = await self.create_backup_job(
+            BackupJobCreate(
+                job_type=job_type.upper(),
+                status=BackupJobStatus.PENDING,
+                tier=tier.lower(),
+                source_path=source_path,
+            )
+        )
+        return {
+            "id": str(job.id),
+            "job_type": job.job_type,
+            "status": job.status,
+            "tier": job.tier,
+            "source_path": job.source_path,
+            "destination_path": job.destination_path,
+            "file_size_bytes": job.file_size_bytes,
+            "file_count": job.file_count,
+            "checksum": job.checksum,
+            "error_message": job.error_message,
+            "created_at": job.created_at.isoformat() if job.created_at else None,
+            "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+            "message": f"Backup job {job.id} finished with status {job.status}.",
+        }
+
+    async def get_backup_job(self, job_id: str) -> Optional[Dict[str, Any]]:
+        job = await self.backup_job_repo.get(job_id)
+        if not job:
+            return None
+        return {
+            "id": str(job.id),
+            "job_type": job.job_type,
+            "status": job.status,
+            "tier": job.tier,
+            "source_path": job.source_path,
+            "destination_path": job.destination_path,
+            "file_size_bytes": job.file_size_bytes,
+            "file_count": job.file_count,
+            "checksum": job.checksum,
+            "error_message": job.error_message,
+            "started_at": job.started_at.isoformat() if job.started_at else None,
+            "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+            "created_at": job.created_at.isoformat() if job.created_at else None,
+        }
+
+    async def trigger_restore(
+        self,
+        backup_job_id: str,
+        user_id: str
+    ) -> Dict[str, Any]:
+        from app.tasks.background_workers import trigger_restore_backup
+        backup_job = await self.backup_job_repo.get(backup_job_id)
+        if not backup_job:
+            raise ValueError(f"Backup job '{backup_job_id}' not found.")
+        if backup_job.status != BackupJobStatus.COMPLETED.value:
+            raise ValueError(
+                f"Cannot restore from backup with status '{backup_job.status}'. Only completed backups can be restored."
+            )
+        restore_job = await self.backup_job_repo.create_by_dict({
+            "job_type": "RESTORE",
+            "status": BackupJobStatus.PENDING.value,
+            "tier": backup_job.tier,
+            "source_path": backup_job.destination_path,
+        })
+        await self.backup_job_repo.db.commit()
+        trigger_restore_backup.delay(str(restore_job.id))
+        return {
+            "id": str(restore_job.id),
+            "status": restore_job.status,
+            "source_backup_id": backup_job_id,
+            "message": f"Restore job {restore_job.id} created and queued from backup {backup_job_id}.",
+        }
+
+    async def get_restore_job(self, job_id: str) -> Optional[Dict[str, Any]]:
+        job = await self.backup_job_repo.get(job_id)
+        if not job:
+            return None
+        return {
+            "id": str(job.id),
+            "job_type": job.job_type,
+            "status": job.status,
+            "tier": job.tier,
+            "source_path": job.source_path,
+            "destination_path": job.destination_path,
+            "error_message": job.error_message,
+            "started_at": job.started_at.isoformat() if job.started_at else None,
+            "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+            "created_at": job.created_at.isoformat() if job.created_at else None,
+        }

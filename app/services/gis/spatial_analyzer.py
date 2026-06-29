@@ -30,7 +30,7 @@ def ensure_geometry(data: Any) -> BaseGeometry:
         Shapely geometry
     """
     if data is None:
-        return Point()
+        raise ValueError("Geometry data is required")
     
     if isinstance(data, BaseGeometry):
         return data

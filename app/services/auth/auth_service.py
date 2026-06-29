@@ -6,6 +6,7 @@ Land Intelligence System
 
 import logging
 from typing import Optional, Dict, Any
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User, UserRole
@@ -57,7 +58,7 @@ class AuthService:
         # Create user using repository
         user = await self.user_repo.create_by_dict(user_data)
         
-        logger.info(f"User registered: {user.email} with role {user.role.value}")
+        logger.info(f"User registered: {user.id} with role {user.role.value}")
         return user
 
     async def authenticate_user(self, login_data: UserLogin) -> Optional[User]:
@@ -100,11 +101,30 @@ class AuthService:
         """
         Authenticate user and generate JWT tokens.
         """
-        user = await self.authenticate_user(login_data)
-        
+        user = await self.user_repo.get_by_email_or_username(login_data.username)
         if not user:
             raise ValueError("Invalid credentials")
-        
+
+        # Check user.locked_until before password verification
+        if user.locked_until and user.locked_until > datetime.now(timezone.utc):
+            raise ValueError("Account is locked")
+
+        # Verify password
+        hashed_pw = str(user.hashed_password) if user.hashed_password else ""
+        if not verify_password(login_data.password, hashed_pw):
+            user.failed_login_attempts = int(user.failed_login_attempts or 0) + 1
+            if user.failed_login_attempts >= 5:
+                from datetime import timedelta
+                user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=30)
+            await self.db.flush()
+            raise ValueError("Invalid credentials")
+
+        # Reset counter on success
+        user.failed_login_attempts = 0
+        user.locked_until = None
+        user.last_login = datetime.now(timezone.utc)
+        await self.db.flush()
+
         if not user.is_active:
             raise ValueError("Account is deactivated")
         
@@ -165,7 +185,6 @@ class AuthService:
             jti = payload.get("jti")
             exp = payload.get("exp")
             if jti and exp:
-                from datetime import datetime, timezone
                 expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
                 await blacklist_token(jti, expires_at)
                 logger.info(f"Token revoked for user: {payload.get('sub')}")
@@ -205,7 +224,7 @@ class AuthService:
         
         user = await self.user_repo.update_by_dict(user_id, update_data)
         if user:
-            logger.info(f"User updated: {user.email}")
+            logger.info(f"User updated: {user.id}")
         return user
 
     async def delete_user(self, user_id: str) -> bool:

@@ -6,7 +6,7 @@ Land Intelligence System
 
 import logging
 from typing import Optional, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 
@@ -33,8 +33,8 @@ class SessionService:
         token_hash = self._hash_token(token)
         self._token_cache[token_hash] = {
             "user_id": user_id,
-            "expires_at": datetime.utcnow() + timedelta(seconds=expires_in),
-            "created_at": datetime.utcnow()
+            "expires_at": datetime.now(timezone.utc) + timedelta(seconds=expires_in),
+            "created_at": datetime.now(timezone.utc)
         }
     
     def store_refresh_token(self, refresh_token: str, user_id: str) -> None:
@@ -54,7 +54,7 @@ class SessionService:
             return None
         
         # Check expiration
-        if cached["expires_at"] < datetime.utcnow():
+        if cached["expires_at"] < datetime.now(timezone.utc):
             del self._token_cache[token_hash]
             return None
         
@@ -109,7 +109,7 @@ class SessionService:
         """
         sessions = []
         for token_hash, data in self._token_cache.items():
-            if data["user_id"] == user_id and data["expires_at"] > datetime.utcnow():
+            if data["user_id"] == user_id and data["expires_at"] > datetime.now(timezone.utc):
                 sessions.append({
                     "token_hash": token_hash,
                     "created_at": data["created_at"],
@@ -127,7 +127,7 @@ class SessionService:
         """
         Remove expired tokens from cache.
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         expired_access = []
         
         for token_hash, data in self._token_cache.items():

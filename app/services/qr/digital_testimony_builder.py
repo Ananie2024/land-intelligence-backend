@@ -6,7 +6,7 @@ Land Intelligence System
 
 import logging
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.models.parcel import Parcel
 from app.models.document import Document
@@ -65,7 +65,7 @@ class DigitalTestimonyBuilder:
         payload = {
             "v": "1.0", # Payload version
             "type": "PARCEL",
-            "ts": datetime.utcnow().isoformat(),
+            "ts": datetime.now(timezone.utc).isoformat(),
             "data": {
                 "id": str(parcel.id),
                 "num": parcel.parcel_number,
@@ -91,7 +91,7 @@ class DigitalTestimonyBuilder:
         payload = {
             "v": "1.0",
             "type": "DOCUMENT",
-            "ts": datetime.utcnow().isoformat(),
+            "ts": datetime.now(timezone.utc).isoformat(),
             "data": {
                 "id": str(document.id),
                 "type": document.document_type.code if document.document_type else "UNKNOWN",
