@@ -86,6 +86,13 @@ class DocumentManager:
         # Extract metadata from file
         file_metadata = await self.metadata_extractor.extract(file, filename)
         
+        # Validate file type and size
+        file_size_bytes = file_metadata.get("file_size_bytes", 0)
+        if not self.metadata_extractor.validate_file_type(filename):
+            raise ValueError("Unsupported file type")
+        if not self.metadata_extractor.validate_file_size(file_size_bytes):
+            raise ValueError("File size exceeds limit")
+        
         # Check for duplicate file using checksum
         checksum = file_metadata.get("checksum")
         if checksum and metadata.parcel_id:

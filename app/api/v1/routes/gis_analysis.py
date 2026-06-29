@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.api.auth_dependencies import get_current_user_id
 from app.services.gis.gis_service import GisAnalysisService
 from app.schemas.gis_analysis_schema import (
     DistanceRequest,
@@ -36,7 +37,8 @@ router = APIRouter()
 )
 async def calculate_distance(
     payload: DistanceRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user_id),
 ):
     try:
         service = GisAnalysisService(db)
@@ -71,7 +73,8 @@ async def calculate_distance(
 )
 async def check_intersection(
     payload: IntersectionRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user_id),
 ):
     try:
         service = GisAnalysisService(db)
@@ -109,7 +112,8 @@ async def check_intersection(
 )
 async def contains_point(
     payload: ContainsPointRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user_id),
 ):
     try:
         service = GisAnalysisService(db)
@@ -144,7 +148,8 @@ async def contains_point(
 )
 async def check_zoning_overlay(
     payload: OverlayRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user_id),
 ):
     try:
         service = GisAnalysisService(db)

@@ -98,33 +98,6 @@ async def create_parcel(
 
 
 # ---------------------------------------------------------------------------
-# GET /parcels/{parcel_id}  — fetch single parcel
-# ---------------------------------------------------------------------------
-
-@router.get(
-    "/{parcel_id}",
-    response_model=ParcelResponse,
-    summary="Get parcel",
-    description="Retrieve a single parcel by its UUID.",
-)
-async def get_parcel(
-    parcel_id: str,
-    db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user_id),
-):
-    service = ParcelService(db)
-    parcel = await service.get_parcel(parcel_id)
-
-    if not parcel:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Parcel '{parcel_id}' not found.",
-        )
-
-    return parcel
-
-
-# ---------------------------------------------------------------------------
 # GET /parcels/by-number/{parcel_number}  — lookup by business key
 # ---------------------------------------------------------------------------
 
@@ -204,6 +177,33 @@ async def list_parcels_by_parish(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
         )
+
+
+# ---------------------------------------------------------------------------
+# GET /parcels/{parcel_id}  — fetch single parcel
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/{parcel_id}",
+    response_model=ParcelResponse,
+    summary="Get parcel",
+    description="Retrieve a single parcel by its UUID.",
+)
+async def get_parcel(
+    parcel_id: str,
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user_id),
+):
+    service = ParcelService(db)
+    parcel = await service.get_parcel(parcel_id)
+
+    if not parcel:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Parcel '{parcel_id}' not found.",
+        )
+
+    return parcel
 
 
 # ---------------------------------------------------------------------------

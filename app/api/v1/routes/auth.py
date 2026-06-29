@@ -19,7 +19,9 @@ from app.schemas.user_schema import (
     PasswordChange,
     UserResponse,
 )
-from app.api.auth_dependencies import get_current_user_id, require_admin
+from app.api.auth_dependencies import get_current_user_id, require_admin, get_current_user_data
+from app.core.token_blacklist import blacklist_token
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -110,11 +112,13 @@ async def refresh(
     description="Invalidate the current session token.",
 )
 async def logout(
-    current_user_id: str = Depends(get_current_user_id),
+    payload: dict = Depends(get_current_user_data),
 ):
-    # TODO: implement Redis-backed token blacklist.
-    # Until then the client must discard both tokens locally;
-    # the access token remains technically valid until natural expiry.
+    jti = payload.get("jti")
+    exp = payload.get("exp")
+    if jti and exp:
+        expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
+        await blacklist_token(jti, expires_at)
     return {"message": "Successfully logged out"}
 
 

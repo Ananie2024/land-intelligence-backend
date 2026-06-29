@@ -92,6 +92,42 @@ async def upload_document(
         )
 
 
+@router.get("/", response_model=DocumentListResponse)
+async def search_documents(
+    parcel_id: Optional[str] = None,
+    document_type_id: Optional[str] = None,
+    filename: Optional[str] = None,
+    reference_number: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    doc_manager: DocumentManager = Depends(get_document_manager),
+    user_id: str = Depends(get_current_user_id)
+):
+    """Search and list documents with pagination."""
+    skip = (page - 1) * size
+    
+    # Note: list/search implementation depends on repository capabilities
+    # This is a simplified search implementation
+    documents = await doc_manager.search_documents(
+        filename=filename,
+        reference_number=reference_number,
+        parcel_id=parcel_id,
+        document_type_id=document_type_id,
+        skip=skip,
+        limit=size
+    )
+    
+    # We'd need a separate count method for true pagination response
+    # For now, we return the list. In a real scenario, we'd wrap this.
+    return DocumentListResponse(
+        items=documents,
+        total=len(documents), # Simplified
+        page=page,
+        size=size,
+        pages=1 # Simplified
+    )
+
+
 @router.get("/{document_id}", response_model=DocumentResponse)
 async def get_document(
     document_id: str,
@@ -172,42 +208,6 @@ async def delete_document(
             detail=f"Document {document_id} not found"
         )
     return None
-
-
-@router.get("/", response_model=DocumentListResponse)
-async def search_documents(
-    parcel_id: Optional[str] = None,
-    document_type_id: Optional[str] = None,
-    filename: Optional[str] = None,
-    reference_number: Optional[str] = None,
-    page: int = Query(1, ge=1),
-    size: int = Query(20, ge=1, le=100),
-    doc_manager: DocumentManager = Depends(get_document_manager),
-    user_id: str = Depends(get_current_user_id)
-):
-    """Search and list documents with pagination."""
-    skip = (page - 1) * size
-    
-    # Note: list/search implementation depends on repository capabilities
-    # This is a simplified search implementation
-    documents = await doc_manager.search_documents(
-        filename=filename,
-        reference_number=reference_number,
-        parcel_id=parcel_id,
-        document_type_id=document_type_id,
-        skip=skip,
-        limit=size
-    )
-    
-    # We'd need a separate count method for true pagination response
-    # For now, we return the list. In a real scenario, we'd wrap this.
-    return DocumentListResponse(
-        items=documents,
-        total=len(documents), # Simplified
-        page=page,
-        size=size,
-        pages=1 # Simplified
-    )
 
 
 @router.get("/{document_id}/physical-location")
