@@ -66,8 +66,10 @@ class UserRepository(BaseRepository[User, None, None]):
             user.failed_login_attempts = 0
             user.locked_until = None
             user.last_login = datetime.now(timezone.utc)
+           
             await self.db.flush()
             await self.db.refresh(user)
+            await self.db.commit()
         return user
     
     async def lock_user(self, user_id: str, lock_minutes: int = 30) -> Optional[User]:

@@ -92,10 +92,10 @@ class AuthService:
             return None
         
         # Reset failed login attempts on successful login
-        await self.user_repo.reset_failed_login(str(user.id))
+        updated_user = await self.user_repo.reset_failed_login(str(user.id))
         
         logger.info(f"User authenticated: {login_data.username}")
-        return user
+        return updated_user
 
     async def login(self, login_data: UserLogin) -> TokenResponse:
         """
@@ -124,6 +124,11 @@ class AuthService:
         user.locked_until = None
         user.last_login = datetime.now(timezone.utc)
         await self.db.flush()
+        # Re-fetch the user to avoid SQLAlchemy async lazy-load pitfalls
+        # after attribute expiration caused by server-side defaults/onupdate.
+        user = await self.user_repo.get(str(user.id))
+        if user is None:
+            raise ValueError("Account not found after update")
 
         if not user.is_active:
             raise ValueError("Account is deactivated")

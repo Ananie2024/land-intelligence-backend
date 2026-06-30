@@ -121,3 +121,4 @@ create_gitkeep_files.sh
 *.crt
 encryption/
 keys/
+test_auth.py
