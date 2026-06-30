@@ -93,7 +93,7 @@ class ErrorResponse(BaseModel):
 
     def __init__(self, **data: Any):
         if "timestamp" not in data:
-            data["timestamp"] = datetime.utcnow().isoformat()
+            data["timestamp"] = datetime.now(timezone.utc).isoformat()
         super().__init__(**data)
 
 

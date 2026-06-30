@@ -60,7 +60,15 @@ class UserRepository(BaseRepository[User, None, None]):
         return user
     
     async def reset_failed_login(self, user_id: str) -> Optional[User]:
-        """Reset failed login attempts counter"""
+        """
+        Reset failed login attempts counter.
+
+        NOTE: This method calls self.db.commit() independently. It is NOT safe to
+        call from within another method that manages its own transaction (e.g. a
+        bulk operation with an outer commit), because the inner commit will
+        prematurely persist and close that outer transaction. Currently called
+        only from the standalone login-success path in AuthService.
+        """
         user = await self.get(user_id)
         if user:
             user.failed_login_attempts = 0

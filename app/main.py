@@ -7,6 +7,7 @@ Land Intelligence System
 """
 
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,8 +34,58 @@ logger = logging.getLogger(__name__)
 
 
 # ------------------------------------------------------------------
+# Lifespan (startup / shutdown)
+# ------------------------------------------------------------------
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Application lifespan context manager — replaces the deprecated
+    @app.on_event("startup") / ("shutdown") pattern.
+    """
+    # --- STARTUP ------------------------------------------------------------
+    logger.info("Starting Land Intelligence System API")
+
+    # Production safety check: CORS origins
+    if settings.ENVIRONMENT == "production":
+        localhost_origins = [
+            o for o in settings.CORS_ORIGINS
+            if "localhost" in o or "127.0.0.1" in o
+        ]
+        if localhost_origins:
+            logger.warning(
+                "CORS_ORIGINS contains localhost entries in production "
+                "environment: %s.  These are likely leftover development "
+                "defaults.  Set CORS_ORIGINS to the actual frontend "
+                "origin(s) in your .env or environment variables.",
+                localhost_origins,
+            )
+
+    try:
+        async for db in get_db():
+            await db.execute(text("SELECT 1"))
+            logger.info("Database connection verified")
+            break
+    except Exception as e:
+        logger.error(f"Failed to connect to database on startup: {str(e)}")
+        # Do not crash application startup
+
+    yield  # <-- application runs here
+
+    # --- SHUTDOWN -----------------------------------------------------------
+    logger.info("Shutting down Land Intelligence System API")
+    await engine.dispose()
+
+
+# ------------------------------------------------------------------
 # FastAPI Application
 # ------------------------------------------------------------------
+
+# Disable interactive API docs in production to avoid leaking endpoint
+# schemas to unauthenticated users.
+_docs_url = None if settings.ENVIRONMENT == "production" else "/api/docs"
+_redoc_url = None if settings.ENVIRONMENT == "production" else "/api/redoc"
+_openapi_url = None if settings.ENVIRONMENT == "production" else "/api/openapi.json"
 
 app = FastAPI(
     title="Land Intelligence System API",
@@ -46,9 +97,10 @@ app = FastAPI(
     document management, GIS spatial analysis,
     tax calculation, and backup services.
     """,
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json",
+    docs_url=_docs_url,
+    redoc_url=_redoc_url,
+    openapi_url=_openapi_url,
+    lifespan=lifespan,
 )
 
 app.state.limiter = limiter
@@ -142,50 +194,3 @@ async def health_check():
     }
 
 
-# ------------------------------------------------------------------
-# Startup Events
-# ------------------------------------------------------------------
-
-@app.on_event("startup")
-async def startup_event():
-    """
-    Application startup tasks.
-    """
-
-    logger.info(
-        "Starting Land Intelligence System API"
-    )
-
-    try:
-        async for db in get_db():
-            await db.execute(text("SELECT 1"))
-            logger.info(
-                "Database connection verified"
-            )
-            break
-
-    except Exception as e:
-        logger.error(
-            f"Failed to connect to database on startup: {str(e)}"
-        )
-
-        # Do not crash application startup
-        # Allows degraded startup if database
-        # becomes available shortly afterward.
-
-
-# ------------------------------------------------------------------
-# Shutdown Events
-# ------------------------------------------------------------------
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    Application shutdown tasks.
-    """
-
-    logger.info(
-        "Shutting down Land Intelligence System API"
-    )
-
-    await engine.dispose()

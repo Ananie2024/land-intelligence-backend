@@ -18,6 +18,13 @@ class Settings(BaseSettings):
     )
 
     # ------------------------------------------------------------------
+    # Environment
+    # ------------------------------------------------------------------
+    # Set to "production" in deployment.  Used to enable/disable
+    # safety checks that should not run during local development.
+    ENVIRONMENT: str = Field(default="development")
+
+    # ------------------------------------------------------------------
     # API
     # ------------------------------------------------------------------
     API_HOST: str = Field(default="0.0.0.0")
