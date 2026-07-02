@@ -122,3 +122,4 @@ create_gitkeep_files.sh
 encryption/
 keys/
 test_auth.py
+.aider*

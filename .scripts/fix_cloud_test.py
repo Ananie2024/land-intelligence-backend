@@ -1,4 +1,5 @@
-"""Unit tests for cloud backup providers and services."""
+from pathlib import Path
+text = '''"""Unit tests for cloud backup providers and services."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
@@ -11,7 +12,8 @@ from app.services.backup.cloud.encryption_service import EncryptionService
 class TestCloudBackupService:
     @pytest.fixture
     def service_gcs(self):
-        with patch("app.services.backup.cloud.cloud_backup_service.GoogleCloudStorageProvider"),              patch("app.services.backup.cloud.cloud_backup_service.LocalBackupService"):
+        with patch("app.services.backup.cloud.cloud_backup_service.GoogleCloudStorageProvider"), \
+             patch("app.services.backup.cloud.cloud_backup_service.LocalBackupService"):
             svc = CloudBackupService("google_cloud_storage")
             svc.provider = MagicMock()
             svc.staging_backup_service = AsyncMock()
@@ -20,7 +22,8 @@ class TestCloudBackupService:
 
     @pytest.fixture
     def service_b2(self):
-        with patch("app.services.backup.cloud.cloud_backup_service.BackblazeB2Provider"),              patch("app.services.backup.cloud.cloud_backup_service.LocalBackupService"):
+        with patch("app.services.backup.cloud.cloud_backup_service.BackblazeB2Provider"), \
+             patch("app.services.backup.cloud.cloud_backup_service.LocalBackupService"):
             svc = CloudBackupService("backblaze_b2")
             svc.provider = MagicMock()
             svc.staging_backup_service = AsyncMock()
@@ -49,7 +52,8 @@ class TestCloudBackupService:
 class TestCloudDownloadService:
     @pytest.fixture
     def service(self):
-        with patch("app.services.backup.cloud.cloud_download_service.GoogleCloudStorageProvider"),              patch("app.services.backup.cloud.cloud_download_service.BackblazeB2Provider"):
+        with patch("app.services.backup.cloud.cloud_download_service.GoogleCloudStorageProvider"), \
+             patch("app.services.backup.cloud.cloud_download_service.BackblazeB2Provider"):
             svc = CloudDownloadService()
             svc.provider = MagicMock()
             return svc
@@ -77,3 +81,6 @@ class TestEncryptionService:
     def test_decrypt_raises_not_implemented(self, service):
         with pytest.raises(NotImplementedError):
             service.decrypt("/path/to/file")
+'''
+Path('tests/unit/test_cloud_providers.py').write_text(text)
+print('done')
