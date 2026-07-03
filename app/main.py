@@ -14,7 +14,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.api.v1.endpoints import router as v1_router
-from app.api.middleware.error_handlers import register_error_handlers
 from app.api.middleware.exception_handler import register_exception_handler
 from app.api.middleware.response_middleware import StandardizeResponseMiddleware, PaginationMiddleware
 from app.core.config import settings
@@ -108,11 +107,10 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 # ------------------------------------------------------------------
-# Error Handlers
+# Exception Handler
 # ------------------------------------------------------------------
 
-# Register before middleware stack
-register_error_handlers(app)
+# Register centralized exception handler
 register_exception_handler(app)
 
 

@@ -18,3 +18,4 @@ def import_all_models():
     from app.models.storage_cabinet import StorageCabinet  # noqa: F401
     from app.models.tax_payment import TaxPayment       # noqa: F401
     from app.models.tax_record import TaxRecord         # noqa: F401
+    from app.models.user import User                    # noqa: F401

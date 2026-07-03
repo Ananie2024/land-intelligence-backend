@@ -10,16 +10,16 @@ Verifies that StandardizeResponseMiddleware and PaginationMiddleware:
 - Do not consume the response body in a way that crashes the server
 """
 
-import json
 import pytest
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import FileResponse
 from starlette.testclient import TestClient
 
 from app.api.middleware.response_middleware import (
     StandardizeResponseMiddleware,
     PaginationMiddleware,
 )
+from app.api.middleware.exception_handler import register_exception_handler
 
 
 # ---------------------------------------------------------------------------
@@ -29,6 +29,7 @@ from app.api.middleware.response_middleware import (
 
 def build_app():
     application = FastAPI()
+    register_exception_handler(application)
     application.add_middleware(StandardizeResponseMiddleware)
     application.add_middleware(PaginationMiddleware)
     return application
@@ -46,11 +47,11 @@ def client():
 
 
 # ---------------------------------------------------------------------------
-# 1. Error responses — must NOT be standardized
+# 1. Error responses — must be standardized via CentralizedExceptionMiddleware
 # ---------------------------------------------------------------------------
 
 
-def test_error_response_not_standardized(client):
+def test_error_response_is_standardized(client):
     @client.app.get("/error")
     def _error():
         raise HTTPException(status_code=400, detail="bad request")
@@ -58,10 +59,10 @@ def test_error_response_not_standardized(client):
     response = client.get("/error")
     assert response.status_code == 400
     body = response.json()
-    # Standardization wraps errors, but middleware explicitly skips >= 400
-    # So body should remain the raw error detail, not the standardized wrapper
-    assert "detail" in body
-    assert body["detail"] == "bad request"
+    # CentralizedExceptionMiddleware catches HTTPExceptions and returns standardized format
+    assert body["success"] is False
+    assert "errors" in body
+    assert body["message"] == "bad request"
 
 
 # ---------------------------------------------------------------------------
