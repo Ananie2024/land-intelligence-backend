@@ -29,7 +29,6 @@ PASSTHROUGH_PREFIXES = (
     "/api/docs",
     "/api/redoc",
     "/health",
-    "/",
 )
 
 
@@ -38,14 +37,30 @@ def _is_passthrough(path: str) -> bool:
 
 
 async def _read_body(response: Response) -> bytes:
+    """Read the body from a response, handling both direct and streaming responses."""
+    # First, try to get the body directly (works for regular Response)
     try:
-        return response.body
+        if hasattr(response, "body"):
+            body = response.body  # type: ignore
+            if body:
+                return body
     except (RuntimeError, AttributeError):
         pass
-    body = b""
-    async for chunk in response.body_iterator:
-        body += chunk
-    return body
+    
+    # For streaming responses, consume the body_iterator
+    if hasattr(response, "body_iterator"):
+        body = b""
+        try:
+            async for chunk in response.body_iterator:  # type: ignore
+                if isinstance(chunk, bytes):
+                    body += chunk
+                else:
+                    body += chunk.encode("utf-8")
+            return body
+        except Exception as e:
+            logger.warning("Failed to read streaming body: %s", e)
+    
+    return b""
 
 
 class StandardizeResponseMiddleware(BaseHTTPMiddleware):
@@ -63,8 +78,11 @@ class StandardizeResponseMiddleware(BaseHTTPMiddleware):
 
         try:
             body = await _read_body(response)
+            if not body:
+                return response
             data = json.loads(body.decode("utf-8"))
 
+            # If already in standardized format, pass through
             if isinstance(data, dict) and "success" in data and "timestamp" in data:
                 return JSONResponse(content=data, status_code=response.status_code)
 
@@ -91,11 +109,15 @@ class PaginationMiddleware(BaseHTTPMiddleware):
 
         try:
             body = await _read_body(response)
+            if not body:
+                return response
             data = json.loads(body.decode("utf-8"))
 
+            # If already in standardized format, pass through
             if isinstance(data, dict) and "success" in data and "timestamp" in data:
                 return JSONResponse(content=data, status_code=response.status_code)
 
+            # Check if this is a paginated response
             if isinstance(data, dict) and all(
                 k in data for k in ("items", "total", "page", "size")
             ):
