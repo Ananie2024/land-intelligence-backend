@@ -48,7 +48,7 @@ async def blacklist_token(jti: str, expires_at: datetime) -> None:
         logger.info(f"Token blacklisted: jti={jti}, ttl={ttl}s")
     except Exception as e:
         logger.error(f"Failed to blacklist token: {str(e)}")
-        raise
+        pass  # Gracefully handle Redis connection failures
 
 
 async def is_token_blacklisted(jti: str) -> bool:
