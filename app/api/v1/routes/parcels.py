@@ -286,3 +286,58 @@ async def get_parcel_ownership_history(
     service = ParcelService(db)
     history = await service.get_ownership_history(parcel_id)
     return history
+
+
+# ---------------------------------------------------------------------------
+# GET /parcels/map  — parcels with geometry for map display
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/map",
+    response_model=ParcelListResponse,
+    summary="Get all parcels with geometry for map",
+    description="Return all active parcels with geometry included for interactive map display.",
+)
+async def get_parcels_for_map(
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user_id),
+):
+    from sqlalchemy import select
+    from app.models.parcel import Parcel
+    
+    result = await db.execute(
+        select(Parcel).where(Parcel.is_active)
+    )
+    parcels = result.scalars().all()
+    
+    # Transform to include geometry
+    items = []
+    for parcel in parcels:
+        parcel_dict = {
+            "id": str(parcel.id),
+            "parcel_number": parcel.parcel_number,
+            "parish_id": str(parcel.parish_id),
+            "land_use_category_id": str(parcel.land_use_category_id) if parcel.land_use_category_id else None,
+            "area_sqm": parcel.area_sqm,
+            "geometry_wkb": parcel.geometry_wkb,
+            "title_deed_number": parcel.title_deed_number,
+            "owner_name": parcel.owner_name,
+            "owner_contact": parcel.owner_contact,
+            "location_description": parcel.location_description,
+            "valuation": parcel.valuation,
+            "valuation_date": parcel.valuation_date.isoformat() if parcel.valuation_date else None,
+            "is_active": parcel.is_active,
+            "created_at": parcel.created_at,
+            "updated_at": parcel.updated_at,
+            # Include parsed geometry for map
+            "geometry": parcel.geometry_wkb if parcel.geometry_wkb else None,
+        }
+        items.append(parcel_dict)
+    
+    return {
+        "items": items,
+        "total": len(items),
+        "page": 1,
+        "size": len(items),
+        "pages": 1,
+    }

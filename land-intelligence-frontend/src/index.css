@@ -1,221 +1,119 @@
 @import "tailwindcss";
 
-/* ==========================================
-   Global Reset
-========================================== */
+/* Import Premium Typography */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-html,
-body,
-#root {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
+@theme {
+  /* Brand Typography */
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Color Palette - Premium Dark Mode Focused */
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
+  --color-primary-950: #1e1b4b;
+
+  --color-accent-50: #faf5ff;
+  --color-accent-100: #f3e8ff;
+  --color-accent-200: #e9d5ff;
+  --color-accent-300: #d8b4fe;
+  --color-accent-400: #c084fc;
+  --color-accent-500: #a855f7;
+  --color-accent-600: #9333ea;
+  --color-accent-700: #7e22ce;
+  --color-accent-800: #6b21a8;
+  --color-accent-900: #581c87;
+  --color-accent-950: #3b0764;
+
+  /* Semantic Overrides */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+
+  /* Premium Gradients */
+  --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
+  --background-image-gradient-conic: conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops));
+  --background-image-glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  --background-image-glass-gradient-dark: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.3) 100%);
+
+  /* Animation Utilities */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 2s infinite alternate;
 }
 
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 }
 
-body {
-    font-family:
-        Inter,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-
-    background: var(--bg);
-    color: var(--text);
-
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-
-    text-rendering: optimizeLegibility;
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 5px rgba(99, 102, 241, 0.2), 0 0 10px rgba(99, 102, 241, 0.1); }
+  100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.6), 0 0 30px rgba(168, 85, 247, 0.4); }
 }
 
-a {
-    text-decoration: none;
-    color: inherit;
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-button {
-    cursor: pointer;
+::-webkit-scrollbar-track {
+  background: #0f172a;
 }
 
-
-/* ==========================================
-   Design Tokens
-========================================== */
-
-:root {
-    --text: #6b6375;
-    --text-h: #08060d;
-
-    --bg: #ffffff;
-    --border: #e5e4e7;
-
-    --code-bg: #f4f3ec;
-
-    --accent: #aa3bff;
-    --accent-bg: rgba(170, 59, 255, 0.1);
-    --accent-border: rgba(170, 59, 255, 0.5);
-
-    --social-bg: rgba(244, 243, 236, 0.5);
-
-    --shadow:
-        rgba(0, 0, 0, 0.1) 0 10px 15px -3px,
-        rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-    --sans:
-        Inter,
-        system-ui,
-        "Segoe UI",
-        Roboto,
-        sans-serif;
-
-    --heading:
-        Inter,
-        system-ui,
-        "Segoe UI",
-        Roboto,
-        sans-serif;
-
-    --mono:
-        ui-monospace,
-        SFMono-Regular,
-        Consolas,
-        monospace;
-
-    font-family: var(--sans);
-    font-size: 18px;
-    line-height: 145%;
-    letter-spacing: 0.18px;
-
-    color: var(--text);
-    background: var(--bg);
-
-    color-scheme: light dark;
-    font-synthesis: none;
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+  border: 2px solid #0f172a;
 }
 
-
-/* ==========================================
-   Dark Mode
-========================================== */
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --text: #9ca3af;
-        --text-h: #f3f4f6;
-
-        --bg: #16171d;
-        --border: #2e303a;
-
-        --code-bg: #1f2028;
-
-        --accent: #c084fc;
-        --accent-bg: rgba(192, 132, 252, 0.15);
-        --accent-border: rgba(192, 132, 252, 0.5);
-
-        --social-bg: rgba(47, 48, 58, 0.5);
-
-        --shadow:
-            rgba(0, 0, 0, 0.4) 0 10px 15px -3px,
-            rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-    }
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
 }
 
-
-/* ==========================================
-   Application Root
-========================================== */
-
-#root {
-    width: 1126px;
-    max-width: 100%;
-
-    min-height: 100svh;
-
-    margin: 0 auto;
-
-    display: flex;
-    flex-direction: column;
-
-    border-inline: 1px solid var(--border);
-
-    text-align: center;
+/* Selection style */
+::selection {
+  background-color: rgba(99, 102, 241, 0.3);
+  color: #ffffff;
 }
 
-
-/* ==========================================
-   Typography
-========================================== */
-
-h1,
-h2 {
-    font-family: var(--heading);
-    font-weight: 500;
-    color: var(--text-h);
+/* Glassmorphism Panel styles */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.075);
 }
 
-h1 {
-    font-size: 56px;
-    letter-spacing: -1.68px;
-    margin: 32px 0;
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-panel-hover:hover {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
 }
 
-h2 {
-    font-size: 24px;
-    line-height: 118%;
-    letter-spacing: -0.24px;
-    margin: 0 0 8px;
+/* Subgrid dotted patterns for premium visual designs */
+.bg-dot-pattern {
+  background-size: 24px 24px;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
 }
 
-p {
-    margin: 0;
-}
-
-
-@media (max-width: 1024px) {
-
-    :root {
-        font-size: 16px;
-    }
-
-    h1 {
-        font-size: 36px;
-        margin: 20px 0;
-    }
-
-    h2 {
-        font-size: 20px;
-    }
-}
-
-
-/* ==========================================
-   Code Styling
-========================================== */
-
-code,
-.counter {
-    font-family: var(--mono);
-    display: inline-flex;
-
-    border-radius: 4px;
-
-    color: var(--text-h);
-}
-
-code {
-    font-size: 15px;
-    line-height: 135%;
-
-    padding: 4px 8px;
-
-    background: var(--code-bg);
+/* Utility to override layout reset */
+html, body, #root {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
 }

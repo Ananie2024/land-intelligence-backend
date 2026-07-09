@@ -19,6 +19,8 @@ from app.api.v1.routes import (
     physical_locations,
     backups,
     auth,
+    users,
+    dashboard,
 )
 
 # Apply logging globally to v1
@@ -29,6 +31,14 @@ router.include_router(
     auth.router,
     prefix="/auth",
     tags=["Auth"],
+)
+
+# Users endpoints (Admin managed)
+router.include_router(
+    users.router,
+    prefix="/users",
+    tags=["Users"],
+    dependencies=[Depends(get_current_user_data)]
 )
 
 # Health endpoint (Public but logged)
@@ -94,5 +104,12 @@ router.include_router(
     backups.router,
     prefix="/backups",
     tags=["Backups"],
+    dependencies=[Depends(get_current_user_data)]
+)
+
+router.include_router(
+    dashboard.router,
+    prefix="/dashboard",
+    tags=["Dashboard"],
     dependencies=[Depends(get_current_user_data)]
 )

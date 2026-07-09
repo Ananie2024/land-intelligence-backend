@@ -108,3 +108,12 @@ class PasswordChange(BaseModel):
         if not any(c.isalpha() for c in v):
             raise ValueError("Password must contain at least one letter")
         return v
+
+
+class UserListResponse(BaseModel):
+    """Schema for paginated user list response."""
+    items: list[UserResponse]
+    total: int
+    page: int
+    size: int
+    pages: int

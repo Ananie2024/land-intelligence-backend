@@ -10,4 +10,6 @@ from . import (
     physical_locations,
     backups,
     auth,
+    users,
+    dashboard,
 )
