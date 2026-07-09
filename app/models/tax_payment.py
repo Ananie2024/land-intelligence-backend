@@ -65,6 +65,7 @@ class TaxPayment(BaseModel):
     payment_reference = Column(
         String(100),
         nullable=True,
+        unique=True,
         index=True,
         comment="External payment reference number"
     )
