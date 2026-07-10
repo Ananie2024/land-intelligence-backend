@@ -1,6 +1,7 @@
 // QR Generator Component
 // Land Intelligence System
 
+import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Download } from 'lucide-react';
 import type { QrCodeGenerateResponse } from '@/types/qr';
@@ -10,16 +11,23 @@ interface QrGeneratorProps {
   parcelId: string;
 }
 
+// Extended type for QR code generation response
+interface QrCodeGenerateResponseExtended extends QrCodeGenerateResponse {
+  token: string;
+  qr_image_base64?: string;
+  expires_at?: string | null;
+}
+
 export const QrGenerator: React.FC<QrGeneratorProps> = ({ parcelId }) => {
-  const [qrData, setQrData] = React.useState<QrCodeGenerateResponse | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [qrData, setQrData] = useState<QrCodeGenerateResponseExtended | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const generateQr = async () => {
     setIsLoading(true);
     try {
       const response = await qrService.generateQrCode(parcelId);
       if (response.success && response.data) {
-        setQrData(response.data);
+        setQrData(response.data as QrCodeGenerateResponseExtended);
       }
     } catch (error) {
       console.error('Failed to generate QR code', error);
@@ -29,7 +37,7 @@ export const QrGenerator: React.FC<QrGeneratorProps> = ({ parcelId }) => {
   };
 
   const downloadQr = () => {
-    if (!qrData) return;
+    if (!qrData?.qr_image_base64) return;
     const link = document.createElement('a');
     link.href = `data:image/svg+xml;base64,${btoa(qrData.qr_image_base64)}`;
     link.download = `qr-${parcelId}.svg`;
@@ -51,10 +59,10 @@ export const QrGenerator: React.FC<QrGeneratorProps> = ({ parcelId }) => {
       {qrData && (
         <div className="flex items-center gap-4">
           <div className="bg-white p-2 rounded">
-            <QRCodeSVG value={qrData.token} size={128} />
+            <QRCodeSVG value={qrData.code} size={128} />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Expires: {new Date(qrData.expires_at).toLocaleDateString()}</p>
+            <p className="text-sm text-gray-500">Expires: {qrData.expires_at ? new Date(qrData.expires_at).toLocaleDateString() : 'N/A'}</p>
             <button
               onClick={downloadQr}
               className="mt-2 flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800"

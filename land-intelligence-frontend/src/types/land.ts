@@ -3,6 +3,7 @@ import { BaseEntity, QueryFilters } from './common';
 export interface Parish extends BaseEntity {
   name: string;
   code: string;
+  registry_path?: string | null;
   description?: string | null;
   address?: string | null;
   contact_person?: string | null;

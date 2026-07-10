@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, Bell, User, LogOut, ChevronDown, ShieldCheck } from 'lucide-react';
+import { Menu, Bell, User, LogOut, ChevronDown } from 'lucide-react';
 import { useUser, useAuthStore } from '@/features/authentication/store/authStore';
 import { env } from '@/utils/env';
 
@@ -11,8 +11,8 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
-  const user = useAuthStore(state => state.user);
-  const logout = useAuthStore(state => state.logout);
+  const user = useUser();
+  const logout = useAuthStore((state: any) => state.logout);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -49,12 +49,32 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
         <Menu className="w-5 h-5" />
       </button>
 
-      {/* Spacing or Search Input */}
-      <div className="hidden sm:flex items-center gap-2">
-        <span className="text-slate-500 text-[10px] sm:text-xs font-semibold uppercase tracking-widest bg-slate-900 border border-slate-800/80 px-2 sm:px-2.5 py-1 rounded-md flex items-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-success" />
-          <span className="hidden sm:inline">Kigali Archdiocese</span>
-          <span className="sm:hidden">Archdiocese</span>
+      {/* Logo and Branding - Desktop */}
+      <div className="hidden lg:flex items-center gap-3">
+        <img 
+          src="/archidiocese-logo.png" 
+          alt="Archdiocese of Kigali" 
+          className="h-9 w-auto object-contain"
+        />
+        <div className="flex flex-col">
+          <span className="text-white font-extrabold text-base tracking-tight leading-none">
+            {env.VITE_APP_NAME}
+          </span>
+          <span className="text-[10px] text-gold-400 font-medium uppercase tracking-wider">
+            Land Registry System
+          </span>
+        </div>
+      </div>
+
+      {/* Logo and Branding - Mobile/Tablet */}
+      <div className="lg:hidden flex items-center gap-2">
+        <img 
+          src="/archidiocese-logo.png" 
+          alt="Archdiocese of Kigali" 
+          className="h-7 w-auto object-contain"
+        />
+        <span className="text-white font-bold text-sm">
+          {env.VITE_APP_NAME}
         </span>
       </div>
 
@@ -72,7 +92,7 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-1.5 sm:gap-2.5 p-1 px-1.5 sm:px-2.5 rounded-xl hover:bg-slate-800/50 transition-colors"
           >
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr from-primary-500 to-accent-500 flex items-center justify-center font-bold text-white text-xs sm:text-sm shadow-md">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr from-primary-500 via-gold-500 to-burgundy-500 flex items-center justify-center font-bold text-white text-xs sm:text-sm shadow-md">
               {userInfo.full_name?.charAt(0) || userInfo.username?.charAt(0) || 'U'}
             </div>
             <div className="text-left hidden md:block">

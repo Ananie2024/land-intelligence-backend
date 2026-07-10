@@ -40,8 +40,20 @@ export const backupService = {
     return response.data;
   },
 
-  getRestoreJob: async (jobId: string): Promise<APIResponse<any>> => {
+getRestoreJob: async (jobId: string): Promise<APIResponse<any>> => {
     return apiClient.get<any>(ENDPOINTS.BACKUPS.RESTORE_BY_ID(jobId));
+  },
+
+  verifyBackups: async (): Promise<APIResponse<any>> => {
+    return apiClient.post<any>(ENDPOINTS.BACKUPS.VERIFY);
+  },
+
+  createBackup: async (options?: { 
+    jobType?: string; 
+    tier?: string; 
+    sourcePath?: string 
+  }): Promise<APIResponse<any>> => {
+    return apiClient.post<any>(ENDPOINTS.BACKUPS.BASE, options);
   },
 };
 

@@ -17,11 +17,30 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
   viewer: 1,
 };
 
-// Create the store with middleware
-// @ts-ignore - zustand/persist v5 typing issue
-export const useAuthStore = create(
+// Auth state interface
+interface AuthState {
+  user: UserResponse | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  initializeFromStorage: () => void;
+  setupUnauthorizedListener: () => () => void;
+  login: (credentials: LoginCredentials) => Promise<boolean>;
+  logout: () => void;
+  refreshAccessToken: () => Promise<void>;
+  fetchCurrentUser: () => Promise<void>;
+  hasRole: (role: UserRole) => boolean;
+  hasAnyRole: (roles: UserRole[]) => boolean;
+}
+
+// Create the store with middleware - use proper typing for zustand v5
+// Using any type to work around middleware typing incompatibility
+export const useAuthStore: any = create(
+  // @ts-ignore
   persist(
-    (set, get) => ({
+    (set: (partial: Partial<AuthState>) => void, get: () => AuthState) => ({
       // Initial state
       user: null,
       accessToken: null,
@@ -33,16 +52,16 @@ export const useAuthStore = create(
       // Initialize from localStorage
       initializeFromStorage: () => {
         const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-        const refreshToken = localStorage.getItem(LOCAL_STORAGE_KEYS.REFRESH_TOKEN);
+        const refreshTokenVal = localStorage.getItem(LOCAL_STORAGE_KEYS.REFRESH_TOKEN);
         const userProfile = localStorage.getItem(LOCAL_STORAGE_KEYS.USER_PROFILE);
 
-        if (token && refreshToken && userProfile) {
+        if (token && refreshTokenVal && userProfile) {
           try {
             const user = JSON.parse(userProfile) as UserResponse;
             set({
               user,
               accessToken: token,
-              refreshToken: refreshToken,
+              refreshToken: refreshTokenVal,
               isAuthenticated: true,
             });
           } catch (e) {
@@ -176,14 +195,14 @@ export const useAuthStore = create(
 
       // Check if user has specific role
       hasRole: (role: UserRole): boolean => {
-        const user = get().user as UserResponse | null;
+        const user = get().user;
         if (!user) return false;
         return user.role === role;
       },
 
       // Check if user has any of the specified roles (with hierarchy support)
       hasAnyRole: (roles: UserRole[]): boolean => {
-        const user = get().user as UserResponse | null;
+        const user = get().user;
         if (!user) return false;
         const userRole = user.role as UserRole;
         const userRoleLevel = ROLE_HIERARCHY[userRole];
@@ -192,7 +211,7 @@ export const useAuthStore = create(
     }),
     {
       name: 'land-intelligence-auth',
-      partialize: (state: any) => ({
+      partialize: (state: AuthState) => ({
         user: state.user,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
@@ -204,18 +223,18 @@ export const useAuthStore = create(
 
 // Main hook for useAuth
 export const useAuth = () => {
-  const user = useAuthStore(state => state.user);
-  const accessToken = useAuthStore(state => state.accessToken);
-  const refreshToken = useAuthStore(state => state.refreshToken);
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const isLoading = useAuthStore(state => state.isLoading);
-  const error = useAuthStore(state => state.error);
-  const login = useAuthStore(state => state.login);
-  const logout = useAuthStore(state => state.logout);
-  const refreshAccessToken = useAuthStore(state => state.refreshAccessToken);
-  const fetchCurrentUser = useAuthStore(state => state.fetchCurrentUser);
-  const hasRole = useAuthStore(state => state.hasRole);
-  const hasAnyRole = useAuthStore(state => state.hasAnyRole);
+  const user = useAuthStore((state: AuthState) => state.user);
+  const accessToken = useAuthStore((state: AuthState) => state.accessToken);
+  const refreshToken = useAuthStore((state: AuthState) => state.refreshToken);
+  const isAuthenticated = useAuthStore((state: AuthState) => state.isAuthenticated);
+  const isLoading = useAuthStore((state: AuthState) => state.isLoading);
+  const error = useAuthStore((state: AuthState) => state.error);
+  const login = useAuthStore((state: AuthState) => state.login);
+  const logout = useAuthStore((state: AuthState) => state.logout);
+  const refreshAccessToken = useAuthStore((state: AuthState) => state.refreshAccessToken);
+  const fetchCurrentUser = useAuthStore((state: AuthState) => state.fetchCurrentUser);
+  const hasRole = useAuthStore((state: AuthState) => state.hasRole);
+  const hasAnyRole = useAuthStore((state: AuthState) => state.hasAnyRole);
 
   return {
     state: {
@@ -236,22 +255,22 @@ export const useAuth = () => {
 };
 
 // Convenience hooks for role-based access
-export const useUser = () => useAuthStore(state => state.user);
-export const useAccessToken = () => useAuthStore(state => state.accessToken);
-export const useRefreshToken = () => useAuthStore(state => state.refreshToken);
-export const useAuthLoading = () => useAuthStore(state => state.isLoading);
-export const useAuthError = () => useAuthStore(state => state.error);
+export const useUser = () => useAuthStore((state: AuthState) => state.user);
+export const useAccessToken = () => useAuthStore((state: AuthState) => state.accessToken);
+export const useRefreshToken = () => useAuthStore((state: AuthState) => state.refreshToken);
+export const useAuthLoading = () => useAuthStore((state: AuthState) => state.isLoading);
+export const useAuthError = () => useAuthStore((state: AuthState) => state.error);
 export const useAuthStatus = () => {
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const user = useAuthStore(state => state.user);
+  const isAuthenticated = useAuthStore((state: AuthState) => state.isAuthenticated);
+  const user = useAuthStore((state: AuthState) => state.user);
 
   return {
     isAuthenticated,
     user,
-    isLoading: useAuthStore(state => state.isLoading),
-    hasRole: useAuthStore(state => state.hasRole),
-    hasAnyRole: useAuthStore(state => state.hasAnyRole),
+    isLoading: useAuthStore((state: AuthState) => state.isLoading),
+    hasRole: useAuthStore((state: AuthState) => state.hasRole),
+    hasAnyRole: useAuthStore((state: AuthState) => state.hasAnyRole),
   };
 };
-export const useUserRole = () => useAuthStore(state => state.user?.role);
-export const useIsAuthenticated = () => useAuthStore(state => state.isAuthenticated);
+export const useUserRole = () => useAuthStore((state: AuthState) => state.user?.role);
+export const useIsAuthenticated = () => useAuthStore((state: AuthState) => state.isAuthenticated);

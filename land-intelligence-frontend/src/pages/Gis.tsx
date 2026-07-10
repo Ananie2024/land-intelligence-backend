@@ -7,23 +7,23 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { GISMap } from '@/components/ui/GISMap';
 import { Button } from '@/components/ui/Button';
 import { RefreshCw, Layers } from 'lucide-react';
-import { apiClient } from '@/api/apiClient';
-import { ENDPOINTS } from '@/api/endpoints';
-import type { ParcelGeo } from '@/types/land';
+import { landService } from '@/services/landService';
+import type { Parcel } from '@/types/land';
+import { toast } from 'react-hot-toast';
 
-// WKB (Well-Known Binary) to GeoJSON coordinates converter
-function parseWkbToCoordinates(wkbHex: string): [number, number][][] {
-  // For now, return empty array - would need proper WKB parsing
-  // In production, use a library like 'wkb' or implement binary parsing
-  if (!wkbHex) return [];
-  
-  // Placeholder: Return a default polygon for demo
-  // Actual implementation would parse the WKB hex string
-  return [];
+import { parseWkbToCoordinates } from '@/utils/wkbParser';
+
+interface ParcelGeoData {
+  id: string;
+  parcel_number: string;
+  owner_name: string;
+  area_sqm: number;
+  geometry: [number, number][][]; // Array of polygon rings
+  valuation?: number;
 }
 
 export default function GisPage() {
-  const [parcels, setParcels] = useState<ParcelGeo[]>([]);
+  const [parcels, setParcels] = useState<ParcelGeoData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -33,10 +33,11 @@ export default function GisPage() {
   const loadParcels = async () => {
     setIsLoading(true);
     try {
-      const response = await apiClient.get<{ items: any[] }>(ENDPOINTS.PARCELS.FOR_MAP);
+      const response = await landService.getParcelsForMap();
       if (response.success && response.data) {
         // Transform parcels to geo format for map
-        const geoParcels: ParcelGeo[] = response.data.items.map((parcel: any) => ({
+        // API returns parcels with geometry_wkb (hex string), parse to coordinates
+        const geoParcels: ParcelGeoData[] = response.data.map((parcel: Parcel) => ({
           id: parcel.id,
           parcel_number: parcel.parcel_number,
           owner_name: parcel.owner_name,
@@ -45,15 +46,18 @@ export default function GisPage() {
           geometry: parseWkbToCoordinates(parcel.geometry_wkb),
         }));
         setParcels(geoParcels);
+      } else {
+        toast.error('Failed to load parcels for map');
       }
     } catch (error) {
       console.error('Failed to load parcels', error);
+      toast.error('Failed to load parcels');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleParcelClick = (parcel: ParcelGeo) => {
+  const handleParcelClick = (parcel: ParcelGeoData) => {
     console.log('Parcel clicked:', parcel);
     // Could open a side panel or modal with parcel details
   };

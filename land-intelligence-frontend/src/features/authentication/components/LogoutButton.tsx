@@ -2,7 +2,7 @@
 // Land Intelligence System
 
 import { LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useAuth } from '../store/authStore';
 
 interface LogoutButtonProps {

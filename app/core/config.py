@@ -101,10 +101,14 @@ class Settings(BaseSettings):
     GCS_PROJECT_ID: str | None = Field(default=None)
     GCS_BUCKET_NAME: str | None = Field(default=None)
     GCS_CREDENTIALS_PATH: str | None = Field(default=None)
+    GCS_ENCRYPTION_KEY_PATH: str | None = Field(default=None)
+    GCS_ENCRYPTION_ENABLED: bool = Field(default=False)
     B2_ENABLED: bool = Field(default=False)
     B2_ACCOUNT_ID: str | None = Field(default=None)
     B2_APPLICATION_KEY: str | None = Field(default=None)
     B2_BUCKET_NAME: str | None = Field(default=None)
+    B2_ENCRYPTION_KEY_PATH: str | None = Field(default=None)
+    B2_ENCRYPTION_ENABLED: bool = Field(default=False)
 
     # ------------------------------------------------------------------
     # SMTP / Email

@@ -12,4 +12,5 @@ from . import (
     auth,
     users,
     dashboard,
+    reports,
 )

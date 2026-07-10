@@ -114,6 +114,9 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
+# Frontend lockfile (keep for reproducible builds)
+!land-intelligence-frontend/package-lock.json
+
 hash_gen.py
 
 # Scaffold/setup scripts (don't commit utility scripts)

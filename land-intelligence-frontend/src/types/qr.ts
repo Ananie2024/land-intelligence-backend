@@ -28,11 +28,12 @@ export interface QrCodeGenerateResponse {
 }
 
 export interface QrCodeVerifyResponse {
-  is_valid: boolean;
+  valid: boolean;
   code: string;
   code_type: string;
   parcel_id?: string | null;
   document_id?: string | null;
+  parcel_number?: string | null;
   expires_at?: string | null;
   is_revoked: boolean;
   data_payload?: Record<string, any> | null;

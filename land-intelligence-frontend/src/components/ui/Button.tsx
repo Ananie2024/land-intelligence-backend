@@ -2,7 +2,7 @@ import React from 'react';
 import { LoadingSpinner } from './LoadingSpinner';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'outline' | 'ghost' | 'glass';
+  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'gold' | 'burgundy' | 'outline' | 'ghost' | 'glass';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -32,6 +32,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       secondary: 'bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700/80 focus:ring-slate-500',
       danger: 'bg-danger hover:opacity-90 text-white shadow-lg shadow-danger/20 focus:ring-danger',
       success: 'bg-success hover:opacity-90 text-white shadow-lg shadow-success/20 focus:ring-success',
+      gold: 'bg-gold-600 hover:bg-gold-500 text-white shadow-lg shadow-gold-600/20 focus:ring-gold-500',
+      burgundy: 'bg-burgundy-600 hover:bg-burgundy-500 text-white shadow-lg shadow-burgundy-600/20 focus:ring-burgundy-500',
       outline: 'bg-transparent border border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white focus:ring-slate-600',
       ghost: 'bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white focus:ring-slate-700',
       glass: 'glass-panel text-white hover:bg-white/10 hover:border-white/20 focus:ring-white/30',

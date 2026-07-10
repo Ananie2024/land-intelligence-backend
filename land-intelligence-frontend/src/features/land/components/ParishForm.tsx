@@ -16,7 +16,16 @@ export const ParishForm: React.FC<ParishFormProps> = ({ parish, onSubmit, isLoad
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<ParishCreate>();
+  } = useForm<ParishCreate>({
+    defaultValues: parish ? {
+      name: parish.name,
+      code: parish.code,
+      description: parish.description || '',
+      contact_email: parish.contact_email || '',
+      contact_phone: parish.contact_phone || '',
+      boundary_wkb: parish.boundary_wkb || '',
+    } : undefined,
+  });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -28,7 +37,6 @@ export const ParishForm: React.FC<ParishFormProps> = ({ parish, onSubmit, isLoad
           {...register('name', { required: 'Name is required' })}
           type="text"
           id="name"
-          defaultValue={parish?.name}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           disabled={isLoading}
         />
@@ -45,7 +53,6 @@ export const ParishForm: React.FC<ParishFormProps> = ({ parish, onSubmit, isLoad
           {...register('code', { required: 'Code is required' })}
           type="text"
           id="code"
-          defaultValue={parish?.code}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           disabled={isLoading}
         />
@@ -61,7 +68,6 @@ export const ParishForm: React.FC<ParishFormProps> = ({ parish, onSubmit, isLoad
         <textarea
           {...register('description')}
           id="description"
-          defaultValue={parish?.description || ''}
           rows={3}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           disabled={isLoading}
@@ -76,7 +82,6 @@ export const ParishForm: React.FC<ParishFormProps> = ({ parish, onSubmit, isLoad
           {...register('contact_email')}
           type="email"
           id="contact_email"
-          defaultValue={parish?.contact_email || ''}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           disabled={isLoading}
         />
@@ -90,7 +95,6 @@ export const ParishForm: React.FC<ParishFormProps> = ({ parish, onSubmit, isLoad
           {...register('contact_phone')}
           type="tel"
           id="contact_phone"
-          defaultValue={parish?.contact_phone || ''}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           disabled={isLoading}
         />
@@ -103,7 +107,6 @@ export const ParishForm: React.FC<ParishFormProps> = ({ parish, onSubmit, isLoad
         <textarea
           {...register('boundary_wkb')}
           id="boundary_wkb"
-          defaultValue={parish?.boundary_wkb || ''}
           rows={3}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-xs"
           disabled={isLoading}

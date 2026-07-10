@@ -4,6 +4,7 @@ from typing import Any
 
 from app.core.config import settings
 from app.services.backup.cloud.backblaze_b2_provider import BackblazeB2Provider
+from app.services.backup.cloud.encryption_service import EncryptionService
 from app.services.backup.cloud.google_cloud_storage_provider import GoogleCloudStorageProvider
 from app.services.backup.local.local_backup_service import LocalBackupService
 
@@ -19,8 +20,12 @@ class CloudBackupService:
 
         if cloud_provider == "google_cloud_storage":
             self.provider = GoogleCloudStorageProvider()
+            self.encryption_enabled = settings.GCS_ENCRYPTION_ENABLED
+            self.encryption_service = EncryptionService() if self.encryption_enabled else None
         elif cloud_provider == "backblaze_b2":
             self.provider = BackblazeB2Provider()
+            self.encryption_enabled = getattr(settings, 'B2_ENCRYPTION_ENABLED', False)
+            self.encryption_service = EncryptionService() if self.encryption_enabled else None
         else:
             raise ValueError(f"Unsupported cloud provider: {cloud_provider}")
 
@@ -37,16 +42,35 @@ class CloudBackupService:
             return local_result
 
         archive_path = local_result["destination_path"]
-        destination_key = f"daily/{job_id}/{Path(archive_path).name}"
+        file_to_upload = archive_path
+        
+        # Encrypt if enabled
+        encryption_result = None
+        if self.encryption_service:
+            logger.info("Encrypting backup for job %s", job_id)
+            encryption_result = self.encryption_service.encrypt(archive_path)
+            if encryption_result.get("status") == "FAILED":
+                return {
+                    "status": "FAILED",
+                    "error_message": f"Encryption failed: {encryption_result.get('error_message')}",
+                    "destination_path": archive_path,
+                    "checksum": local_result.get("checksum"),
+                    "file_size_bytes": local_result.get("file_size_bytes"),
+                    "file_count": local_result.get("file_count"),
+                }
+            file_to_upload = encryption_result.get("encrypted_path", archive_path)
+
+        destination_key = f"daily/{job_id}/{Path(file_to_upload).name}"
 
         try:
-            upload_result = self.provider.upload(archive_path, destination_key)
+            upload_result = self.provider.upload(file_to_upload, destination_key)
             return {
                 "status": upload_result.get("status", "COMPLETED"),
                 "file_size_bytes": local_result.get("file_size_bytes"),
                 "file_count": local_result.get("file_count"),
                 "destination_path": upload_result.get("destination_path"),
                 "checksum": local_result.get("checksum"),
+                "encrypted": self.encryption_enabled,
             }
         except Exception as exc:
             logger.error(

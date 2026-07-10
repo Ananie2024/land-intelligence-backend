@@ -18,7 +18,6 @@ export { authService } from '@/services/authService';
 export { landService } from '@/services/landService';
 export { userService } from '@/services/userService';
 export { documentService } from '@/services/documentService';
-export { projectService } from '@/services/projectService';
 export { reportService } from '@/services/reportService';
 export { backupService } from '@/services/backupService';
 export { qrService } from '@/services/qrService';
@@ -45,11 +44,6 @@ export type {
   ParcelFilters,
   ParcelOwnershipHistory,
 } from '@/types/land';
-export type {
-  Project,
-  ProjectCreate,
-  ProjectStatus,
-} from '@/types/project';
 export type {
   Document,
   DocumentCreate,

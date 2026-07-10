@@ -15,6 +15,7 @@ const Gis = React.lazy(() => import('@/pages/Gis'));
 const Users = React.lazy(() => import('@/pages/Users'));
 const Backups = React.lazy(() => import('@/pages/Backups'));
 const Settings = React.lazy(() => import('@/pages/Settings'));
+const Reports = React.lazy(() => import('@/pages/Reports'));
 
 // Loading page fallback wrapper
 function SuspenseFallback({ children }: { children: React.ReactNode }) {
@@ -70,6 +71,10 @@ export const router = createBrowserRouter([
           {
             path: 'gis',
             element: <SuspenseFallback><Gis /></SuspenseFallback>,
+          },
+          {
+            path: 'reports',
+            element: <SuspenseFallback><Reports /></SuspenseFallback>,
           },
           {
             path: 'settings',

@@ -1,6 +1,6 @@
 import { apiClient } from '@/api/apiClient';
 import { ENDPOINTS } from '@/api/endpoints';
-import { Parish, Parcel, ParcelCreate, ParcelFilters, ParcelOwnershipHistory } from '@/types/land';
+import { Parish, ParishCreate, Parcel, ParcelCreate, ParcelFilters, ParcelOwnershipHistory } from '@/types/land';
 import { APIResponse } from '@/types/api';
 
 export const landService = {
@@ -11,6 +11,18 @@ export const landService = {
 
   getParishById: async (id: string): Promise<APIResponse<Parish>> => {
     return apiClient.get<Parish>(ENDPOINTS.PARISHES.BY_ID(id));
+  },
+
+  createParish: async (parish: ParishCreate): Promise<APIResponse<Parish>> => {
+    return apiClient.post<Parish>(ENDPOINTS.PARISHES.BASE, parish);
+  },
+
+  updateParish: async (id: string, parish: Partial<Parish>): Promise<APIResponse<Parish>> => {
+    return apiClient.patch<Parish>(ENDPOINTS.PARISHES.BY_ID(id), parish);
+  },
+
+  deleteParish: async (id: string): Promise<APIResponse<{ message: string }>> => {
+    return apiClient.delete<{ message: string }>(ENDPOINTS.PARISHES.BY_ID(id));
   },
 
   refreshParishCount: async (id: string): Promise<APIResponse<Parish>> => {

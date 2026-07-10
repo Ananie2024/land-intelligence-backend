@@ -12,12 +12,12 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isInitializing, setIsInitializing] = useState(true);
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const user = useAuthStore(state => state.user);
-  const initializeFromStorage = useAuthStore(state => state.initializeFromStorage);
-  const setupUnauthorizedListener = useAuthStore(state => state.setupUnauthorizedListener);
-  const refreshAccessToken = useAuthStore(state => state.refreshAccessToken);
-  const logout = useAuthStore(state => state.logout);
+  const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
+  const user = useAuthStore((state: any) => state.user);
+  const initializeFromStorage = useAuthStore((state: any) => state.initializeFromStorage);
+  const setupUnauthorizedListener = useAuthStore((state: any) => state.setupUnauthorizedListener);
+  const refreshAccessToken = useAuthStore((state: any) => state.refreshAccessToken);
+  const logout = useAuthStore((state: any) => state.logout);
 
   // Session restoration on mount
   useEffect(() => {

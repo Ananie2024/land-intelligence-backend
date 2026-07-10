@@ -7,7 +7,7 @@ export default function AuthLayout() {
     <div className="min-h-screen w-screen bg-slate-950 flex flex-col items-center justify-center p-4 md:p-6 font-sans relative">
       {/* Background visual graphics */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gold-500/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute inset-0 bg-dot-pattern pointer-events-none opacity-30 z-0" />
 
       {/* Main glass box container */}
@@ -15,10 +15,12 @@ export default function AuthLayout() {
         
         {/* App Logo & Branding */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-accent-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-primary-500/20 mb-4">
-            L
-          </div>
-          <h2 className="text-xl font-extrabold text-white tracking-tight leading-none m-0">
+          <img 
+            src="/archidiocese-logo.png" 
+            alt="Archdiocese of Kigali" 
+            className="h-16 w-auto object-contain mb-4 drop-shadow-lg"
+          />
+          <h2 className="text-2xl font-extrabold text-white tracking-tight leading-none m-0 bg-gradient-to-r from-primary-400 via-gold-400 to-burgundy-400 bg-clip-text text-transparent">
             {env.VITE_APP_NAME}
           </h2>
           <p className="text-xs text-slate-400 font-medium mt-2 leading-relaxed max-w-[280px]">

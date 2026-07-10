@@ -3,7 +3,7 @@
 
 import { apiClient } from '@/api/apiClient';
 import { ENDPOINTS } from '@/api/endpoints';
-import { QrCode, QrCodeGenerateResponse } from '@/types/qr';
+import { QrCode, QrCodeGenerateResponse, QrCodeVerifyResponse } from '@/types/qr';
 import { APIResponse } from '@/types/api';
 
 export const qrService = {
@@ -15,7 +15,7 @@ export const qrService = {
     return apiClient.post<QrCodeGenerateResponse>(ENDPOINTS.QR.GENERATE_DOCUMENT(documentId));
   },
 
-  verifyQrCode: async (code: string): Promise<APIResponse<{ valid: boolean; code: string; code_type: string; parcel_id?: string; document_id?: string; message: string }>> => {
+verifyQrCode: async (code: string): Promise<APIResponse<QrCodeVerifyResponse>> => {
     return apiClient.post(ENDPOINTS.QR.VERIFY, { code });
   },
 

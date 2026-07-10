@@ -16,7 +16,17 @@ export const ParcelForm: React.FC<ParcelFormProps> = ({ parcel, onSubmit, isLoad
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<ParcelCreate>();
+  } = useForm<ParcelCreate>({
+    defaultValues: parcel ? {
+      parcel_number: parcel.parcel_number,
+      parish_id: parcel.parish_id,
+      area_sqm: parcel.area_sqm,
+      owner_name: parcel.owner_name,
+      title_deed_number: parcel.title_deed_number || '',
+      location_description: parcel.location_description || '',
+      geometry_wkb: parcel.geometry_wkb || '',
+    } : undefined,
+  });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -28,7 +38,6 @@ export const ParcelForm: React.FC<ParcelFormProps> = ({ parcel, onSubmit, isLoad
           {...register('parcel_number', { required: 'Parcel number is required' })}
           type="text"
           id="parcel_number"
-          defaultValue={parcel?.parcel_number}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           disabled={isLoading}
         />
@@ -44,7 +53,6 @@ export const ParcelForm: React.FC<ParcelFormProps> = ({ parcel, onSubmit, isLoad
         <select
           {...register('parish_id', { required: 'Parish is required' })}
           id="parish_id"
-          defaultValue={parcel?.parish_id}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           disabled={isLoading}
         >
@@ -63,7 +71,6 @@ export const ParcelForm: React.FC<ParcelFormProps> = ({ parcel, onSubmit, isLoad
           {...register('area_sqm', { required: 'Area is required', valueAsNumber: true })}
           type="number"
           id="area_sqm"
-          defaultValue={parcel?.area_sqm}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           disabled={isLoading}
         />
@@ -80,7 +87,6 @@ export const ParcelForm: React.FC<ParcelFormProps> = ({ parcel, onSubmit, isLoad
           {...register('owner_name', { required: 'Owner name is required' })}
           type="text"
           id="owner_name"
-          defaultValue={parcel?.owner_name}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           disabled={isLoading}
         />
@@ -97,7 +103,6 @@ export const ParcelForm: React.FC<ParcelFormProps> = ({ parcel, onSubmit, isLoad
           {...register('title_deed_number')}
           type="text"
           id="title_deed_number"
-          defaultValue={parcel?.title_deed_number || ''}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           disabled={isLoading}
         />
@@ -110,7 +115,6 @@ export const ParcelForm: React.FC<ParcelFormProps> = ({ parcel, onSubmit, isLoad
         <textarea
           {...register('location_description')}
           id="location_description"
-          defaultValue={parcel?.location_description || ''}
           rows={2}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           disabled={isLoading}
@@ -124,7 +128,6 @@ export const ParcelForm: React.FC<ParcelFormProps> = ({ parcel, onSubmit, isLoad
         <textarea
           {...register('geometry_wkb')}
           id="geometry_wkb"
-          defaultValue={parcel?.geometry_wkb || ''}
           rows={2}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-xs"
           disabled={isLoading}

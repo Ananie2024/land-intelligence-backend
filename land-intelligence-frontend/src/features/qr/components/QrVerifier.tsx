@@ -10,7 +10,7 @@ export const QrVerifier: React.FC = () => {
   const [result, setResult] = useState<{ valid: boolean; parcelNumber?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const verify = async () => {
+const verify = async () => {
     if (!token) return;
     setIsLoading(true);
     try {
@@ -18,7 +18,7 @@ export const QrVerifier: React.FC = () => {
       if (response.success && response.data) {
         setResult({
           valid: response.data.valid,
-          parcelNumber: response.data.parcel_number,
+          parcelNumber: response.data.parcel_number ?? undefined,
         });
       }
     } catch (error) {

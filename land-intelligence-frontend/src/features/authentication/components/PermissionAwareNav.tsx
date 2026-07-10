@@ -67,7 +67,7 @@ export const PermissionAwareNav: React.FC<PermissionAwareNavProps> = ({ groups, 
     <nav className="flex-grow p-4 space-y-6 overflow-y-auto">
       {visibleGroups.map((group, groupIdx) => (
         <div key={groupIdx} className="space-y-2">
-          <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3">
+          <h4 className="text-[10px] font-bold text-gold-400/70 uppercase tracking-widest px-3">
             {group.title}
           </h4>
           <ul className="space-y-1">
@@ -80,7 +80,7 @@ export const PermissionAwareNav: React.FC<PermissionAwareNavProps> = ({ groups, 
                     flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg transition-all duration-200 group
                     ${
                       props.isActive
-                        ? 'bg-primary-600/10 text-primary-400 border-l-2 border-primary-500 pl-2.5'
+                        ? 'bg-primary-600/10 text-gold-300 border-l-2 border-gold-500 pl-2.5'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                     }
                   `}
@@ -91,7 +91,7 @@ export const PermissionAwareNav: React.FC<PermissionAwareNavProps> = ({ groups, 
                       <>
                         <Icon
                           className={`w-4 h-5 transition-colors ${
-                            props.isActive ? 'text-primary-400' : 'text-slate-400 group-hover:text-slate-200'
+                            props.isActive ? 'text-gold-400' : 'text-slate-400 group-hover:text-gold-300'
                           }`}
                         />
                         {link.name}

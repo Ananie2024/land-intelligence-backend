@@ -10,6 +10,7 @@ import {
   DollarSign,
   Building2,
   X,
+  BarChart,
 } from 'lucide-react';
 import { env } from '@/utils/env';
 import { PermissionAwareNav } from '@/features/authentication/components/PermissionAwareNav';
@@ -36,6 +37,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       links: [
         { name: 'Document Archive', path: '/documents', icon: FileText },
         { name: 'Tax Calculations', path: '/tax', icon: DollarSign },
+        { name: 'Reports', path: '/reports', icon: BarChart },
         { name: 'QR Codes', path: '/qr', icon: QrCode },
       ],
     },
@@ -68,15 +70,22 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        {/* Header Branding */}
-        <div className="h-16 px-6 border-b border-slate-900 flex items-center justify-between">
+        {/* Header Branding - with Logo */}
+        <div className="h-16 px-4 border-b border-slate-900 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-600 flex items-center justify-center font-black text-white shadow-md shadow-primary-500/20">
-              L
+            <img 
+              src="/archidiocese-logo.png" 
+              alt="Archdiocese of Kigali" 
+              className="h-8 w-auto object-contain"
+            />
+            <div className="flex flex-col">
+              <span className="text-white font-extrabold text-sm tracking-tight leading-none truncate max-w-[140px]">
+                {env.VITE_APP_NAME}
+              </span>
+              <span className="text-[9px] text-gold-400 font-medium uppercase tracking-wider">
+                Land Registry
+              </span>
             </div>
-            <span className="text-white font-extrabold text-base tracking-tight truncate max-w-[170px]">
-              {env.VITE_APP_NAME}
-            </span>
           </div>
 
           {/* Close button for mobile drawer */}

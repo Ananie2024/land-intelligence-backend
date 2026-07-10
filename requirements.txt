@@ -46,8 +46,9 @@ celery[redis]==5.3.6
 redis==5.0.1
 schedule==1.2.1
 
-# Reporting & PDF Generation
-reportlab==4.0.9
+# Reporting & Export Libraries
+reportlab>=3.6.0
+openpyxl==3.1.2
 
 # Development Dependencies (optional, comment out for production)
 pytest==7.4.4

@@ -45,7 +45,7 @@ export class ApiError extends Error {
 
 
 // ==========================================
-// Axios Client
+// Axios Client Configuration
 // ==========================================
 //
 // Development:
@@ -56,11 +56,32 @@ export class ApiError extends Error {
 // localhost:8000/api/v1
 //
 // Production:
-// Replace proxy with deployed API URL
+// Browser → API URL (VITE_API_URL)
 //
+// https://api.your-domain.com/api/v1
+//
+// Note: VITE_API_URL should be the full backend URL (e.g., https://api.domain.com)
+// and will be combined with /api/v1 for the API path.
+
+const getBaseURL = (): string => {
+  // In development, use relative URL for Vite proxy
+  if (env.DEV) {
+    return "/api/v1";
+  }
+  // In production, use VITE_API_URL + /api/v1
+  // VITE_API_URL already has /api/v1 appended in .env.prod if needed
+  // Or we append it here if the env var is just the base URL
+  const apiUrl = env.VITE_API_URL;
+  // If VITE_API_URL already ends with /api/v1, use it as-is
+  if (apiUrl.endsWith("/api/v1")) {
+    return apiUrl;
+  }
+  // Otherwise append /api/v1 to the base URL
+  return `${apiUrl.replace(/\/$/, "")}/api/v1`;
+};
 
 export const api: AxiosInstance = axios.create({
-  baseURL: "/api/v1",
+  baseURL: getBaseURL(),
 
   timeout: 30000,
 

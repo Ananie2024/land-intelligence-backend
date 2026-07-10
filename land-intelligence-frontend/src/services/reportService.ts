@@ -1,6 +1,10 @@
+import { api } from '@/api/axios';
 import { apiClient } from '@/api/apiClient';
 import { ENDPOINTS } from '@/api/endpoints';
 import { APIResponse } from '@/types/api';
+
+// Report export types
+export type ExportFormat = 'pdf' | 'excel';
 
 export interface TaxReportSummary {
   parcel_id: string;
@@ -30,6 +34,32 @@ export interface GisComplianceReport {
 }
 
 export const reportService = {
+  // Export methods for reports (returns Blob for file download)
+  exportTaxReport: async (parcelId: string, format: ExportFormat = 'pdf'): Promise<Blob> => {
+    const response = await api.get(ENDPOINTS.REPORTS.TAX(parcelId), {
+      params: { format },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  exportParcelsReport: async (format: ExportFormat = 'pdf', parishId?: string): Promise<Blob> => {
+    const response = await api.get(ENDPOINTS.REPORTS.PARCELS, {
+      params: { format, ...(parishId ? { parish_id: parishId } : {}) },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  exportDashboardReport: async (format: ExportFormat = 'pdf'): Promise<Blob> => {
+    const response = await api.get(ENDPOINTS.REPORTS.DASHBOARD, {
+      params: { format },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // Legacy methods for API data fetching (use apiClient for standard APIResponse)
   getTaxReport: async (parcelId: string): Promise<APIResponse<TaxReportSummary>> => {
     return apiClient.get<TaxReportSummary>(ENDPOINTS.TAX.OUTSTANDING(parcelId));
   },
@@ -38,7 +68,7 @@ export const reportService = {
     parcelId: string, 
     params?: { skip?: number; limit?: number }
   ): Promise<APIResponse<TaxRecordSummary[]>> => {
-    return apiClient.get<TaxRecordSummary[]>(ENDPOINTS.TAX.HISTORY(parcelId), params);
+    return apiClient.get<TaxRecordSummary[]>(ENDPOINTS.TAX.HISTORY(parcelId), { params });
   },
 
   getGisOverlayReport: async (

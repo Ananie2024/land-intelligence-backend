@@ -93,28 +93,31 @@ export const ENDPOINTS = {
     GRID: (locationId: string) => `/locations/${locationId}/grid`,
   },
   
-  // Backups endpoints
-  BACKUPS: {
-    BASE: '/backups',
-    TRIGGER: '/backups/trigger',
-    JOBS: '/backups/jobs',
-    BY_JOB_ID: (jobId: string) => `/backups/jobs/${jobId}`,
-    RESTORE: '/backups/restore',
-    RESTORE_BY_ID: (jobId: string) => `/backups/restore/${jobId}`,
-  },
+   // Backups endpoints
+   BACKUPS: {
+     BASE: '/backups',
+     TRIGGER: '/backups/trigger',
+     VERIFY: '/backups/verify',
+     JOBS: '/backups/jobs',
+     BY_JOB_ID: (jobId: string) => `/backups/jobs/${jobId}`,
+     RESTORE: '/backups/restore',
+     RESTORE_BY_ID: (jobId: string) => `/backups/restore/${jobId}`,
+   },
 
-  // Projects endpoints (for future backend implementation)
-  PROJECTS: {
-    BASE: '/projects',
-    BY_ID: (id: string) => `/projects/${id}`,
-  },
+   // Dashboard endpoints
+   DASHBOARD: {
+     BASE: '/dashboard',
+     STATS: '/dashboard/stats',
+     STATS_PARISHES: '/dashboard/stats/parishes',
+     STATS_PARCELS: '/dashboard/stats/parcels',
+     STATS_USERS: '/dashboard/stats/users',
+   },
 
-  // Dashboard endpoints
-  DASHBOARD: {
-    BASE: '/dashboard',
-    STATS: '/dashboard/stats',
-    STATS_PARISHES: '/dashboard/stats/parishes',
-    STATS_PARCELS: '/dashboard/stats/parcels',
-    STATS_USERS: '/dashboard/stats/users',
-  },
-} as const;
+   // Reports endpoints
+   REPORTS: {
+     BASE: '/reports',
+     TAX: (parcelId: string) => `/reports/tax/${parcelId}`,
+     PARCELS: '/reports/parcels',
+     DASHBOARD: '/reports/dashboard',
+   },
+   } as const;

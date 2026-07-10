@@ -7,12 +7,13 @@ export function Footer() {
   return (
     <footer className="w-full py-6 px-8 border-t border-slate-900 bg-slate-950/40 text-center text-xs text-slate-500 mt-auto flex flex-col sm:flex-row items-center justify-between gap-4">
       <div>
-        &copy; {currentYear} {env.VITE_APP_NAME}. Archdiocese of Kigali. All rights reserved.
+        &copy; {currentYear} <span className="text-white font-semibold">{env.VITE_APP_NAME}</span>.{' '}
+        <span className="text-gold-400">Archdiocese of Kigali</span>. All rights reserved.
       </div>
       <div className="flex items-center gap-6">
-        <a href="#" className="hover:text-slate-300 transition-colors">Privacy Policy</a>
-        <a href="#" className="hover:text-slate-300 transition-colors">Terms of Service</a>
-        <a href="#" className="hover:text-slate-300 transition-colors">Support & Helpdesk</a>
+        <a href="#" className="hover:text-gold-400 transition-colors">Privacy Policy</a>
+        <a href="#" className="hover:text-gold-400 transition-colors">Terms of Service</a>
+        <a href="#" className="hover:text-gold-400 transition-colors">Support & Helpdesk</a>
       </div>
     </footer>
   );
