@@ -20,12 +20,11 @@ export const ENDPOINTS = {
     UPDATE_ME: '/auth/me',
   },
   
-  // Users endpoints (admin managed)
-  USERS: {
-    BASE: '/users',
-    BY_ID: (id: string) => `/users/${id}`,
-    UPDATE_ME: '/auth/me',
-  },
+   // Users endpoints (admin managed)
+   USERS: {
+     BASE: '/users/',
+     BY_ID: (id: string) => `/users/${id}`,
+   },
   
   // Parishes endpoints
   PARISHES: {
@@ -77,20 +76,31 @@ export const ENDPOINTS = {
   // QR Code endpoints
   QR: {
     BASE: '/qr',
-    GENERATE: (id: string) => `/qr/parcels/${id}/generate`,
-    VERIFY: (token: string) => `/qr/verify/${token}`,
+    GENERATE_PARCEL: (id: string) => `/qr/generate/parcel/${id}`,
+    GENERATE_DOCUMENT: (id: string) => `/qr/generate/document/${id}`,
+    VERIFY: '/qr/verify',
+    BY_ID: (id: string) => `/qr/${id}`,
+    REVOKE: (id: string) => `/qr/${id}`,
   },
   
   // Locations endpoints
   LOCATIONS: {
     BASE: '/locations',
+    BY_ID: (id: string) => `/locations/${id}`,
+    FIND: '/locations/find',
     CABINETS: '/locations/cabinets',
+    CABINETS_BY_ID: (id: string) => `/locations/cabinets/${id}`,
+    GRID: (locationId: string) => `/locations/${locationId}/grid`,
   },
   
   // Backups endpoints
   BACKUPS: {
     BASE: '/backups',
-    VERIFY: '/backups/verify',
+    TRIGGER: '/backups/trigger',
+    JOBS: '/backups/jobs',
+    BY_JOB_ID: (jobId: string) => `/backups/jobs/${jobId}`,
+    RESTORE: '/backups/restore',
+    RESTORE_BY_ID: (jobId: string) => `/backups/restore/${jobId}`,
   },
 
   // Projects endpoints (for future backend implementation)

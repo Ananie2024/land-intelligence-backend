@@ -7,7 +7,7 @@ import { authService } from '@/services/authService';
 import { userService } from '@/services/userService';
 import { LOCAL_STORAGE_KEYS } from '@/utils/constants';
 import { ApiError } from '@/api/axios';
-import type { AuthState, LoginCredentials } from '../types/auth';
+import type { LoginCredentials } from '../types/auth';
 import type { UserResponse, UserRole } from '@/types/user';
 
 // Role hierarchy: admin > client > viewer
@@ -17,15 +17,9 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
   viewer: 1,
 };
 
-export const useAuthStore = create<AuthState & { 
-  login: (credentials: LoginCredentials) => Promise<boolean>;
-  logout: () => void;
-  refreshAccessToken: () => Promise<void>;
-  fetchCurrentUser: () => Promise<void>;
-  hasRole: (role: UserRole) => boolean;
-  hasAnyRole: (roles: UserRole[]) => boolean;
-  initializeFromStorage: () => void;
-}>()(
+// Create the store with middleware
+// @ts-ignore - zustand/persist v5 typing issue
+export const useAuthStore = create(
   persist(
     (set, get) => ({
       // Initial state
@@ -58,20 +52,38 @@ export const useAuthStore = create<AuthState & {
         }
       },
 
+      // Listen for unauthorized events from axios interceptor
+      setupUnauthorizedListener: () => {
+        const handleUnauthorized = () => {
+          set({
+            user: null,
+            accessToken: null,
+            refreshToken: null,
+            isAuthenticated: false,
+            error: 'Session expired. Please log in again.',
+          });
+        };
+
+        window.addEventListener('auth:unauthorized', handleUnauthorized);
+
+        // Return cleanup function
+        return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+      },
+
       // Login action
       login: async (credentials: LoginCredentials) => {
         set({ isLoading: true, error: null });
         try {
           const response = await authService.login(credentials);
-          
+
           if (response.success && response.data) {
             const { access_token, refresh_token, user } = response.data;
-            
+
             // Store tokens
             localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, access_token);
             localStorage.setItem(LOCAL_STORAGE_KEYS.REFRESH_TOKEN, refresh_token);
             localStorage.setItem(LOCAL_STORAGE_KEYS.USER_PROFILE, JSON.stringify(user));
-            
+
             set({
               user,
               accessToken: access_token,
@@ -84,8 +96,8 @@ export const useAuthStore = create<AuthState & {
             throw new Error(response.message || 'Login failed');
           }
         } catch (error) {
-          const message = error instanceof ApiError 
-            ? error.message 
+          const message = error instanceof ApiError
+            ? error.message
             : (error as Error).message || 'Login failed';
           set({ error: message, isLoading: false, isAuthenticated: false });
           return false;
@@ -95,15 +107,16 @@ export const useAuthStore = create<AuthState & {
       // Logout action
       logout: () => {
         // Invalidate token on backend (fire and forget)
-        if (get().accessToken) {
-          authService.logout().catch(() => {});
+        const currentToken = get().accessToken;
+        if (currentToken) {
+          authService.logout().catch(() => { });
         }
-        
+
         // Clear local storage
         localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
         localStorage.removeItem(LOCAL_STORAGE_KEYS.REFRESH_TOKEN);
         localStorage.removeItem(LOCAL_STORAGE_KEYS.USER_PROFILE);
-        
+
         set({
           user: null,
           accessToken: null,
@@ -115,19 +128,19 @@ export const useAuthStore = create<AuthState & {
 
       // Refresh access token
       refreshAccessToken: async () => {
-        const refreshToken = get().refreshToken;
-        if (!refreshToken) return;
+        const refreshTokenValue = get().refreshToken;
+        if (!refreshTokenValue) return;
 
         try {
-          const response = await authService.refresh(refreshToken);
-          
+          const response = await authService.refresh(refreshTokenValue);
+
           if (response.success && response.data) {
             const { access_token, refresh_token, user } = response.data;
-            
+
             localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, access_token);
             localStorage.setItem(LOCAL_STORAGE_KEYS.REFRESH_TOKEN, refresh_token);
             localStorage.setItem(LOCAL_STORAGE_KEYS.USER_PROFILE, JSON.stringify(user));
-            
+
             set({
               user,
               accessToken: access_token,
@@ -148,10 +161,12 @@ export const useAuthStore = create<AuthState & {
             set({ isLoading: false });
             return;
           }
-          
+
           const response = await userService.getUserById(user.id);
-          
+
           if (response.success && response.data) {
+            // Update both localStorage and state
+            localStorage.setItem(LOCAL_STORAGE_KEYS.USER_PROFILE, JSON.stringify(response.data));
             set({ user: response.data, isLoading: false });
           }
         } catch (error) {
@@ -161,22 +176,23 @@ export const useAuthStore = create<AuthState & {
 
       // Check if user has specific role
       hasRole: (role: UserRole): boolean => {
-        const user = get().user;
+        const user = get().user as UserResponse | null;
         if (!user) return false;
         return user.role === role;
       },
 
-      // Check if user has any of the specified roles
+      // Check if user has any of the specified roles (with hierarchy support)
       hasAnyRole: (roles: UserRole[]): boolean => {
-        const user = get().user;
+        const user = get().user as UserResponse | null;
         if (!user) return false;
-        const userRoleLevel = ROLE_HIERARCHY[user.role];
+        const userRole = user.role as UserRole;
+        const userRoleLevel = ROLE_HIERARCHY[userRole];
         return roles.some(role => ROLE_HIERARCHY[role] <= userRoleLevel);
       },
     }),
     {
       name: 'land-intelligence-auth',
-      partialize: (state) => ({
+      partialize: (state: any) => ({
         user: state.user,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
@@ -188,23 +204,34 @@ export const useAuthStore = create<AuthState & {
 
 // Main hook for useAuth
 export const useAuth = () => {
-  const store = useAuthStore();
-  
+  const user = useAuthStore(state => state.user);
+  const accessToken = useAuthStore(state => state.accessToken);
+  const refreshToken = useAuthStore(state => state.refreshToken);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const isLoading = useAuthStore(state => state.isLoading);
+  const error = useAuthStore(state => state.error);
+  const login = useAuthStore(state => state.login);
+  const logout = useAuthStore(state => state.logout);
+  const refreshAccessToken = useAuthStore(state => state.refreshAccessToken);
+  const fetchCurrentUser = useAuthStore(state => state.fetchCurrentUser);
+  const hasRole = useAuthStore(state => state.hasRole);
+  const hasAnyRole = useAuthStore(state => state.hasAnyRole);
+
   return {
     state: {
-      user: store.user,
-      accessToken: store.accessToken,
-      refreshToken: store.refreshToken,
-      isAuthenticated: store.isAuthenticated,
-      isLoading: store.isLoading,
-      error: store.error,
+      user,
+      accessToken,
+      refreshToken,
+      isAuthenticated,
+      isLoading,
+      error,
     },
-    login: store.login,
-    logout: store.logout,
-    refreshAccessToken: store.refreshAccessToken,
-    fetchCurrentUser: store.fetchCurrentUser,
-    hasRole: store.hasRole,
-    hasAnyRole: store.hasAnyRole,
+    login,
+    logout,
+    refreshAccessToken,
+    fetchCurrentUser,
+    hasRole,
+    hasAnyRole,
   };
 };
 
@@ -217,7 +244,7 @@ export const useAuthError = () => useAuthStore(state => state.error);
 export const useAuthStatus = () => {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const user = useAuthStore(state => state.user);
-  
+
   return {
     isAuthenticated,
     user,

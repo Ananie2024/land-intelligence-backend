@@ -1,3 +1,4 @@
+import { api } from '@/api/axios';
 import { apiClient } from '@/api/apiClient';
 import { ENDPOINTS } from '@/api/endpoints';
 import { Document, DocumentCreate, DocumentUpdate, DocumentFilters } from '@/types/document';
@@ -33,13 +34,20 @@ export const documentService = {
   },
 
   deleteDocument: async (id: string, hardDelete?: boolean): Promise<APIResponse<{ message: string }>> => {
+    // Use params to pass hard_delete flag
     const params = hardDelete ? { hard_delete: true } : undefined;
-    return apiClient.delete<{ message: string }>(ENDPOINTS.DOCUMENTS.BY_ID(id));
+    
+    // Use api instance directly for delete with params support
+    const response = await api.delete<APIResponse<{ message: string }>>(ENDPOINTS.DOCUMENTS.BY_ID(id), { params });
+    return response.data;
   },
 
   downloadDocument: async (id: string): Promise<Blob> => {
-    const response = await apiClient.get<Blob>(`${ENDPOINTS.DOCUMENTS.BY_ID(id)}/file`);
-    return response.data as unknown as Blob;
+    // Use api instance directly with responseType: 'blob' for file download
+    const response = await api.get(ENDPOINTS.DOCUMENTS.DOWNLOAD(id), {
+      responseType: 'blob'
+    });
+    return response.data as Blob;
   },
 };
 

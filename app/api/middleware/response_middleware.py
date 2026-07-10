@@ -36,6 +36,10 @@ def _is_passthrough(path: str) -> bool:
     return any(path == p or path.startswith(p) for p in PASSTHROUGH_PREFIXES)
 
 
+def _is_options_request(request: Request) -> bool:
+    return request.method == "OPTIONS"
+
+
 async def _read_body(response: Response) -> bytes:
     """Read the body from a response, handling both direct and streaming responses."""
     # First, try to get the body directly (works for regular Response)
@@ -49,13 +53,13 @@ async def _read_body(response: Response) -> bytes:
     
     # For streaming responses, consume the body_iterator
     if hasattr(response, "body_iterator"):
-        body = b""
+        body: bytes = b""
         try:
             async for chunk in response.body_iterator:  # type: ignore
                 if isinstance(chunk, bytes):
                     body += chunk
                 else:
-                    body += chunk.encode("utf-8")
+                    body += chunk.encode("utf-8")  # type: ignore
             return body
         except Exception as e:
             logger.warning("Failed to read streaming body: %s", e)
@@ -66,6 +70,10 @@ async def _read_body(response: Response) -> bytes:
 class StandardizeResponseMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         response = await call_next(request)
+
+        # Skip middleware for OPTIONS requests (CORS preflight)
+        if _is_options_request(request):
+            return response
 
         if _is_passthrough(request.url.path):
             return response
@@ -97,6 +105,10 @@ class StandardizeResponseMiddleware(BaseHTTPMiddleware):
 class PaginationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         response = await call_next(request)
+
+        # Skip middleware for OPTIONS requests (CORS preflight)
+        if _is_options_request(request):
+            return response
 
         if _is_passthrough(request.url.path):
             return response

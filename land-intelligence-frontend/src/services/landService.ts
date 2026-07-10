@@ -56,6 +56,10 @@ export const landService = {
   getParcelOwnershipHistory: async (id: string): Promise<APIResponse<ParcelOwnershipHistory[]>> => {
     return apiClient.get<ParcelOwnershipHistory[]>(ENDPOINTS.PARCELS.OWNERSHIP_HISTORY(id));
   },
+
+  getParcelsForMap: async (): Promise<APIResponse<Parcel[]>> => {
+    return apiClient.get<Parcel[]>(ENDPOINTS.PARCELS.FOR_MAP);
+  },
 };
 
 export default landService;

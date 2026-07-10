@@ -91,7 +91,7 @@ app = FastAPI(
     version="1.0.0",
     description="""
     Digital Land Management System for the Archdiocese of Kigali.
-
+    
     This API provides secure access to land parcel records,
     document management, GIS spatial analysis,
     tax calculation, and backup services.
@@ -100,6 +100,7 @@ app = FastAPI(
     redoc_url=_redoc_url,
     openapi_url=_openapi_url,
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 app.state.limiter = limiter

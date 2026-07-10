@@ -20,6 +20,10 @@ export { userService } from '@/services/userService';
 export { documentService } from '@/services/documentService';
 export { projectService } from '@/services/projectService';
 export { reportService } from '@/services/reportService';
+export { backupService } from '@/services/backupService';
+export { qrService } from '@/services/qrService';
+export { dashboardService } from '@/services/dashboardService';
+export { locationService } from '@/services/locationService';
 
 // Types
 export type { APIResponse, PaginatedResponse, ErrorDetail } from '@/types/api';
@@ -53,3 +57,7 @@ export type {
   DocumentFilters,
   DocumentType,
 } from '@/types/document';
+export type { Backup, BackupVerifyResponse } from '@/types/backup';
+export type { QrCode, QrCodeGenerateResponse } from '@/types/qr';
+export type { SystemStats, ParishStats, ParcelStats, UserStats } from '@/types/dashboard';
+export type { PhysicalLocation, StorageCabinet } from '@/services/locationService';

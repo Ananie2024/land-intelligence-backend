@@ -5,8 +5,9 @@ Phase 2 — Section 3.1
 Land Intelligence System
 """
 
-from sqlalchemy import Column, String, Text, Boolean
+from sqlalchemy import Column, String, Text, Boolean, text
 from sqlalchemy.orm import relationship
+from sqlalchemy import Index
 
 from app.models.base import BaseModel
 
@@ -21,7 +22,7 @@ class DocumentType(BaseModel):
         code: Unique type code (e.g., "TITLE", "MAP")
         description: Description of document type
         requires_verification: Whether documents of this type require verification
-        retention_years: Retention period in years
+        retention_years: Retention period in years or 'PERMANENT'
         is_active: Soft delete flag (inherited from BaseModel)
         created_at: Timestamp when record was created (inherited)
         updated_at: Timestamp when record was last updated (inherited)
@@ -32,8 +33,6 @@ class DocumentType(BaseModel):
     name = Column(
         String(100),
         nullable=False,
-        unique=True,
-        index=True,
         comment="Type name (e.g., 'Title Deed', 'Survey Map')"
     )
     
@@ -54,23 +53,26 @@ class DocumentType(BaseModel):
     requires_verification = Column(
         Boolean,
         nullable=False,
-        default=False,
-        server_default="0",
+        server_default=text("false"),
         comment="Whether documents of this type require verification"
     )
     
     retention_years = Column(
-        String(10),  # e.g., "10", "PERMANENT"
+        String(10),
         nullable=False,
-        default="PERMANENT",
-        server_default="PERMANENT",
+        server_default=text("'PERMANENT'"),
         comment="Retention period in years or 'PERMANENT'"
     )
     
     # Relationships
     documents = relationship(
         "Document",
-        back_populates="document_type"
+        back_populates="document_type",
+    )
+    
+    # Indexes for search
+    __table_args__ = (
+        Index('ix_document_types_name', 'name'),
     )
     
     def __repr__(self):

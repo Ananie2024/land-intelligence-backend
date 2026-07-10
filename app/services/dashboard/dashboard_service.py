@@ -7,12 +7,11 @@ Business logic for dashboard statistics and system overview.
 """
 
 import logging
-from sqlalchemy import select, func
+from sqlalchemy import select, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.parish import Parish
 from app.models.parcel import Parcel
-from app.models.user import User, UserRole
 from app.models.document import Document
 from app.schemas.dashboard_schema import (
     SystemStats,
@@ -78,15 +77,16 @@ class DashboardService:
             parcels_with_deeds=parcel_row.parcels_with_deeds if parcel_row else 0,
         )
 
-        # User statistics
-        user_result = await self.db.execute(
-            select(
-                func.count(User.id).label("total_users"),
-                func.count(User.id).filter(User.role == UserRole.ADMIN.value).label("admin_count"),
-                func.count(User.id).filter(User.role == UserRole.CLIENT.value).label("client_count"),
-                func.count(User.id).filter(User.role == UserRole.VIEWER.value).label("viewer_count"),
-            ).where(User.is_active)
-        )
+        # User statistics - use raw SQL text to avoid enum casting issues
+        user_result = await self.db.execute(text("""
+            SELECT 
+                count(users.id) AS total_users,
+                count(users.id) FILTER (WHERE users.role::text = 'admin') AS admin_count,
+                count(users.id) FILTER (WHERE users.role::text = 'client') AS client_count,
+                count(users.id) FILTER (WHERE users.role::text = 'viewer') AS viewer_count
+            FROM users 
+            WHERE users.is_active
+        """))
         user_row = user_result.first()
 
         user_stats = UserStats(
@@ -180,14 +180,15 @@ class DashboardService:
 
     async def get_user_stats(self) -> UserStats:
         """Get user statistics only."""
-        result = await self.db.execute(
-            select(
-                func.count(User.id).label("total_users"),
-                func.count(User.id).filter(User.role == UserRole.ADMIN.value).label("admin_count"),
-                func.count(User.id).filter(User.role == UserRole.CLIENT.value).label("client_count"),
-                func.count(User.id).filter(User.role == UserRole.VIEWER.value).label("viewer_count"),
-            ).where(User.is_active)
-        )
+        result = await self.db.execute(text("""
+            SELECT 
+                count(users.id) AS total_users,
+                count(users.id) FILTER (WHERE users.role::text = 'admin') AS admin_count,
+                count(users.id) FILTER (WHERE users.role::text = 'client') AS client_count,
+                count(users.id) FILTER (WHERE users.role::text = 'viewer') AS viewer_count
+            FROM users 
+            WHERE users.is_active
+        """))
         row = result.first()
 
         if row is None:

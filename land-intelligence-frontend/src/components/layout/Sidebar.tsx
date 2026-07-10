@@ -1,5 +1,4 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Map,
@@ -13,6 +12,8 @@ import {
   X,
 } from 'lucide-react';
 import { env } from '@/utils/env';
+import { PermissionAwareNav } from '@/features/authentication/components/PermissionAwareNav';
+import type { NavGroup } from '@/features/authentication/components/PermissionAwareNav';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -20,7 +21,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const menuItems = [
+  // Define navigation structure with role requirements
+  const menuItems: NavGroup[] = [
     {
       title: 'General',
       links: [
@@ -39,10 +41,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     },
     {
       title: 'Administration',
+      roles: ['admin'], // Only show this group for admin users
       links: [
-        { name: 'User Management', path: '/users', icon: Users },
-        { name: 'System Backups', path: '/backups', icon: Database },
-        { name: 'Settings', path: '/settings', icon: Settings },
+        { name: 'User Management', path: '/users', icon: Users, requiredRoles: ['admin'] },
+        { name: 'System Backups', path: '/backups', icon: Database, requiredRoles: ['admin'] },
+        { name: 'Settings', path: '/settings', icon: Settings, requiredRoles: ['admin'] },
       ],
     },
   ];
@@ -86,48 +89,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </button>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="flex-grow p-4 space-y-6 overflow-y-auto">
-          {menuItems.map((group, groupIdx) => (
-            <div key={groupIdx} className="space-y-2">
-              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3">
-                {group.title}
-              </h4>
-              <ul className="space-y-1">
-                {group.links.map((link, linkIdx) => (
-                  <li key={linkIdx}>
-                    <NavLink
-                      to={link.path}
-                      onClick={onClose}
-                      className={({ isActive }) => `
-                        flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg transition-all duration-200 group
-                        ${
-                          isActive
-                            ? 'bg-primary-600/10 text-primary-400 border-l-2 border-primary-500 pl-2.5'
-                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-                        }
-                      `}
-                    >
-                      {({ isActive }) => {
-                        const Icon = link.icon;
-                        return (
-                          <>
-                            <Icon
-                              className={`w-4 h-5 transition-colors ${
-                                isActive ? 'text-primary-400' : 'text-slate-400 group-hover:text-slate-200'
-                              }`}
-                            />
-                            {link.name}
-                          </>
-                        );
-                      }}
-                    </NavLink>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </nav>
+        {/* Permission-Aware Navigation Items */}
+        <PermissionAwareNav groups={menuItems} onItemClick={onClose} />
 
         {/* Footer info/System status */}
         <div className="p-4 border-t border-slate-900 bg-slate-900/20 text-[10px] text-slate-500 flex items-center justify-between">

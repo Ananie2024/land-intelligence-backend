@@ -4,11 +4,19 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 
+// Extend AxiosRequestConfig to include custom _retry property
+declare module "axios" {
+  export interface InternalAxiosRequestConfig {
+    _retry?: boolean;
+  }
+}
+
 import { env } from "@/utils/env";
-import { LOCAL_STORAGE_KEYS, API_ROUTES } from "@/utils/constants";
+import { LOCAL_STORAGE_KEYS } from "@/utils/constants";
 
 import { APIResponse, ErrorDetail } from "@/types/api";
 import { PaginationMeta } from "@/types/common";
+import { ENDPOINTS } from "./endpoints";
 
 
 // ==========================================
@@ -181,7 +189,6 @@ api.interceptors.response.use(
     }
 
 
-
     // ======================================
     // Handle Token Refresh
     // ======================================
@@ -192,11 +199,15 @@ api.interceptors.response.use(
 
       originalRequest &&
 
+      !originalRequest._retry &&
+
       !originalRequest.url?.includes(
-        API_ROUTES.AUTH.LOGIN
+        ENDPOINTS.AUTH.REFRESH
       )
 
     ) {
+
+      originalRequest._retry = true;
 
 
       if (isRefreshing) {
@@ -207,7 +218,7 @@ api.interceptors.response.use(
 
             failedQueue.push({
               resolve,
-              reject,
+              reject
             });
 
           }
@@ -215,14 +226,10 @@ api.interceptors.response.use(
         )
         .then((token) => {
 
-
           if (originalRequest.headers) {
-
             originalRequest.headers.Authorization =
               `Bearer ${token}`;
-
           }
-
 
           return api(originalRequest);
 
@@ -254,24 +261,22 @@ api.interceptors.response.use(
 
         try {
 
-
           /*
             IMPORTANT:
             Uses Vite proxy.
             No direct localhost:8000 call.
+            
+            We use the api instance directly (not axios.post) to ensure
+            the request goes through the proxy and doesn't bypass interceptors.
           */
 
           const refreshResponse =
-            await axios.post(
-
-              `/api/v1${API_ROUTES.AUTH.REFRESH}`,
-
+            await api.post(
+              ENDPOINTS.AUTH.REFRESH,
               {
                 refresh_token: refreshToken,
               }
-
             );
-
 
 
           const {
@@ -280,7 +285,6 @@ api.interceptors.response.use(
           } =
             refreshResponse.data.data ||
             refreshResponse.data;
-
 
 
           localStorage.setItem(
@@ -295,14 +299,10 @@ api.interceptors.response.use(
           );
 
 
-
           if (originalRequest.headers) {
-
             originalRequest.headers.Authorization =
               `Bearer ${access_token}`;
-
           }
-
 
 
           processQueue(null, access_token);
@@ -311,13 +311,10 @@ api.interceptors.response.use(
           isRefreshing = false;
 
 
-
           return api(originalRequest);
 
 
-
         } catch (refreshError) {
-
 
           processQueue(
             refreshError as Error,
@@ -326,7 +323,6 @@ api.interceptors.response.use(
 
 
           isRefreshing = false;
-
 
 
           localStorage.removeItem(
@@ -344,11 +340,10 @@ api.interceptors.response.use(
           );
 
 
-
+          // Dispatch event for auth store to handle logout
           window.dispatchEvent(
             new Event("auth:unauthorized")
           );
-
 
 
           return Promise.reject(

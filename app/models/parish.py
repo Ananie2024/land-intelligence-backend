@@ -5,8 +5,9 @@ Phase 2 — Section 3.1
 Land Intelligence System
 """
 
-from sqlalchemy import Column, String, Text, Integer
+from sqlalchemy import Column, String, Text, Integer, func
 from sqlalchemy.orm import relationship
+from sqlalchemy import Index
 from geoalchemy2 import Geometry
 
 from app.models.base import BaseModel
@@ -14,19 +15,19 @@ from app.models.base import BaseModel
 
 class Parish(BaseModel):
     """
-    Parish entity representing administrative grouping of land parcels.
+    Parish entity representing administrative land divisions.
     
     Attributes:
         id: UUID primary key (inherited from BaseModel)
         name: Official parish name
-        code: Unique parish code (e.g., PAR-001)
-        description: Optional description of parish boundaries/history
+        code: Unique parish code (e.g., "PAR-001")
+        description: Description of parish boundaries and history
         address: Physical address of parish office
-        contact_person: Name of primary contact
+        contact_person: Name of primary contact person
         contact_phone: Phone number for parish office
         contact_email: Email address for parish office
-        boundary_wkb: Spatial boundary of the parish (MULTIPOLYGON)
         parcel_count: Cached count of active parcels in this parish
+        boundary_wkb: Spatial boundary in WKB format
         is_active: Soft delete flag (inherited from BaseModel)
         created_at: Timestamp when record was created (inherited)
         updated_at: Timestamp when record was last updated (inherited)
@@ -37,7 +38,6 @@ class Parish(BaseModel):
     name = Column(
         String(200),
         nullable=False,
-        index=True,
         comment="Official parish name"
     )
     
@@ -46,7 +46,7 @@ class Parish(BaseModel):
         nullable=False,
         unique=True,
         index=True,
-        comment="Unique parish code (e.g., PAR-001)"
+        comment="Unique parish code (e.g., 'PAR-001')"
     )
     
     description = Column(
@@ -79,25 +79,28 @@ class Parish(BaseModel):
         comment="Email address for parish office"
     )
     
+    parcel_count = Column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        comment="Cached count of active parcels in this parish"
+    )
+    
     boundary_wkb = Column(
         Geometry(geometry_type='MULTIPOLYGON', srid=4326),
         nullable=True,
         comment="Spatial boundary of the parish (MULTIPOLYGON) in WGS84"
     )
     
-    parcel_count = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        server_default="0",
-        comment="Cached count of active parcels in this parish"
-    )
-    
     # Relationships
     parcels = relationship(
         "Parcel",
         back_populates="parish",
-        cascade="all, delete-orphan"
+    )
+    
+    # Indexes for search
+    __table_args__ = (
+        Index('ix_parishes_name', 'name'),
     )
     
     def __repr__(self):

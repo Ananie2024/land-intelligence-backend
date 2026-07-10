@@ -5,15 +5,16 @@ Phase 2 — Section 3.1
 Land Intelligence System
 """
 
-from sqlalchemy import Column, String, Text, Float, Boolean
+from sqlalchemy import Column, String, Text, Float, Boolean, text
 from sqlalchemy.orm import relationship
+from sqlalchemy import Index
 
 from app.models.base import BaseModel
 
 
 class LandUseCategory(BaseModel):
     """
-    Land use category entity representing classifications of land use.
+    Land use category entity representing classification of land use.
     
     Attributes:
         id: UUID primary key (inherited from BaseModel)
@@ -34,8 +35,6 @@ class LandUseCategory(BaseModel):
     name = Column(
         String(100),
         nullable=False,
-        unique=True,
-        index=True,
         comment="Category name (e.g., 'Residential', 'Agricultural')"
     )
     
@@ -56,24 +55,21 @@ class LandUseCategory(BaseModel):
     base_tax_rate = Column(
         Float,
         nullable=False,
-        default=0.0,
-        server_default="0.0",
+        server_default=text("0.0"),
         comment="Base tax rate per square meter"
     )
     
     tax_rate_unit = Column(
         String(20),
         nullable=False,
-        default="per_sqm",
-        server_default="per_sqm",
+        server_default=text("'per_sqm'"),
         comment="Unit for tax rate (e.g., 'per_sqm', 'flat')"
     )
     
     requires_approval = Column(
         Boolean,
         nullable=False,
-        default=False,
-        server_default="0",
+        server_default=text("false"),
         comment="Whether this land use requires special approval"
     )
     
@@ -86,9 +82,14 @@ class LandUseCategory(BaseModel):
     # Relationships
     parcels = relationship(
         "Parcel",
-        back_populates="land_use_category"
+        back_populates="land_use_category",
+    )
+    
+    # Indexes for search
+    __table_args__ = (
+        Index('ix_land_use_categories_name', 'name'),
     )
     
     def __repr__(self):
         """String representation of LandUseCategory instance."""
-        return f"<LandUseCategory(name='{self.name}', code='{self.code}', rate={self.base_tax_rate})>"
+        return f"<LandUseCategory(name='{self.name}', code='{self.code}')>"

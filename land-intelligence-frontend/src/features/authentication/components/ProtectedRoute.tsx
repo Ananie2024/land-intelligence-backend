@@ -22,9 +22,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Check role-based access if roles are specified
+// Check role-based access if roles are specified
   if (requiredRoles && state.user) {
-    const hasAccess = requiredRoles.includes(state.user.role);
+    const hasAccess = requiredRoles.some(role => state.user?.role === role);
     if (!hasAccess) {
       return <Navigate to="/unauthorized" replace />;
     }
