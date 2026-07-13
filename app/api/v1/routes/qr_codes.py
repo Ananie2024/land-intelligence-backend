@@ -26,14 +26,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/generate/parcel/{parcel_id}", response_model=QRCodeResponse)
+@router.post("/generate/parcel/{parcel_upi}", response_model=QRCodeResponse)
 async def generate_parcel_qr(
-    parcel_id: str,
+    parcel_upi: str,
     expires_days: Optional[int] = Query(None, ge=1, le=365),
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
-    """Generate a Digital Testimony QR code for a parcel."""
+    """Generate a Digital Testimony QR code for a parcel using UPI."""
     from app.repositories.qr_registry_repository import QRRegistryRepository
     from app.repositories.parcel_repository import ParcelRepository
     from app.repositories.document_repository import DocumentRepository
@@ -46,7 +46,7 @@ async def generate_parcel_qr(
     )
     
     try:
-        qr_entry = await service.generate_parcel_qr(parcel_id, expires_days, user_id)
+        qr_entry = await service.generate_parcel_qr(parcel_upi, expires_days, user_id)
         return qr_entry
     except ValueError as e:
         raise HTTPException(

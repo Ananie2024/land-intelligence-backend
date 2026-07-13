@@ -3,7 +3,7 @@
 
 export interface TaxPayment {
   id: string;
-  parcel_id: string;
+  parcel_upi: string;
   assessment_year: string;
   assessed_value: number;
   base_tax_amount: number;

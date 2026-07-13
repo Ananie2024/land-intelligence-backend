@@ -2,6 +2,7 @@
 // Land Intelligence System
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { landService } from '@/services/landService';
 import type { Parish } from '@/types/land';
 import { ParishTable } from '../components/ParishTable';
@@ -9,6 +10,7 @@ import { ParishForm } from '../components/ParishForm';
 import type { ParishCreate } from '@/types/land';
 
 export const ParishListPage: React.FC = () => {
+  const navigate = useNavigate();
   const [parishes, setParishes] = useState<Parish[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -82,12 +84,12 @@ export const ParishListPage: React.FC = () => {
         </button>
       </div>
       
-      {isLoading ? (
+{isLoading ? (
         <div className="text-center py-12">Loading parishes...</div>
       ) : (
         <ParishTable 
           parishes={parishes}
-          onView={(parish) => console.log('View', parish)}
+          onView={(parish) => navigate(`/parishes/${parish.id}`)}
           onEdit={(parish) => {
             setEditingParish(parish);
             setShowForm(true);

@@ -82,7 +82,7 @@ def generate_tax_excel(
     ws.append(["Parcel Information"])
     ws["A3"].font = Font(bold=True, color="4472C4")
     
-    ws.append(["Parcel Number", parcel_data.get("parcel_number", "N/A")])
+    ws.append(["UPI", parcel_data.get("upi", "N/A")])
     ws.append(["Owner", parcel_data.get("owner_name", "N/A")])
     ws.append(["Area (sqm)", parcel_data.get("area_sqm", 0)])
     ws.append(["Total Outstanding", f"${parcel_data.get('total_outstanding', 0):,.2f}"])
@@ -163,13 +163,13 @@ def generate_parcels_excel(
     # Parcels sheet
     parcels_ws = wb.create_sheet("Parcels")
     
-    headers = ["Parcel #", "Owner", "Area (sqm)", "Valuation", "Parish", "Land Use"]
+    headers = ["UPI", "Owner", "Area (sqm)", "Valuation", "Parish", "Land Use"]
     parcels_ws.append(headers)
     _apply_header_style(parcels_ws, 1)
     
     for parcel in parcels:
         parcels_ws.append([
-            parcel.get("parcel_number", "N/A"),
+            parcel.get("upi", "N/A"),
             parcel.get("owner_name", "N/A"),
             parcel.get("area_sqm", 0),
             parcel.get("valuation", 0) or 0,

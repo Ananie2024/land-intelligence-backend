@@ -10,8 +10,8 @@ interface ParcelDetailProps {
 export const ParcelDetail: React.FC<ParcelDetailProps> = ({ parcel }) => {
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">Parcel {parcel.parcel_number}</h2>
+<div>
+        <h2 className="text-xl font-bold text-gray-900">UPI: {parcel.upi}</h2>
         <p className="text-sm text-gray-500">Parish: {parcel.parish_name || parcel.parish_id}</p>
       </div>
 

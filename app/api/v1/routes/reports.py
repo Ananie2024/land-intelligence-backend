@@ -20,25 +20,25 @@ router = APIRouter()
 
 
 # ---------------------------------------------------------------------------
-# GET /reports/tax/{parcel_id} - Tax report export
+# GET /reports/tax/{parcel_upi} - Tax report export
 # ---------------------------------------------------------------------------
 
 @router.get(
-    "/tax/{parcel_id}",
+    "/tax/{parcel_upi}",
     summary="Export tax report",
-    description="Generate a tax assessment report for a parcel in PDF or Excel format.",
+    description="Generate a tax assessment report for a parcel in PDF or Excel format using UPI.",
 )
 async def export_tax_report(
-    parcel_id: str,
+    parcel_upi: str,
     format: str = Query("pdf", pattern="^(pdf|excel)$", description="Export format"),
     db: AsyncSession = Depends(get_db),
     _: str = Depends(require_client_or_admin),
 ):
-    """Generate tax report for a parcel."""
+    """Generate tax report for a parcel using UPI."""
     service = ReportsService(db)
     
     try:
-        content = await service.generate_tax_report(parcel_id, format)
+        content = await service.generate_tax_report(parcel_upi, format)
     except ValueError as e:
         raise HTTPException(
             status_code=404,
@@ -46,7 +46,7 @@ async def export_tax_report(
         )
     
     media_type = "application/pdf" if format == "pdf" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    filename = f"tax-report-{parcel_id}.{format}"
+    filename = f"tax-report-{parcel_upi}.{format}"
     
     return Response(
         content=content,

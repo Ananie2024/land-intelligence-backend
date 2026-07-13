@@ -2,6 +2,7 @@
 // Land Intelligence System
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
 import { MapPin, Plus } from 'lucide-react';
@@ -13,6 +14,7 @@ import { Modal } from '@/components/ui/Modal';
 import { toast } from 'react-hot-toast';
 
 export default function Parcels() {
+  const navigate = useNavigate();
   const [parcels, setParcels] = useState<Parcel[]>([]);
   const [parishes, setParishes] = useState<Array<{ id: string; name: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -131,7 +133,7 @@ export default function Parcels() {
         ) : (
           <ParcelTable 
             parcels={parcels}
-            onView={(parcel) => console.log('View parcel:', parcel)}
+            onView={(parcel) => navigate(`/parcels/${parcel.id}`)}
             onEdit={(parcel) => {
               setEditingParcel(parcel);
               setShowForm(true);

@@ -39,7 +39,7 @@ export default function Tax() {
         <div className="flex items-center gap-2">
           <input
             type="text"
-            placeholder="Enter parcel ID..."
+            placeholder="Enter UPI (e.g., 1/02/02/03/1390)..."
             value={parcelId}
             onChange={(e) => setParcelId(e.target.value)}
             className="px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-md text-sm text-white placeholder-slate-500"

@@ -89,19 +89,19 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
         )
         return list(result.scalars().all())
     
-    async def get_by_parcel_number(self, parcel_number: str) -> Optional[Parcel]:
+    async def get_by_upi(self, upi: str) -> Optional[Parcel]:
         """
-        Get parcel by unique parcel number.
+        Get parcel by Unique Parcel Identifier (UPI).
         
         Args:
-            parcel_number: Unique parcel identifier
+            upi: Unique Parcel Identifier (e.g. 1/02/02/03/1390)
             
         Returns:
             Parcel instance if found, None otherwise
         """
         result = await self.db.execute(
             select(Parcel).where(
-                Parcel.parcel_number == parcel_number,
+                Parcel.upi == upi,
                 Parcel.is_active
             )
         )
@@ -128,7 +128,7 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
     async def search(
         self,
         owner_name: Optional[str] = None,
-        parcel_number: Optional[str] = None,
+        upi: Optional[str] = None,
         parish_id: Optional[str] = None,
         land_use_category_id: Optional[str] = None,
         min_area_sqm: Optional[float] = None,
@@ -141,7 +141,7 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
         
         Args:
             owner_name: Filter by owner name (partial match)
-            parcel_number: Filter by parcel number (partial match)
+            upi: Filter by UPI (partial match)
             parish_id: Filter by parish
             land_use_category_id: Filter by land use category
             min_area_sqm: Minimum area in square meters
@@ -157,8 +157,8 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
         if owner_name:
             query = query.where(Parcel.owner_name.contains(owner_name))
         
-        if parcel_number:
-            query = query.where(Parcel.parcel_number.contains(parcel_number))
+        if upi:
+            query = query.where(Parcel.upi.contains(upi))
         
         if parish_id:
             query = query.where(Parcel.parish_id == parish_id)

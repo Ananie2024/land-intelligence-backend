@@ -48,14 +48,14 @@ export const ParcelTable: React.FC<ParcelTableProps> = ({ parcels, onEdit, onDel
         <tbody className="bg-white divide-y divide-gray-200">
           {parcels.map((parcel) => (
             <tr key={parcel.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                  <MapPin className="h-5 w-5 text-gray-400 mr-2" />
-                  <span className="font-mono text-sm text-gray-900">{parcel.parcel_number}</span>
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {parcel.parish_name || parcel.parish_id}
+               <td className="px-6 py-4 whitespace-nowrap">
+                 <div className="flex items-center">
+                   <MapPin className="h-5 w-5 text-gray-400 mr-2" />
+                   <span className="font-mono text-sm text-gray-900">{parcel.upi}</span>
+                 </div>
+               </td>
+               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                 {parcel.parish_name || parcel.parish_id}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {parcel.area_sqm.toLocaleString()} m²

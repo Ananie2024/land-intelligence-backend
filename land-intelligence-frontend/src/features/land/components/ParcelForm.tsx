@@ -18,7 +18,7 @@ export const ParcelForm: React.FC<ParcelFormProps> = ({ parcel, onSubmit, isLoad
     formState: { errors },
   } = useForm<ParcelCreate>({
     defaultValues: parcel ? {
-      parcel_number: parcel.parcel_number,
+      upi: parcel.upi,
       parish_id: parcel.parish_id,
       area_sqm: parcel.area_sqm,
       owner_name: parcel.owner_name,
@@ -31,18 +31,19 @@ export const ParcelForm: React.FC<ParcelFormProps> = ({ parcel, onSubmit, isLoad
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <label htmlFor="parcel_number" className="block text-sm font-medium text-gray-700">
-          Parcel Number
+        <label htmlFor="upi" className="block text-sm font-medium text-gray-700">
+          UPI (Unique Parcel Identifier)
         </label>
         <input
-          {...register('parcel_number', { required: 'Parcel number is required' })}
+          {...register('upi', { required: 'UPI is required' })}
           type="text"
-          id="parcel_number"
+          id="upi"
+          placeholder="e.g., 1/02/02/03/1390"
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           disabled={isLoading}
         />
-        {errors.parcel_number && (
-          <p className="mt-1 text-sm text-red-600">{errors.parcel_number.message}</p>
+        {errors.upi && (
+          <p className="mt-1 text-sm text-red-600">{errors.upi.message}</p>
         )}
       </div>
 

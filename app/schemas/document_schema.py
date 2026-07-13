@@ -15,7 +15,7 @@ class DocumentBase(BaseModel):
     Base schema for Document with shared fields.
     Used as base for both Create and Response schemas.
     """
-    parcel_id: Optional[str] = Field(None, description="Foreign key to parcel (optional)")
+    parcel_upi: Optional[str] = Field(None, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     document_type_id: str = Field(..., description="Foreign key to document type")
     filename: str = Field(..., max_length=500, description="Original filename")
     description: Optional[str] = Field(None, description="Document description")
@@ -41,7 +41,7 @@ class DocumentUploadRequest(BaseModel):
     Schema for document upload request with metadata.
     File upload is handled separately as form data.
     """
-    parcel_id: Optional[str] = Field(None, description="Foreign key to parcel")
+    parcel_upi: Optional[str] = Field(None, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     document_type_id: str = Field(..., description="Foreign key to document type")
     description: Optional[str] = Field(None, description="Document description")
     document_date: Optional[date] = Field(None, description="Document date")
@@ -53,7 +53,7 @@ class DocumentUpdate(BaseModel):
     Schema for updating an existing Document.
     All fields are optional for partial updates.
     """
-    parcel_id: Optional[str] = Field(None, description="Foreign key to parcel")
+    parcel_upi: Optional[str] = Field(None, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     document_type_id: Optional[str] = Field(None, description="Foreign key to document type")
     filename: Optional[str] = Field(None, max_length=500, description="Original filename")
     description: Optional[str] = Field(None, description="Document description")
@@ -80,7 +80,7 @@ class DocumentResponse(DocumentBase):
     
     # Optional nested relationship data
     document_type_name: Optional[str] = Field(None, description="Document type name (when included)")
-    parcel_number: Optional[str] = Field(None, description="Parcel number (when included)")
+    upi: Optional[str] = Field(None, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     qr_code_count: int = Field(0, description="Number of associated QR codes")
     
     model_config = ConfigDict(from_attributes=True)
@@ -101,7 +101,7 @@ class DocumentSearchParams(BaseModel):
     """
     Schema for document search/filter parameters.
     """
-    parcel_id: Optional[str] = Field(None, description="Filter by parcel")
+    parcel_upi: Optional[str] = Field(None, description="Filter by Unique Parcel Identifier (UPI)")
     document_type_id: Optional[str] = Field(None, description="Filter by document type")
     filename: Optional[str] = Field(None, max_length=500, description="Filter by filename (partial match)")
     reference_number: Optional[str] = Field(None, max_length=200, description="Filter by reference number")

@@ -17,6 +17,13 @@ const Backups = React.lazy(() => import('@/pages/Backups'));
 const Settings = React.lazy(() => import('@/pages/Settings'));
 const Reports = React.lazy(() => import('@/pages/Reports'));
 
+// Lazy load detail pages
+const ParcelDetailPage = React.lazy(() => import('@/features/land/pages/ParcelDetailPage'));
+const ParishDetailPage = React.lazy(() => import('@/features/land/pages/ParishDetailPage'));
+const DocumentDetailPage = React.lazy(() => import('@/features/documents/pages/DocumentDetailPage'));
+const UserDetailPage = React.lazy(() => import('@/features/users/pages/UserDetailPage'));
+const UserProfilePage = React.lazy(() => import('@/features/users/pages/UserProfilePage'));
+
 // Loading page fallback wrapper
 function SuspenseFallback({ children }: { children: React.ReactNode }) {
   return (
@@ -53,12 +60,24 @@ export const router = createBrowserRouter([
             element: <SuspenseFallback><Parcels /></SuspenseFallback>,
           },
           {
+            path: 'parcels/:id',
+            element: <SuspenseFallback><ParcelDetailPage /></SuspenseFallback>,
+          },
+          {
             path: 'parishes',
             element: <SuspenseFallback><Parishes /></SuspenseFallback>,
           },
           {
+            path: 'parishes/:id',
+            element: <SuspenseFallback><ParishDetailPage /></SuspenseFallback>,
+          },
+          {
             path: 'documents',
             element: <SuspenseFallback><Documents /></SuspenseFallback>,
+          },
+          {
+            path: 'documents/:id',
+            element: <SuspenseFallback><DocumentDetailPage /></SuspenseFallback>,
           },
           {
             path: 'tax',
@@ -77,6 +96,10 @@ export const router = createBrowserRouter([
             element: <SuspenseFallback><Reports /></SuspenseFallback>,
           },
           {
+            path: 'profile',
+            element: <SuspenseFallback><UserProfilePage /></SuspenseFallback>,
+          },
+          {
             path: 'settings',
             element: <SuspenseFallback><Settings /></SuspenseFallback>,
           },
@@ -87,6 +110,10 @@ export const router = createBrowserRouter([
               {
                 path: 'users',
                 element: <SuspenseFallback><Users /></SuspenseFallback>,
+              },
+              {
+                path: 'users/:id',
+                element: <SuspenseFallback><UserDetailPage /></SuspenseFallback>,
               },
               {
                 path: 'backups',

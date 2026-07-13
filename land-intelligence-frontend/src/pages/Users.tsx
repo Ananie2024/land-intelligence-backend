@@ -2,6 +2,7 @@
 // Land Intelligence System
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
 import { Users, UserPlus } from 'lucide-react';
@@ -13,6 +14,7 @@ import { Modal } from '@/components/ui/Modal';
 import { toast } from 'react-hot-toast';
 
 export default function UsersPage() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -123,7 +125,7 @@ export default function UsersPage() {
         ) : (
           <UserTable 
             users={users}
-            onView={(user) => console.log('View user:', user)}
+            onView={(user) => navigate(`/users/${user.id}`)}
             onEdit={(user) => {
               setEditingUser(user);
               setShowForm(true);

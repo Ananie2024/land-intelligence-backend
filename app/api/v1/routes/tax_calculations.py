@@ -42,15 +42,15 @@ async def calculate_tax(
     try:
         service = TaxService(db)
         result = await service.calculate_tax(
-            parcel_id=payload.parcel_id,
+            parcel_upi=payload.parcel_upi,
             assessment_year=payload.assessment_year,
             land_use_category_id=payload.land_use_category_id,
             include_penalties=payload.include_penalties
         )
         
         return TaxCalculationResponse(
-            parcel_id=result["parcel_id"],
-            parcel_number=result["parcel_number"],
+            parcel_upi=result["parcel_upi"],
+            upi=result["upi"],
             assessment_year=result["assessment_year"],
             land_use_category_name=result["land_use_category_name"],
             area_sqm=result["area_sqm"],
@@ -90,7 +90,7 @@ async def generate_assessment(
     try:
         service = TaxService(db)
         record = await service.generate_assessment(
-            parcel_id=payload.parcel_id,
+            parcel_upi=payload.parcel_upi,
             assessment_year=payload.assessment_year,
             user_id=user_id
         )
@@ -104,7 +104,7 @@ async def generate_assessment(
         await db.commit()
         await db.refresh(record)
         
-        logger.info(f"Tax assessment generated for parcel {payload.parcel_id} year {payload.assessment_year} by user {user_id}")
+        logger.info(f"Tax assessment generated for parcel {payload.parcel_upi} year {payload.assessment_year} by user {user_id}")
         return record
     except ValueError as e:
         raise HTTPException(
@@ -209,23 +209,23 @@ async def record_tax_payment(
 
 
 @router.get(
-    "/outstanding/{parcel_id}",
+    "/outstanding/{parcel_upi}",
     response_model=OutstandingBalanceResponse,
     summary="Get outstanding tax balance",
     description="Calculate the breakdown of outstanding, overdue, and upcoming tax liabilities for a parcel."
 )
 async def get_outstanding_tax(
-    parcel_id: str,
+    parcel_upi: str,
     db: AsyncSession = Depends(get_db),
     _: str = Depends(get_current_user_id),
 ):
     try:
         service = TaxService(db)
-        result = await service.get_outstanding_tax(parcel_id, _)
+        result = await service.get_outstanding_tax(parcel_upi, _)
         
         return OutstandingBalanceResponse(
-            parcel_id=result["parcel_id"],
-            parcel_number=result["parcel_number"],
+            parcel_upi=result["parcel_upi"],
+            upi=result["upi"],
             total_outstanding=result["total_outstanding"],
             overdue_amount=result["overdue_amount"],
             upcoming_amount=result["upcoming_amount"],
@@ -245,13 +245,13 @@ async def get_outstanding_tax(
 
 
 @router.get(
-    "/history/{parcel_id}",
+    "/history/{parcel_upi}",
     response_model=List[TaxPaymentResponse],
     summary="Get payment history",
     description="Retrieve all historical payment transactions posted for a parcel's assessments."
 )
 async def get_payment_history(
-    parcel_id: str,
+    parcel_upi: str,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
@@ -259,7 +259,7 @@ async def get_payment_history(
 ):
     try:
         service = TaxService(db)
-        result = await service.get_payment_history(parcel_id, skip=skip, limit=limit, user_id=_)
+        result = await service.get_payment_history(parcel_upi, skip=skip, limit=limit, user_id=_)
         
         return result
     except ValueError as e:

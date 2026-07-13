@@ -14,3 +14,4 @@ export { ParcelDetail } from './components/ParcelDetail';
 // Pages
 export { ParishListPage } from './pages/ParishListPage';
 export { ParishDetailPage } from './pages/ParishDetailPage';
+export { ParcelDetailPage } from './pages/ParcelDetailPage';

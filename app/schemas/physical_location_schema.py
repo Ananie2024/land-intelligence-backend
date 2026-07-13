@@ -132,7 +132,7 @@ class PhysicalLocationFinderRequest(BaseModel):
     """
     Schema for physical location finder request.
     """
-    parcel_id: Optional[str] = Field(None, description="Parcel ID to find physical location for")
+    parcel_upi: Optional[str] = Field(None, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     document_id: Optional[str] = Field(None, description="Document ID to find physical location for")
     reference_number: Optional[str] = Field(None, description="Reference number to search")
 
@@ -143,7 +143,7 @@ class PhysicalLocationFinderResponse(BaseModel):
     """
     found: bool = Field(..., description="Whether physical location was found")
     parcel_id: Optional[str] = None
-    parcel_number: Optional[str] = None
+    upi: Optional[str] = None
     document_id: Optional[str] = None
     document_filename: Optional[str] = None
     physical_location: Optional[PhysicalLocationResponse] = None
@@ -152,4 +152,4 @@ class PhysicalLocationFinderResponse(BaseModel):
 
 
 # Forward reference for circular import
-PhysicalLocationResponse.model_rebuild()# app/schemas/physical_location_schema.py
+PhysicalLocationResponse.model_rebuild()

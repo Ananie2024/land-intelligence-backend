@@ -5,7 +5,7 @@ Phase 2 — Section 3.2
 Land Intelligence System
 """
 
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from sqlalchemy import select, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,12 +30,34 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
 
     async def create(self, schema: DocumentCreate) -> Document:
         """
-        Create a document, ignoring schema-only metadata fields that are not
-        persisted by the current Document model.
+        Create a document, converting parcel_upi to parcel_id UUID.
         """
         data = schema.model_dump(exclude_none=True)
         data.pop("metadata", None)
+        
+        # Convert parcel_upi to parcel_id if provided
+        if "parcel_upi" in data:
+            # This should be handled by the service layer
+            # For now, we'll just remove parcel_upi as the DB model uses parcel_id
+            data.pop("parcel_upi", None)
 
+        document = Document(**data)
+        self.db.add(document)
+        await self.db.flush()
+        await self.db.refresh(document)
+        return document
+
+    async def create_direct(self, data: dict) -> Document:
+        """
+        Create a document directly with raw data dictionary.
+        Used when parcel_upi has already been converted to parcel_id.
+        
+        Args:
+            data: Dictionary with document data (parcel_id instead of parcel_upi)
+            
+        Returns:
+            Created document instance
+        """
         document = Document(**data)
         self.db.add(document)
         await self.db.flush()
@@ -48,6 +70,10 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
         """
         data = schema.model_dump(exclude_none=True)
         data.pop("metadata", None)
+        
+        # Convert parcel_upi to parcel_id if provided
+        if "parcel_upi" in data:
+            data.pop("parcel_upi", None)
 
         document = await self.get(id)
         if not document:
@@ -203,7 +229,7 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
         Args:
             filename: Filter by filename (partial match)
             reference_number: Filter by reference number (partial match)
-            parcel_id: Filter by parcel
+            parcel_id: Filter by parcel (UUID)
             document_type_id: Filter by document type
             from_date: Filter documents from this date (YYYY-MM-DD)
             to_date: Filter documents up to this date (YYYY-MM-DD)

@@ -21,13 +21,13 @@ export default function QrCodes() {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow mb-6">
-        <label htmlFor="parcel_id" className="block text-sm font-medium text-gray-700 mb-2">
-          Parcel ID for QR Generation
+        <label htmlFor="upi" className="block text-sm font-medium text-gray-700 mb-2">
+          UPI for QR Generation
         </label>
         <input
           type="text"
-          id="parcel_id"
-          placeholder="Enter parcel ID..."
+          id="upi"
+          placeholder="Enter UPI (e.g., 1/02/02/03/1390)..."
           value={parcelId}
           onChange={(e) => setParcelId(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4"

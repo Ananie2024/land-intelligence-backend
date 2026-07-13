@@ -64,16 +64,30 @@ export default function Backups() {
   };
 
   const handleDownload = async (backup: Backup) => {
-    if (backup.status !== 'successful') {
-      toast.error('Only successful backups can be downloaded');
+    // Handle both uppercase (backend) and lowercase (frontend) status values
+    const normalizedStatus = (backup.status || '').toUpperCase();
+    if (normalizedStatus !== 'COMPLETED') {
+      toast.error('Only completed backups can be downloaded');
       return;
     }
     
     try {
-      // Note: backupService doesn't have download method, we'd need to add it
-      // For now, we'll show a placeholder implementation
-      console.log('Download backup:', backup.filename);
-      toast.success(`Downloading ${backup.filename}...`);
+      const blob = await backupService.downloadBackup(backup.id);
+      
+      // Derive filename from destination_path or use fallback
+      const filename = backup.destination_path?.split('/').pop() || 
+                       `backup_${backup.id}.zip`;
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success('Backup downloaded successfully');
     } catch (error) {
       console.error('Failed to download backup', error);
       toast.error('Failed to download backup');

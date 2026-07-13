@@ -35,7 +35,7 @@ class TaxService:
     """
     Business logic layer for tax operations.
     """
-
+    
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = TaxRepository(db)
@@ -49,7 +49,7 @@ class TaxService:
 
     async def calculate_tax(
         self,
-        parcel_id: str,
+        parcel_upi: str,
         assessment_year: str,
         land_use_category_id: Optional[str] = None,
         include_penalties: bool = False
@@ -57,9 +57,9 @@ class TaxService:
         """
         Simulate tax calculation without storing a record.
         """
-        parcel = await self.parcel_repo.get(parcel_id)
+        parcel = await self.parcel_repo.get_by_upi(parcel_upi)
         if not parcel:
-            raise ValueError(f"Parcel with ID '{parcel_id}' not found.")
+            raise ValueError(f"Parcel with UPI '{parcel_upi}' not found.")
 
         override_category = None
         category_name = "Unassigned"
@@ -96,8 +96,8 @@ class TaxService:
         total_tax_amount = Decimal(str(calc_result["base_tax_amount"])) + penalties
 
         return {
-            "parcel_id": str(parcel.id),
-            "parcel_number": parcel.parcel_number,
+            "parcel_upi": parcel_upi,
+            "upi": parcel.upi,
             "assessment_year": int(assessment_year),
             "land_use_category_name": category_name,
             "area_sqm": parcel.area_sqm,
@@ -111,20 +111,21 @@ class TaxService:
 
     async def generate_assessment(
         self,
-        parcel_id: str,
+        parcel_upi: str,
         assessment_year: str,
         user_id: str
     ) -> Optional[TaxRecord]:
         """
         Create a tax assessment record for a parcel.
         """
-        parcel = await self.parcel_repo.get(parcel_id)
+        parcel = await self.parcel_repo.get_by_upi(parcel_upi)
         if not parcel:
-            raise ValueError(f"Parcel with ID '{parcel_id}' not found.")
+            raise ValueError(f"Parcel with UPI '{parcel_upi}' not found.")
 
+        parcel_id = str(parcel.id)
         existing = await self.repo.get_by_parcel_and_year(parcel_id, assessment_year)
         if existing:
-            raise ValueError(f"Tax assessment record already exists for parcel '{parcel_id}' and year '{assessment_year}'.")
+            raise ValueError(f"Tax assessment record already exists for parcel '{parcel_upi}' and year '{assessment_year}'.")
 
         return await self.assessment_generator.generate_assessment(
             parcel=parcel,
@@ -213,16 +214,17 @@ class TaxService:
 
     async def get_outstanding_tax(
         self,
-        parcel_id: str,
+        parcel_upi: str,
         user_id: str
     ) -> Dict[str, Any]:
         """
         Calculate the breakdown of outstanding, overdue, and upcoming tax liabilities for a parcel.
         """
-        parcel = await self.parcel_repo.get(parcel_id)
+        parcel = await self.parcel_repo.get_by_upi(parcel_upi)
         if not parcel:
-            raise ValueError(f"Parcel with ID '{parcel_id}' not found.")
+            raise ValueError(f"Parcel with UPI '{parcel_upi}' not found.")
 
+        parcel_id = str(parcel.id)
         records = await self.repo.get_all_assessments_for_parcel(parcel_id)
 
         # Fetch all payment totals in one query to avoid N+1
@@ -260,8 +262,8 @@ class TaxService:
                     upcoming_amount += outstanding
 
         return {
-            "parcel_id": str(parcel.id),
-            "parcel_number": parcel.parcel_number,
+            "parcel_upi": parcel_upi,
+            "upi": parcel.upi,
             "total_outstanding": round(total_outstanding, 2),
             "overdue_amount": round(overdue_amount, 2),
             "upcoming_amount": round(upcoming_amount, 2),
@@ -270,7 +272,7 @@ class TaxService:
 
     async def get_payment_history(
         self,
-        parcel_id: str,
+        parcel_upi: str,
         skip: int = 0,
         limit: int = 100,
         user_id: Optional[str] = None
@@ -278,11 +280,11 @@ class TaxService:
         """
         Retrieve all historical payment transactions posted for a parcel's assessments.
         """
-        parcel = await self.parcel_repo.get(parcel_id)
+        parcel = await self.parcel_repo.get_by_upi(parcel_upi)
         if not parcel:
-            raise ValueError(f"Parcel with ID '{parcel_id}' not found.")
+            raise ValueError(f"Parcel with UPI '{parcel_upi}' not found.")
 
-        return await self.repo.get_payment_history(parcel_id, skip=skip, limit=limit)
+        return await self.repo.get_payment_history(str(parcel.id), skip=skip, limit=limit)
 
     async def get_tax_record(self, record_id: str, user_id: Optional[str] = None) -> Optional[TaxRecord]:
         """

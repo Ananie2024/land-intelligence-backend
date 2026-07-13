@@ -6,7 +6,12 @@ import { APIResponse } from '@/types/api';
 export const landService = {
   // Parishes Services
   getParishes: async (params?: { page?: number; size?: number; search?: string }): Promise<APIResponse<Parish[]>> => {
-    return apiClient.get<Parish[]>(ENDPOINTS.PARISHES.BASE, params);
+    const response = await apiClient.get<{ items: Parish[]; total: number; page: number; size: number; pages: number }>(ENDPOINTS.PARISHES.BASE, params);
+    // Transform wrapped paginated response to expected format
+    return {
+      ...response,
+      data: response.data?.items ?? null,
+    };
   },
 
   getParishById: async (id: string): Promise<APIResponse<Parish>> => {
@@ -29,10 +34,15 @@ export const landService = {
     return apiClient.post<Parish>(ENDPOINTS.PARISHES.REFRESH_COUNT(id));
   },
 
-  // Parcels Services
-  getParcels: async (filters?: ParcelFilters): Promise<APIResponse<Parcel[]>> => {
-    return apiClient.get<Parcel[]>(ENDPOINTS.PARCELS.BASE, filters);
-  },
+// Parcels Services
+   getParcels: async (filters?: ParcelFilters): Promise<APIResponse<Parcel[]>> => {
+     const response = await apiClient.get<{ items: Parcel[]; total: number; page: number; size: number; pages: number }>(ENDPOINTS.PARCELS.BASE, filters);
+     // Transform wrapped paginated response to expected format
+     return {
+       ...response,
+       data: response.data?.items ?? null,
+     };
+   },
 
   getParcelById: async (id: string): Promise<APIResponse<Parcel>> => {
     return apiClient.get<Parcel>(ENDPOINTS.PARCELS.BY_ID(id));
@@ -50,7 +60,12 @@ export const landService = {
     parishId: string, 
     params?: { page?: number; size?: number }
   ): Promise<APIResponse<Parcel[]>> => {
-    return apiClient.get<Parcel[]>(ENDPOINTS.PARCELS.BY_PARISH(parishId), params);
+    const response = await apiClient.get<{ items: Parcel[]; total: number; page: number; size: number; pages: number }>(ENDPOINTS.PARCELS.BY_PARISH(parishId), params);
+    // Transform wrapped paginated response to expected format
+    return {
+      ...response,
+      data: response.data?.items ?? null,
+    };
   },
 
   createParcel: async (parcel: ParcelCreate): Promise<APIResponse<Parcel>> => {

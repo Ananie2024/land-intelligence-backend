@@ -5,13 +5,23 @@
  * Parses a hex-encoded WKB (Well-Known Binary) string to coordinate arrays
  * Supports Point, LineString, Polygon, and MultiPolygon geometry types
  * 
- * WKB Format (for Polygon):
- * - Byte 0: Byte order (0 = little-endian, 1 = big-endian)
+ * WKB Format:
+ * - Byte 0: Byte order (0 = big-endian, 1 = little-endian)
  * - Bytes 1-4: Geometry type (uint32)
- * - Bytes 5-8: Number of rings (uint32)
- * - For each ring:
- *   - Bytes N-N+3: Number of points (uint32)
- *   - Bytes N+4+: Point coordinates (double X, double Y for each point)
+ * - Polygon:
+ *   - Bytes 5-8: Number of rings (uint32)
+ *   - For each ring:
+ *     - Bytes N-N+3: Number of points (uint32)
+ *     - Bytes N+4+: Point coordinates (double X, double Y for each point)
+ * - MultiPolygon:
+ *   - Bytes 5-8: Number of polygons (uint32)
+ *   - For each sub-polygon:
+ *     - Bytes N: Byte order (uint8)
+ *     - Bytes N+1-N+4: Geometry type (uint32)
+ *     - Bytes N+5-N+8: Number of rings (uint32)
+ *     - For each ring:
+ *       - Bytes N-N+3: Number of points (uint32)
+ *       - Bytes N+4+: Point coordinates (double X, double Y for each point)
  */
 
 // WKB geometry type constants
@@ -109,11 +119,15 @@ export function parseWkbToCoordinates(wkbHex: string | null | undefined): [numbe
         
       case WKB_TYPES.MULTIPOLYGON: {
         // MultiPolygon: number of polygons, each with rings
+        // Each sub-polygon has its own 5-byte header (byte order + geometry type)
         const polyCount = view.getUint32(pos, littleEndian);
         pos += 4;
         
         const allRings: [number, number][][] = [];
         for (let poly = 0; poly < polyCount; poly++) {
+          // Skip sub-polygon header: byte order (1 byte) + geometry type (4 bytes)
+          pos += 5;
+          
           const ringCount = view.getUint32(pos, littleEndian);
           pos += 4;
           

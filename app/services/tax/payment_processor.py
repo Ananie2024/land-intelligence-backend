@@ -192,7 +192,7 @@ class PaymentProcessor:
             "receipt_date": payment.payment_date.isoformat(),
             "parcel": {
                 "id": str(parcel.id),
-                "parcel_number": parcel.parcel_number,
+                "upi": parcel.upi,
             },
             "assessment_year": tax_record.assessment_year,
             "payment_details": {

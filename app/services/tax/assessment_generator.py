@@ -230,7 +230,7 @@ class AssessmentGenerator:
             "assessment_id": str(tax_record.id),
             "parcel": {
                 "id": str(parcel.id),
-                "parcel_number": parcel.parcel_number,
+                "upi": parcel.upi,
                 "area_sqm": parcel.area_sqm,
             },
             "assessment_year": tax_record.assessment_year,

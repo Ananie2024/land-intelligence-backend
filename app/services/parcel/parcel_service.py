@@ -66,7 +66,7 @@ class ParcelService:
         if any_filter:
             items = await self.parcel_repo.search(
                 owner_name=filters.get("owner_name"),
-                parcel_number=filters.get("parcel_number"),
+                upi=filters.get("upi"),
                 parish_id=filters.get("parish_id"),
                 land_use_category_id=filters.get("land_use_category_id"),
                 min_area_sqm=filters.get("min_area_sqm"),
@@ -101,9 +101,9 @@ class ParcelService:
         if not parish:
             raise ValueError(f"Parish '{payload.parish_id}' not found.")
 
-        existing = await self.parcel_repo.get_by_parcel_number(payload.parcel_number)
+        existing = await self.parcel_repo.get_by_upi(payload.upi)
         if existing:
-            raise ValueError(f"Parcel number '{payload.parcel_number}' already exists.")
+            raise ValueError(f"UPI '{payload.upi}' already exists.")
 
         if payload.title_deed_number:
             deed_conflict = await self.parcel_repo.get_by_title_deed(payload.title_deed_number)
@@ -126,7 +126,7 @@ class ParcelService:
         await self.db.commit()
         await self.db.refresh(parcel)
 
-        await self._audit("CREATE", str(parcel.id), user_id, new_value={"parcel_number": payload.parcel_number, "parish_id": payload.parish_id, "owner_name": payload.owner_name, "area_sqm": payload.area_sqm})
+        await self._audit("CREATE", str(parcel.id), user_id, new_value={"upi": payload.upi, "parish_id": payload.parish_id, "owner_name": payload.owner_name, "area_sqm": payload.area_sqm})
         logger.info(f"Parcel created: {parcel.id} in parish {payload.parish_id} by user {user_id}")
         return parcel
 
@@ -136,11 +136,11 @@ class ParcelService:
         """
         return await self.parcel_repo.get(parcel_id)
 
-    async def get_parcel_by_number(self, parcel_number: str) -> Optional[Parcel]:
+    async def get_parcel_by_upi(self, upi: str) -> Optional[Parcel]:
         """
-        Look up a parcel using its unique parcel number.
+        Look up a parcel using its Unique Parcel Identifier (UPI).
         """
-        return await self.parcel_repo.get_by_parcel_number(parcel_number)
+        return await self.parcel_repo.get_by_upi(upi)
 
     async def get_parcel_by_deed(self, title_deed_number: str) -> Optional[Parcel]:
         """
@@ -182,10 +182,10 @@ class ParcelService:
         if not parcel:
             return None
 
-        if payload.parcel_number is not None:
-            conflict = await self.parcel_repo.get_by_parcel_number(payload.parcel_number)
+        if payload.upi is not None:
+            conflict = await self.parcel_repo.get_by_upi(payload.upi)
             if conflict and conflict.id != parcel_id:
-                raise ValueError(f"Parcel number '{payload.parcel_number}' is already in use.")
+                raise ValueError(f"UPI '{payload.upi}' is already in use.")
 
         if payload.title_deed_number is not None:
             conflict = await self.parcel_repo.get_by_title_deed(payload.title_deed_number)

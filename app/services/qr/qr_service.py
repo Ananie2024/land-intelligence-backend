@@ -44,16 +44,21 @@ class QRCodeService:
 
     async def generate_parcel_qr(
         self,
-        parcel_id: str,
+        parcel_upi: str,
         expires_days: Optional[int],
         user_id: str
     ) -> QRCodeRegistry:
         """
-        Generate a Digital Testimony QR code for a parcel.
+        Generate a Digital Testimony QR code for a parcel using UPI.
+        
+        Args:
+            parcel_upi: Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390
+            expires_days: Number of days until expiration (None = permanent)
+            user_id: ID of user generating the QR code
         """
-        parcel = await self.parcel_repo.get(parcel_id)
+        parcel = await self.parcel_repo.get_by_upi(parcel_upi)
         if not parcel:
-            raise ValueError(f"Parcel {parcel_id} not found")
+            raise ValueError(f"Parcel with UPI {parcel_upi} not found")
 
         payload = await self.testimony_builder.build_parcel_payload(parcel)
         qr_string, file_path = self.qr_generator.generate(payload, prefix="PRC")
@@ -61,7 +66,7 @@ class QRCodeService:
         expires_at = datetime.now(timezone.utc) + timedelta(days=expires_days) if expires_days else None
 
         qr_entry_data = QRCodeCreate(
-            parcel_id=parcel_id,
+            parcel_upi=parcel_upi,
             code_type="PARCEL",
             data_payload=payload,
             expires_at=expires_at,
@@ -71,6 +76,7 @@ class QRCodeService:
         instance_data = qr_entry_data.model_dump(exclude_none=True)
         instance_data["code"] = qr_string
         instance_data["file_path"] = file_path
+        instance_data["parcel_id"] = str(parcel.id)  # Add parcel_id for DB persistence
 
         qr_entry = QRCodeRegistry(**instance_data)
         self.db.add(qr_entry)
@@ -96,11 +102,23 @@ class QRCodeService:
 
         qr_entry_data = QRCodeCreate(
             document_id=document_id,
-            parcel_id=str(document.parcel_id) if document.parcel_id else None,
+            parcel_upi=None,  # Will be populated from document if available
             code_type="DOCUMENT",
             data_payload=payload,
             metadata={"generated_by": user_id}
         )
+
+        # If document has parcel, get the UPI
+        if document.parcel_id:
+            parcel = await self.parcel_repo.get(document.parcel_id)
+            if parcel:
+                qr_entry_data = QRCodeCreate(
+                    document_id=document_id,
+                    parcel_upi=parcel.upi,
+                    code_type="DOCUMENT",
+                    data_payload=payload,
+                    metadata={"generated_by": user_id}
+                )
 
         instance_data = qr_entry_data.model_dump(exclude_none=True)
         instance_data["code"] = qr_string

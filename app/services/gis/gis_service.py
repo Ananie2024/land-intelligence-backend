@@ -6,7 +6,7 @@ Land Intelligence System
 """
 
 import logging
-from typing import Optional, Any, Dict
+from typing import Optional
 
 from shapely import wkt
 from shapely.geometry.base import BaseGeometry
@@ -33,11 +33,11 @@ class GisAnalysisService:
     async def _resolve_geometry(
         self,
         geom_wkt: Optional[str],
-        parcel_id: Optional[str],
+        parcel_upi: Optional[str],
         param_name: str
     ) -> BaseGeometry:
         """
-        Resolve a geometry from either a WKT string or a parcel ID from database.
+        Resolve a geometry from either a WKT string or a parcel UPI from database.
         """
         if geom_wkt:
             try:
@@ -45,28 +45,34 @@ class GisAnalysisService:
             except Exception as e:
                 raise ValueError(f"Invalid WKT format for {param_name}: {str(e)}")
             
-        if parcel_id:
-            parcel = await self.parcel_repo.get(parcel_id)
+        if parcel_upi:
+            parcel = await self.parcel_repo.get_by_upi(parcel_upi)
             if not parcel:
-                raise ValueError(f"Parcel with ID '{parcel_id}' not found for {param_name}.")
+                raise ValueError(f"Parcel with UPI '{parcel_upi}' not found for {param_name}.")
             if parcel.geometry_wkb is None:
-                raise ValueError(f"Parcel '{parcel_id}' does not have spatial geometry data.")
+                raise ValueError(f"Parcel '{parcel_upi}' does not have spatial geometry data.")
             return ensure_geometry(parcel.geometry_wkb)
             
-        raise ValueError(f"Either WKT or parcel ID must be specified for {param_name}.")
+        raise ValueError(f"Either WKT or parcel UPI must be specified for {param_name}.")
 
     async def calculate_distance(
         self,
         geom1_wkt: Optional[str],
-        parcel_id_1: Optional[str],
+        parcel_upi_1: Optional[str],
         geom2_wkt: Optional[str],
-        parcel_id_2: Optional[str]
-    ) -> Dict[str, Any]:
+        parcel_upi_2: Optional[str]
+    ):
         """
         Calculate minimum distance in meters between two geometries or parcels.
+        
+        Args:
+            geom1_wkt: First geometry in WKT format (optional)
+            parcel_upi_1: UPI of first parcel - e.g. 1/02/02/03/1390 (optional)
+            geom2_wkt: Second geometry in WKT format (optional)
+            parcel_upi_2: UPI of second parcel - e.g. 1/02/02/03/1390 (optional)
         """
-        geom1 = await self._resolve_geometry(geom1_wkt, parcel_id_1, "geom1 / parcel_id_1")
-        geom2 = await self._resolve_geometry(geom2_wkt, parcel_id_2, "geom2 / parcel_id_2")
+        geom1 = await self._resolve_geometry(geom1_wkt, parcel_upi_1, "geom1 / parcel_upi_1")
+        geom2 = await self._resolve_geometry(geom2_wkt, parcel_upi_2, "geom2 / parcel_upi_2")
         
         distance = calculate_distance(geom1, geom2)
         
@@ -78,15 +84,21 @@ class GisAnalysisService:
     async def check_intersection(
         self,
         geom1_wkt: Optional[str],
-        parcel_id_1: Optional[str],
+        parcel_upi_1: Optional[str],
         geom2_wkt: Optional[str],
-        parcel_id_2: Optional[str]
-    ) -> Dict[str, Any]:
+        parcel_upi_2: Optional[str]
+    ):
         """
         Determine if two geometries intersect/overlap, and compute the overlapping area and percentages.
+        
+        Args:
+            geom1_wkt: First geometry in WKT format (optional)
+            parcel_upi_1: UPI of first parcel - e.g. 1/02/02/03/1390 (optional)
+            geom2_wkt: Second geometry in WKT format (optional)
+            parcel_upi_2: UPI of second parcel - e.g. 1/02/02/03/1390 (optional)
         """
-        geom1 = await self._resolve_geometry(geom1_wkt, parcel_id_1, "geom1 / parcel_id_1")
-        geom2 = await self._resolve_geometry(geom2_wkt, parcel_id_2, "geom2 / parcel_id_2")
+        geom1 = await self._resolve_geometry(geom1_wkt, parcel_upi_1, "geom1 / parcel_upi_1")
+        geom2 = await self._resolve_geometry(geom2_wkt, parcel_upi_2, "geom2 / parcel_upi_2")
         
         # Geometries must be projected to a metric CRS for area calculations
         metric_g1 = to_metric(geom1)
@@ -114,14 +126,20 @@ class GisAnalysisService:
     async def contains_point(
         self,
         geom_wkt: Optional[str],
-        parcel_id: Optional[str],
+        parcel_upi: Optional[str],
         x: float,
         y: float
-    ) -> Dict[str, Any]:
+    ):
         """
         Verify if a geometry or parcel contains or intersects a given latitude/longitude point.
+        
+        Args:
+            geom_wkt: Geometry in WKT format (optional)
+            parcel_upi: UPI of parcel - e.g. 1/02/02/03/1390 (optional)
+            x: Longitude
+            y: Latitude
         """
-        geom = await self._resolve_geometry(geom_wkt, parcel_id, "geom / parcel_id")
+        geom = await self._resolve_geometry(geom_wkt, parcel_upi, "geom / parcel_upi")
         point_tuple = (x, y)
         
         contains = contains_point(geom, point_tuple)
@@ -134,14 +152,19 @@ class GisAnalysisService:
 
     async def check_zoning_overlay(
         self,
-        parcel_id: Optional[str],
+        parcel_upi: Optional[str],
         zoning_wkt: str,
         zoning_code: str
-    ) -> Dict[str, Any]:
+    ):
         """
         Overlay a parcel on a zoning district geometry to verify zoning code overlay and compliance area.
+        
+        Args:
+            parcel_upi: UPI of parcel - e.g. 1/02/02/03/1390
+            zoning_wkt: Zoning district geometry in WKT format
+            zoning_code: Zoning identifier code
         """
-        parcel_geom = await self._resolve_geometry(None, parcel_id, "parcel_id")
+        parcel_geom = await self._resolve_geometry(None, parcel_upi, "parcel_upi")
         
         try:
             zoning_geom = wkt.loads(zoning_wkt)

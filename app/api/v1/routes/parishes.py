@@ -33,6 +33,25 @@ router = APIRouter()
 # ---------------------------------------------------------------------------
 
 @router.get(
+    "",
+    response_model=ParishListResponse,
+    summary="List parishes",
+    description="Return a paginated list of all active parishes, with optional name search.",
+    include_in_schema=False,
+)
+async def list_parishes_no_slash(
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(20, ge=1, le=100, description="Items per page"),
+    name: Optional[str] = Query(None, description="Search by parish name (partial match)"),
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user_id),
+):
+    service = ParishService(db)
+    
+    return await service.list_parishes(page=page, size=size, name=name)
+
+
+@router.get(
     "/",
     response_model=ParishListResponse,
     summary="List parishes",
@@ -45,9 +64,7 @@ async def list_parishes(
     db: AsyncSession = Depends(get_db),
     _: str = Depends(get_current_user_id),
 ):
-    service = ParishService(db)
-    
-    return await service.list_parishes(page=page, size=size, name=name)
+    return await list_parishes_no_slash(page=page, size=size, name=name, db=db, _=None)
 
 
 # ---------------------------------------------------------------------------

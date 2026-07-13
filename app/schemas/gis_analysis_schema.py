@@ -8,14 +8,16 @@ Land Intelligence System
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 
+
 class DistanceRequest(BaseModel):
     """
     Schema for calculating distance between two geometries or two parcels.
     """
     geom1_wkt: Optional[str] = Field(None, description="First geometry in Well-Known Text (WKT) format")
     geom2_wkt: Optional[str] = Field(None, description="Second geometry in Well-Known Text (WKT) format")
-    parcel_id_1: Optional[str] = Field(None, description="UUID of first parcel (alternative to geom1_wkt)")
-    parcel_id_2: Optional[str] = Field(None, description="UUID of second parcel (alternative to geom2_wkt)")
+    parcel_upi_1: Optional[str] = Field(None, description="UPI of first parcel (alternative to geom1_wkt) - e.g. 1/02/02/03/1390")
+    parcel_upi_2: Optional[str] = Field(None, description="UPI of second parcel (alternative to geom2_wkt) - e.g. 1/02/02/03/1390")
+
 
 class DistanceResponse(BaseModel):
     """
@@ -24,14 +26,16 @@ class DistanceResponse(BaseModel):
     distance_meters: float = Field(..., description="Minimum distance in meters (returns -1.0 if invalid/empty)")
     message: str = Field(..., description="Details or status message")
 
+
 class IntersectionRequest(BaseModel):
     """
     Schema for detecting overlap and intersection between two geometries/parcels.
     """
     geom1_wkt: Optional[str] = Field(None, description="First geometry in Well-Known Text (WKT)")
     geom2_wkt: Optional[str] = Field(None, description="Second geometry in Well-Known Text (WKT)")
-    parcel_id_1: Optional[str] = Field(None, description="UUID of first parcel")
-    parcel_id_2: Optional[str] = Field(None, description="UUID of second parcel")
+    parcel_upi_1: Optional[str] = Field(None, description="UPI of first parcel - e.g. 1/02/02/03/1390")
+    parcel_upi_2: Optional[str] = Field(None, description="UPI of second parcel - e.g. 1/02/02/03/1390")
+
 
 class IntersectionResponse(BaseModel):
     """
@@ -43,14 +47,16 @@ class IntersectionResponse(BaseModel):
     percentage_overlap_geom1: float = Field(..., description="Percentage of geom1's area that overlaps with geom2")
     percentage_overlap_geom2: float = Field(..., description="Percentage of geom2's area that overlaps with geom1")
 
+
 class ContainsPointRequest(BaseModel):
     """
     Schema to check if a geometry/parcel contains a point.
     """
     geom_wkt: Optional[str] = Field(None, description="Geometry in Well-Known Text (WKT)")
-    parcel_id: Optional[str] = Field(None, description="UUID of parcel")
+    parcel_upi: Optional[str] = Field(None, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     x: float = Field(..., description="Longitude / X coordinate")
     y: float = Field(..., description="Latitude / Y coordinate")
+
 
 class ContainsPointResponse(BaseModel):
     """
@@ -59,13 +65,15 @@ class ContainsPointResponse(BaseModel):
     contains: bool = Field(..., description="True if geometry contains the point")
     intersects: bool = Field(..., description="True if geometry intersects/touches the point")
 
+
 class OverlayRequest(BaseModel):
     """
     Schema for overlaying a parcel on a zoning geometry.
     """
-    parcel_id: str = Field(..., description="UUID of the parcel to check")
+    parcel_upi: str = Field(..., description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     zoning_wkt: str = Field(..., description="Zoning district geometry in WKT")
     zoning_code: str = Field(..., description="Zoning identifier code")
+
 
 class OverlayResponse(BaseModel):
     """

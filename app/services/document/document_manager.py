@@ -77,11 +77,13 @@ class DocumentManager:
         if not doc_type:
             raise ValueError(f"Document type {metadata.document_type_id} not found")
         
-        # Validate parcel exists if provided
-        if metadata.parcel_id:
-            parcel = await self.parcel_repo.get(metadata.parcel_id)
+        # Validate parcel exists if provided (using UPI format)
+        parcel_id = None
+        if metadata.parcel_upi:
+            parcel = await self.parcel_repo.get_by_upi(metadata.parcel_upi)
             if not parcel:
-                raise ValueError(f"Parcel {metadata.parcel_id} not found")
+                raise ValueError(f"Parcel with UPI {metadata.parcel_upi} not found")
+            parcel_id = str(parcel.id)
         
         # Extract metadata from file
         file_metadata = await self.metadata_extractor.extract(file, filename)
@@ -95,9 +97,9 @@ class DocumentManager:
         
         # Check for duplicate file using checksum
         checksum = file_metadata.get("checksum")
-        if checksum and metadata.parcel_id:
+        if checksum and parcel_id:
             existing = await self.document_repo.get_by_checksum_and_parcel(
-                checksum, metadata.parcel_id
+                checksum, parcel_id
             )
             if existing:
                 raise ValueError("Duplicate document: same file already exists for this parcel")
@@ -107,25 +109,29 @@ class DocumentManager:
         file.seek(0)
         
         # Save file to filesystem
-        file_path = await self.file_handler.save_file(file, filename, metadata.parcel_id)
+        file_path = await self.file_handler.save_file(file, filename, parcel_id)
         
-        # Create document record
-        document_data = DocumentCreate(
-            parcel_id=metadata.parcel_id,
-            document_type_id=metadata.document_type_id,
-            filename=filename,
-            file_path=str(file_path),
-            file_size_bytes=file_metadata.get("file_size_bytes", 0),
-            mime_type=file_metadata.get("mime_type", "application/octet-stream"),
-            checksum=file_metadata.get("checksum", ""),
-            description=metadata.description,
-            document_date=metadata.document_date,
-            reference_number=metadata.reference_number,
-            page_count=file_metadata.get("page_count"),
-        )
+        # Create document record - store parcel_upi for API response, but need to handle parcel_id separately
+        document_kwargs = {
+            "document_type_id": metadata.document_type_id,
+            "filename": filename,
+            "file_path": str(file_path),
+            "file_size_bytes": file_metadata.get("file_size_bytes", 0),
+            "mime_type": file_metadata.get("mime_type", "application/octet-stream"),
+            "checksum": file_metadata.get("checksum", ""),
+            "description": metadata.description,
+            "document_date": metadata.document_date,
+            "reference_number": metadata.reference_number,
+            "page_count": file_metadata.get("page_count"),
+        }
+        
+        # We need to add parcel_id separately since the DB model uses it
+        # Store the parcel_id if we have it
+        if parcel_id:
+            document_kwargs["parcel_id"] = parcel_id
         
         try:
-            document = await self.document_repo.create(document_data)
+            document = await self.document_repo.create_direct(document_kwargs)
         except Exception as e:
             # Database creation failed - clean up the saved file
             await self.file_handler.delete_file(str(file_path))
@@ -228,7 +234,7 @@ class DocumentManager:
     
     async def list_documents_by_parcel(
         self,
-        parcel_id: str,
+        parcel_upi: str,
         skip: int = 0,
         limit: int = 100
     ) -> List[DocumentResponse]:
@@ -236,14 +242,19 @@ class DocumentManager:
         List documents belonging to a parcel.
         
         Args:
-            parcel_id: Parcel UUID
+            parcel_upi: Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390
             skip: Number of records to skip
             limit: Maximum number of records
             
         Returns:
             List of document responses
         """
-        documents = await self.document_repo.get_by_parcel(parcel_id, skip, limit)
+        # Get parcel by UPI first
+        parcel = await self.parcel_repo.get_by_upi(parcel_upi)
+        if not parcel:
+            return []
+        
+        documents = await self.document_repo.get_by_parcel(str(parcel.id), skip, limit)
         return [DocumentResponse.model_validate(doc) for doc in documents]
     
     async def list_documents_by_type(
@@ -283,7 +294,7 @@ class DocumentManager:
         self,
         filename: Optional[str] = None,
         reference_number: Optional[str] = None,
-        parcel_id: Optional[str] = None,
+        parcel_upi: Optional[str] = None,
         document_type_id: Optional[str] = None,
         from_date: Optional[str] = None,
         to_date: Optional[str] = None,
@@ -296,7 +307,7 @@ class DocumentManager:
         Args:
             filename: Filter by filename (partial match)
             reference_number: Filter by reference number
-            parcel_id: Filter by parcel
+            parcel_upi: Filter by Unique Parcel Identifier (UPI)
             document_type_id: Filter by document type
             from_date: Filter from date
             to_date: Filter to date
@@ -306,6 +317,13 @@ class DocumentManager:
         Returns:
             List of document responses
         """
+        # Convert UPI to parcel_id if provided
+        parcel_id = None
+        if parcel_upi:
+            parcel = await self.parcel_repo.get_by_upi(parcel_upi)
+            if parcel:
+                parcel_id = str(parcel.id)
+        
         documents = await self.document_repo.search(
             filename=filename,
             reference_number=reference_number,

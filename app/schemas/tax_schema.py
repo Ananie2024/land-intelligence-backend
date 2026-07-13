@@ -16,7 +16,7 @@ class TaxRecordBase(BaseModel):
     """
     Base schema for TaxRecord with shared fields.
     """
-    parcel_id: str = Field(..., description="Foreign key to parcel")
+    parcel_upi: str = Field(..., description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     assessment_year: str = Field(..., pattern=r"^\d{4}$", description="Year of tax assessment")
     assessed_value: float = Field(..., ge=0, description="Assessed value of parcel for tax purposes")
     tax_rate_applied: float = Field(..., ge=0, description="Tax rate applied for this assessment")
@@ -66,7 +66,7 @@ class TaxRecordResponse(TaxRecordBase):
     updated_at: datetime = Field(..., description="Timestamp when record was last updated")
     
     # Optional nested relationship data
-    parcel_number: Optional[str] = Field(None, description="Parcel number (when included)")
+    upi: Optional[str] = Field(None, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     payments: Optional[List["TaxPaymentResponse"]] = Field(None, description="Payment transactions")
     
     model_config = ConfigDict(from_attributes=True)
@@ -129,7 +129,7 @@ class TaxCalculationRequest(BaseModel):
     """
     Schema for tax calculation request.
     """
-    parcel_id: str = Field(..., description="Parcel ID to calculate tax for")
+    parcel_upi: str = Field(..., description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     assessment_year: str = Field(..., pattern=r"^\d{4}$", description="Assessment year")
     land_use_category_id: Optional[str] = Field(None, description="Override land use category")
     include_penalties: bool = Field(True, description="Include late payment penalties")
@@ -139,8 +139,8 @@ class TaxCalculationResponse(BaseModel):
     """
     Schema for tax calculation response.
     """
-    parcel_id: str
-    parcel_number: str
+    parcel_upi: str
+    upi: str
     assessment_year: str
     land_use_category_name: str
     area_sqm: float
@@ -168,8 +168,8 @@ class OutstandingBalanceResponse(BaseModel):
     """
     Schema for outstanding balance response.
     """
-    parcel_id: str
-    parcel_number: str
+    parcel_upi: str
+    upi: str
     total_outstanding: float
     overdue_amount: float
     upcoming_amount: float

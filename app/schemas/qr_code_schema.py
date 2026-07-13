@@ -13,10 +13,10 @@ class QRCodeBase(BaseModel):
     """
     Base schema for QRCodeRegistry with shared fields.
     """
-    parcel_id: Optional[str] = Field(None, description="Foreign key to parcel (optional)")
+    parcel_upi: Optional[str] = Field(None, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     document_id: Optional[str] = Field(None, description="Foreign key to document (optional)")
     code_type: str = Field(..., max_length=20, description="Type of entity (parcel, document)")
-    data_payload: Dict[str, Any] = Field(..., description="JSON data encoded in QR code")
+    data_payload: Dict[str, Any] = Field(default_factory=dict, description="JSON data encoded in QR code")
     expires_at: Optional[datetime] = Field(None, description="Expiration timestamp")
     extra_data: Optional[Dict[str, Any]] = Field(
         None,
@@ -68,7 +68,7 @@ class QRCodeResponse(QRCodeBase):
     updated_at: datetime = Field(..., description="Timestamp when record was last updated")
     
     # Optional nested relationship data
-    parcel_number: Optional[str] = Field(None, description="Parcel number (when included)")
+    upi: Optional[str] = Field(None, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     document_filename: Optional[str] = Field(None, description="Document filename (when included)")
     
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
@@ -78,7 +78,7 @@ class QRCodeGenerateRequest(BaseModel):
     """
     Schema for QR code generation request.
     """
-    parcel_id: Optional[str] = Field(None, description="Parcel ID to generate QR for")
+    parcel_upi: Optional[str] = Field(None, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     document_id: Optional[str] = Field(None, description="Document ID to generate QR for")
     expires_days: Optional[int] = Field(None, ge=1, le=365, description="Expiration in days (None = permanent)")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
@@ -98,9 +98,9 @@ class QRCodeVerifyResponse(BaseModel):
     is_valid: bool = Field(..., description="Whether QR code is valid and not expired/revoked")
     code: str = Field(..., description="QR code string")
     code_type: str = Field(..., description="Type of entity")
-    parcel_id: Optional[str] = Field(None, description="Associated parcel ID")
+    parcel_upi: Optional[str] = Field(None, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     document_id: Optional[str] = Field(None, description="Associated document ID")
     expires_at: Optional[datetime] = Field(None, description="Expiration timestamp")
     is_revoked: bool = Field(..., description="Whether QR code is revoked")
     data_payload: Optional[Dict[str, Any]] = Field(None, description="Decoded data payload")
-    message: str = Field(..., description="Verification message")# app/schemas/qr_code_schema.py
+    message: str = Field(..., description="Verification message")

@@ -40,12 +40,19 @@ export const backupService = {
     return response.data;
   },
 
-getRestoreJob: async (jobId: string): Promise<APIResponse<any>> => {
+  getRestoreJob: async (jobId: string): Promise<APIResponse<any>> => {
     return apiClient.get<any>(ENDPOINTS.BACKUPS.RESTORE_BY_ID(jobId));
   },
 
   verifyBackups: async (): Promise<APIResponse<any>> => {
     return apiClient.post<any>(ENDPOINTS.BACKUPS.VERIFY);
+  },
+
+  downloadBackup: async (jobId: string): Promise<Blob> => {
+    const response = await api.get(ENDPOINTS.BACKUPS.DOWNLOAD(jobId), {
+      responseType: 'blob'
+    });
+    return response.data as Blob;
   },
 
   createBackup: async (options?: { 

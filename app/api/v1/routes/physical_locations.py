@@ -57,12 +57,13 @@ async def create_location(
 
 
 @router.get(
-    "/",
+    "",
     response_model=List[Dict[str, Any]],
     summary="List physical locations",
-    description="List active physical archive locations."
+    description="List active physical archive locations.",
+    include_in_schema=False,
 )
-async def list_locations(
+async def list_locations_no_slash(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
@@ -77,6 +78,21 @@ async def list_locations(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve physical locations."
         )
+
+
+@router.get(
+    "/",
+    response_model=List[Dict[str, Any]],
+    summary="List physical locations",
+    description="List active physical archive locations."
+)
+async def list_locations(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user_id),
+):
+    return await list_locations_no_slash(skip=skip, limit=limit, db=db, _=None)
 
 
 @router.get(

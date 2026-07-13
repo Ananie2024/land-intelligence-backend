@@ -16,7 +16,7 @@ class ParcelBase(BaseModel):
     Base schema for Parcel with shared fields.
     Used as base for both Create and Response schemas.
     """
-    parcel_number: str = Field(..., max_length=50, description="Unique parcel identifier")
+    upi: str = Field(..., max_length=50, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     parish_id: str = Field(..., description="Foreign key to parish")
     land_use_category_id: Optional[str] = Field(None, description="Foreign key to land use category")
     area_sqm: float = Field(..., gt=0, description="Area in square meters")
@@ -55,7 +55,7 @@ class ParcelCreate(ParcelBase):
 
 class ParcelUpdate(BaseModel):
     """Schema for updating an existing Parcel. All fields are optional for partial updates."""
-    parcel_number: Optional[str] = Field(None, max_length=50, description="Unique parcel identifier")
+    upi: Optional[str] = Field(None, max_length=50, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     parish_id: Optional[str] = Field(None, description="Foreign key to parish")
     land_use_category_id: Optional[str] = Field(None, description="Foreign key to land use category")
     area_sqm: Optional[float] = Field(None, gt=0, description="Area in square meters")
@@ -102,7 +102,7 @@ class ParcelSearchParams(BaseModel):
     parish_id: Optional[str] = Field(None, description="Filter by parish")
     land_use_category_id: Optional[str] = Field(None, description="Filter by land use category")
     owner_name: Optional[str] = Field(None, max_length=500, description="Filter by owner name (partial match)")
-    parcel_number: Optional[str] = Field(None, max_length=50, description="Filter by parcel number (partial match)")
+    upi: Optional[str] = Field(None, max_length=50, description="Filter by UPI (partial match)")
     title_deed_number: Optional[str] = Field(None, max_length=100, description="Filter by title deed number")
     min_area_sqm: Optional[float] = Field(None, ge=0, description="Minimum area in square meters")
     max_area_sqm: Optional[float] = Field(None, ge=0, description="Maximum area in square meters")
@@ -114,7 +114,7 @@ class ParcelSearchParams(BaseModel):
 class ParcelOwnershipHistoryResponse(BaseModel):
     """Schema for ownership history entry."""
     id: str = Field(..., description="UUID primary key")
-    parcel_id: str = Field(..., description="Parcel UUID")
+    parcel_upi: str = Field(..., description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     owner_name: str = Field(..., description="Owner name at time of record")
     owner_contact: Optional[str] = Field(None, description="Owner contact information")
     transfer_date: date = Field(..., description="Date of ownership transfer")

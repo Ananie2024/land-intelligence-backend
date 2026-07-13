@@ -93,16 +93,17 @@ export const ENDPOINTS = {
     GRID: (locationId: string) => `/locations/${locationId}/grid`,
   },
   
-   // Backups endpoints
+// Backups endpoints
    BACKUPS: {
-     BASE: '/backups',
-     TRIGGER: '/backups/trigger',
-     VERIFY: '/backups/verify',
-     JOBS: '/backups/jobs',
-     BY_JOB_ID: (jobId: string) => `/backups/jobs/${jobId}`,
-     RESTORE: '/backups/restore',
-     RESTORE_BY_ID: (jobId: string) => `/backups/restore/${jobId}`,
-   },
+      BASE: '/backups',
+      TRIGGER: '/backups/trigger',
+      VERIFY: '/backups/verify',
+      JOBS: '/backups/jobs',
+      BY_JOB_ID: (jobId: string) => `/backups/jobs/${jobId}`,
+      DOWNLOAD: (jobId: string) => `/backups/jobs/${jobId}/download`,
+      RESTORE: '/backups/restore',
+      RESTORE_BY_ID: (jobId: string) => `/backups/restore/${jobId}`,
+    },
 
    // Dashboard endpoints
    DASHBOARD: {

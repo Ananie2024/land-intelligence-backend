@@ -1,5 +1,4 @@
 # app/api/v1/routes/documents.py
-
 """
 Document Management API Routes
 Phase 3 — Section 4.2
@@ -46,9 +45,48 @@ async def get_document_manager(db: AsyncSession = Depends(get_db)) -> DocumentMa
     )
 
 
+async def _search_documents_impl(
+    parcel_upi: Optional[str] = None,
+    document_type_id: Optional[str] = None,
+    filename: Optional[str] = None,
+    reference_number: Optional[str] = None,
+    page: int = 1,
+    size: int = 20,
+    db: AsyncSession = None,
+    doc_manager: DocumentManager = None,
+):
+    """Shared implementation for document search/list."""
+    skip = (page - 1) * size
+    
+    documents = await doc_manager.search_documents(
+        filename=filename,
+        reference_number=reference_number,
+        parcel_upi=parcel_upi,
+        document_type_id=document_type_id,
+        skip=skip,
+        limit=size
+    )
+    
+    total = 0
+    if parcel_upi:
+        repo = DocumentRepository(db)
+        total = await repo.count_by_parcel(parcel_upi)
+    else:
+        total = len(documents)
+    
+    pages = (total + size - 1) // size if size else 1
+    return DocumentListResponse(
+        items=documents,
+        total=total,
+        page=page,
+        size=size,
+        pages=pages
+    )
+
+
 @router.post("/upload", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 async def upload_document(
-    parcel_id: Optional[str] = Form(None),
+    parcel_upi: Optional[str] = Form(None),
     document_type_id: str = Form(...),
     description: Optional[str] = Form(None),
     document_date: Optional[str] = Form(None),
@@ -63,9 +101,8 @@ async def upload_document(
     Upload a document with metadata.
     """
     try:
-        # Create metadata object from form data
         metadata = DocumentCreate(
-            parcel_id=parcel_id,
+            parcel_upi=parcel_upi,
             document_type_id=document_type_id,
             description=description,
             document_date=document_date,
@@ -93,9 +130,34 @@ async def upload_document(
         )
 
 
+@router.get("", response_model=DocumentListResponse, include_in_schema=False)
+async def search_documents_no_slash(
+    parcel_upi: Optional[str] = None,
+    document_type_id: Optional[str] = None,
+    filename: Optional[str] = None,
+    reference_number: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    doc_manager: DocumentManager = Depends(get_document_manager),
+    user_id: str = Depends(get_current_user_id)
+):
+    """Search and list documents with pagination (no trailing slash)."""
+    return await _search_documents_impl(
+        parcel_upi=parcel_upi,
+        document_type_id=document_type_id,
+        filename=filename,
+        reference_number=reference_number,
+        page=page,
+        size=size,
+        db=db,
+        doc_manager=doc_manager
+    )
+
+
 @router.get("/", response_model=DocumentListResponse)
 async def search_documents(
-    parcel_id: Optional[str] = None,
+    parcel_upi: Optional[str] = None,
     document_type_id: Optional[str] = None,
     filename: Optional[str] = None,
     reference_number: Optional[str] = None,
@@ -106,33 +168,15 @@ async def search_documents(
     user_id: str = Depends(get_current_user_id)
 ):
     """Search and list documents with pagination."""
-    skip = (page - 1) * size
-    
-    # Note: list/search implementation depends on repository capabilities
-    # This is a simplified search implementation
-    documents = await doc_manager.search_documents(
+    return await _search_documents_impl(
+        parcel_upi=parcel_upi,
+        document_type_id=document_type_id,
         filename=filename,
         reference_number=reference_number,
-        parcel_id=parcel_id,
-        document_type_id=document_type_id,
-        skip=skip,
-        limit=size
-    )
-    
-    total = 0
-    if parcel_id:
-        repo = DocumentRepository(db)
-        total = await repo.count_by_parcel(parcel_id)
-    else:
-        total = len(documents)
-    
-    pages = (total + size - 1) // size if size else 1
-    return DocumentListResponse(
-        items=documents,
-        total=total,
         page=page,
         size=size,
-        pages=pages
+        db=db,
+        doc_manager=doc_manager
     )
 
 
@@ -179,7 +223,6 @@ async def download_document(
     
     document, file_stream = result
     
-    # aiofiles stream needs to be used in StreamingResponse
     return StreamingResponse(
         _file_stream_generator(file_stream),
         media_type=document.mime_type,

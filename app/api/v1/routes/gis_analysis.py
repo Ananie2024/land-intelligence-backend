@@ -44,9 +44,9 @@ async def calculate_distance(
         service = GisAnalysisService(db)
         result = await service.calculate_distance(
             payload.geom1_wkt,
-            payload.parcel_id_1,
+            payload.parcel_upi_1,
             payload.geom2_wkt,
-            payload.parcel_id_2
+            payload.parcel_upi_2
         )
         
         return DistanceResponse(
@@ -65,6 +65,7 @@ async def calculate_distance(
             detail=f"Internal spatial computation error: {str(e)}"
         )
 
+
 @router.post(
     "/intersects",
     response_model=IntersectionResponse,
@@ -80,9 +81,9 @@ async def check_intersection(
         service = GisAnalysisService(db)
         result = await service.check_intersection(
             payload.geom1_wkt,
-            payload.parcel_id_1,
+            payload.parcel_upi_1,
             payload.geom2_wkt,
-            payload.parcel_id_2
+            payload.parcel_upi_2
         )
         
         return IntersectionResponse(
@@ -104,6 +105,7 @@ async def check_intersection(
             detail=f"Internal spatial computation error: {str(e)}"
         )
 
+
 @router.post(
     "/contains-point",
     response_model=ContainsPointResponse,
@@ -119,7 +121,7 @@ async def contains_point(
         service = GisAnalysisService(db)
         result = await service.contains_point(
             payload.geom_wkt,
-            payload.parcel_id,
+            payload.parcel_upi,
             payload.x,
             payload.y
         )
@@ -140,6 +142,7 @@ async def contains_point(
             detail=f"Internal spatial computation error: {str(e)}"
         )
 
+
 @router.post(
     "/check-overlay",
     response_model=OverlayResponse,
@@ -154,7 +157,7 @@ async def check_zoning_overlay(
     try:
         service = GisAnalysisService(db)
         result = await service.check_zoning_overlay(
-            payload.parcel_id,
+            payload.parcel_upi,
             payload.zoning_wkt,
             payload.zoning_code
         )

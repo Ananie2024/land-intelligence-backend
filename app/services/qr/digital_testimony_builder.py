@@ -68,7 +68,7 @@ class DigitalTestimonyBuilder:
             "ts": datetime.now(timezone.utc).isoformat(),
             "data": {
                 "id": str(parcel.id),
-                "num": parcel.parcel_number,
+                "num": parcel.upi,
                 "owner": parcel.owner_name,
                 "area": parcel.area_sqm,
                 "parish": parcel.parish.name if parcel.parish else "UNKNOWN",
@@ -98,7 +98,7 @@ class DigitalTestimonyBuilder:
                 "ref": document.reference_number,
                 "filename": document.filename,
                 "hash": document.checksum, # Full hash for single document
-                "parcel_num": document.parcel.parcel_number if document.parcel else None
+                "parcel_num": document.parcel.upi if document.parcel else None
             }
         }
         

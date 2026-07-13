@@ -20,7 +20,7 @@ class Parcel(BaseModel):
     
     Attributes:
         id: UUID primary key (inherited from BaseModel)
-        parcel_number: Unique parcel identifier
+        upi: Unique Parcel Identifier (UPI) — e.g. 1/02/02/03/1390
         parish_id: Foreign key to parish
         land_use_category_id: Foreign key to land use category
         area_sqm: Area in square meters
@@ -39,12 +39,12 @@ class Parcel(BaseModel):
     
     __tablename__ = "parcels"
     
-    parcel_number = Column(
+    upi = Column(
         String(50),
         nullable=False,
         unique=True,
         index=True,
-        comment="Unique parcel identifier"
+        comment="Unique Parcel Identifier (UPI) — e.g. 1/02/02/03/1390"
     )
     
     parish_id = Column(UUID(as_uuid=True),
@@ -154,7 +154,7 @@ class Parcel(BaseModel):
     
     # Indexes for spatial and text search
     __table_args__ = (
-        Index('idx_parcel_number', 'parcel_number'),
+        Index('idx_parcel_upi', 'upi'),
         Index('idx_owner_name', 'owner_name'),
         Index('idx_title_deed', 'title_deed_number'),
         # Note: Spatial index for 'geometry' column
@@ -162,4 +162,4 @@ class Parcel(BaseModel):
     
     def __repr__(self):
         """String representation of Parcel instance."""
-        return f"<Parcel(parcel_number='{self.parcel_number}', owner='{self.owner_name[:30]}...')>"
+        return f"<Parcel(upi='{self.upi}', owner='{self.owner_name[:30]}...')>"

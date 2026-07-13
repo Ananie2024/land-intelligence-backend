@@ -2,6 +2,7 @@
 // Land Intelligence System
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
@@ -13,6 +14,7 @@ import { ParishForm } from '@/features/land/components/ParishForm';
 import { Modal } from '@/components/ui/Modal';
 
 export default function Parishes() {
+  const navigate = useNavigate();
   const [parishes, setParishes] = useState<Parish[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -120,7 +122,7 @@ export default function Parishes() {
         ) : (
           <ParishTable 
             parishes={parishes}
-            onView={(parish) => console.log('View parish:', parish)}
+            onView={(parish) => navigate(`/parishes/${parish.id}`)}
             onEdit={(parish) => {
               setEditingParish(parish);
               setShowForm(true);

@@ -6,7 +6,12 @@ import { APIResponse } from '@/types/api';
 
 export const documentService = {
   getDocuments: async (filters?: DocumentFilters): Promise<APIResponse<Document[]>> => {
-    return apiClient.get<Document[]>(ENDPOINTS.DOCUMENTS.BASE, filters);
+    const response = await apiClient.get<{ items: Document[]; total: number; page: number; size: number; pages: number }>(ENDPOINTS.DOCUMENTS.BASE, filters);
+    // Transform paginated response to expected format
+    return {
+      ...response,
+      data: response.data?.items ?? null,
+    };
   },
 
   getDocumentById: async (id: string): Promise<APIResponse<Document>> => {

@@ -13,7 +13,7 @@ export interface DocumentType extends BaseEntity {
 }
 
 export interface Document extends BaseEntity {
-  parcel_id?: string | null;
+  parcel_upi?: string | null;
   document_type_id: string;
   filename: string;
   file_path: string;
@@ -33,7 +33,7 @@ export interface Document extends BaseEntity {
 }
 
 export interface DocumentCreate {
-  parcel_id?: string | null;
+  parcel_upi?: string | null;
   document_type_id: string;
   description?: string | null;
   document_date?: string | null;
@@ -41,7 +41,7 @@ export interface DocumentCreate {
 }
 
 export interface DocumentUpdate {
-  parcel_id?: string | null;
+  parcel_upi?: string | null;
   document_type_id?: string;
   description?: string | null;
   document_date?: string | null;
@@ -50,7 +50,7 @@ export interface DocumentUpdate {
 }
 
 export interface DocumentFilters extends QueryFilters {
-  parcel_id?: string;
+  parcel_upi?: string;
   document_type_id?: string;
   filename?: string;
   reference_number?: string;

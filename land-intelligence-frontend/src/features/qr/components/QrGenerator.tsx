@@ -8,7 +8,7 @@ import type { QrCodeGenerateResponse } from '@/types/qr';
 import { qrService } from '@/services/qrService';
 
 interface QrGeneratorProps {
-  parcelId: string;
+  parcelId: string; // UPI format
 }
 
 // Extended type for QR code generation response
@@ -18,14 +18,14 @@ interface QrCodeGenerateResponseExtended extends QrCodeGenerateResponse {
   expires_at?: string | null;
 }
 
-export const QrGenerator: React.FC<QrGeneratorProps> = ({ parcelId }) => {
+export const QrGenerator: React.FC<QrGeneratorProps> = ({ parcelId: parcelUpi }) => {
   const [qrData, setQrData] = useState<QrCodeGenerateResponseExtended | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const generateQr = async () => {
     setIsLoading(true);
     try {
-      const response = await qrService.generateQrCode(parcelId);
+      const response = await qrService.generateQrCode(parcelUpi);
       if (response.success && response.data) {
         setQrData(response.data as QrCodeGenerateResponseExtended);
       }
@@ -40,7 +40,7 @@ export const QrGenerator: React.FC<QrGeneratorProps> = ({ parcelId }) => {
     if (!qrData?.qr_image_base64) return;
     const link = document.createElement('a');
     link.href = `data:image/svg+xml;base64,${btoa(qrData.qr_image_base64)}`;
-    link.download = `qr-${parcelId}.svg`;
+    link.download = `qr-${parcelUpi}.svg`;
     link.click();
   };
 

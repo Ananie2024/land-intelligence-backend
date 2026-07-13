@@ -2,9 +2,10 @@
 // Land Intelligence System
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
-import { FileText, Upload, Download } from 'lucide-react';
+import { FileText, Upload } from 'lucide-react';
 import { landService } from '@/services/landService';
 import { documentService } from '@/services/documentService';
 import type { Document, DocumentCreate } from '@/types/document';
@@ -15,6 +16,7 @@ import { Modal } from '@/components/ui/Modal';
 import { toast } from 'react-hot-toast';
 
 export default function Documents() {
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [parcels, setParcels] = useState<Parcel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -153,7 +155,7 @@ export default function Documents() {
         ) : (
           <DocumentTable 
             documents={documents}
-            onView={(doc) => console.log('View document:', doc)}
+            onView={(doc) => navigate(`/documents/${doc.id}`)}
             onEdit={(doc) => {
               setEditingDocument(doc);
               setShowForm(true);
@@ -174,7 +176,7 @@ export default function Documents() {
             document={editingDocument}
             onSubmit={editingDocument ? handleUpdate : handleCreate}
             isLoading={isSubmitting}
-            parcels={parcels.map(p => ({ id: p.id, parcel_number: p.parcel_number }))}
+            parcels={parcels.map(p => ({ id: p.id, upi: p.upi }))}
             documentTypes={[
               { id: '1', name: 'Deed' },
               { id: '2', name: 'Title' },

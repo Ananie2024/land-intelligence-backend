@@ -68,8 +68,8 @@ class PhysicalFinder:
                 return {
                     "found": False,
                     "parcel_id": parcel_id,
-                    "parcel_number": parcel.parcel_number,
-                    "message": f"No active documents found for parcel '{parcel.parcel_number}'."
+                    "upi": parcel.upi,
+                    "message": f"No active documents found for parcel with UPI '{parcel.upi}'."
                 }
             doc = docs[0]
         else:
@@ -90,7 +90,7 @@ class PhysicalFinder:
             return {
                 "found": False,
                 "parcel_id": str(parcel_info.id) if parcel_info else None,
-                "parcel_number": parcel_info.parcel_number if parcel_info else None,
+                "upi": parcel_info.upi if parcel_info else None,
                 "document_id": str(doc.id),
                 "document_filename": doc.filename,
                 "message": f"No physical archive location mapped for document '{doc.filename}'."
@@ -103,7 +103,7 @@ class PhysicalFinder:
         return {
             "found": True,
             "parcel_id": str(parcel_info.id) if parcel_info else None,
-            "parcel_number": parcel_info.parcel_number if parcel_info else None,
+            "upi": parcel_info.upi if parcel_info else None,
             "document_id": str(doc.id),
             "document_filename": doc.filename,
             "physical_location": location,

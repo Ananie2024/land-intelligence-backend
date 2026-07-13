@@ -252,6 +252,24 @@ class TaxRepository(BaseRepository[TaxRecord, TaxRecordCreate, TaxRecordUpdate])
         )
         return result.scalar_one_or_none()
 
+    async def get_parcel_by_upi(self, parcel_upi: str) -> Optional[Parcel]:
+        """
+        Get an active parcel by UPI for tax workflows.
+        
+        Args:
+            parcel_upi: Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390
+            
+        Returns:
+            Parcel instance if found, None otherwise
+        """
+        result = await self.db.execute(
+            select(Parcel).where(
+                Parcel.upi == parcel_upi,
+                Parcel.is_active,
+            )
+        )
+        return result.scalar_one_or_none()
+
     async def get_parcels_by_parish(self, parish_id: str) -> List[Parcel]:
         """
         Get active parcels in a parish for batch assessment.

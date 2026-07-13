@@ -41,28 +41,28 @@ class ReportsService:
     
     async def generate_tax_report(
         self,
-        parcel_id: str,
+        parcel_upi: str,
         output_format: str = "pdf"
     ) -> bytes:
         """
-        Generate a tax report for a specific parcel.
+        Generate a tax report for a specific parcel using UPI.
         
         Args:
-            parcel_id: UUID of the parcel
+            parcel_upi: Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390
             output_format: Either 'pdf' or 'excel'
             
         Returns:
             Report file content as bytes
         """
-        # Get outstanding tax data
-        outstanding = await self.tax_service.get_outstanding_tax(parcel_id, None)
+        # Get outstanding tax data using UPI
+        outstanding = await self.tax_service.get_outstanding_tax(parcel_upi, None)
         
         if not outstanding:
-            raise ValueError(f"No tax records found for parcel {parcel_id}")
+            raise ValueError(f"No tax records found for parcel {parcel_upi}")
         
         parcel_data = {
-            "parcel_id": outstanding.get("parcel_id", ""),
-            "parcel_number": outstanding.get("parcel_number", ""),
+            "parcel_upi": parcel_upi,
+            "upi": outstanding.get("upi", ""),
             "owner_name": "",
             "area_sqm": 0,
             "total_outstanding": outstanding.get("total_outstanding", 0),
@@ -70,8 +70,8 @@ class ReportsService:
             "upcoming_amount": outstanding.get("upcoming_amount", 0),
         }
         
-        # Get parcel details for owner name
-        parcel = await self.parcel_service.get_parcel(parcel_id)
+        # Get parcel details for owner name using UPI
+        parcel = await self.parcel_service.get_parcel_by_upi(parcel_upi)
         if parcel:
             parcel_data["owner_name"] = parcel.owner_name
             parcel_data["area_sqm"] = parcel.area_sqm
@@ -119,7 +119,7 @@ class ReportsService:
         # Convert to list of dicts for report generator
         parcel_list = [
             {
-                "parcel_number": p.get("parcel_number", ""),
+                "upi": p.get("upi", ""),
                 "owner_name": p.get("owner_name", ""),
                 "area_sqm": p.get("area_sqm", 0),
                 "valuation": p.get("valuation"),

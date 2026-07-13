@@ -33,18 +33,19 @@ router = APIRouter()
 # ---------------------------------------------------------------------------
 
 @router.get(
-    "/",
+    "",
     response_model=ParcelListResponse,
     summary="List parcels",
     description="Return a paginated, filterable list of all active parcels.",
+    include_in_schema=False,
 )
-async def list_parcels(
+async def list_parcels_no_slash(
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Items per page"),
     parish_id: Optional[str] = Query(None, description="Filter by parish UUID"),
     land_use_category_id: Optional[str] = Query(None, description="Filter by land use category UUID"),
     owner_name: Optional[str] = Query(None, description="Partial match on owner name"),
-    parcel_number: Optional[str] = Query(None, description="Partial match on parcel number"),
+    upi: Optional[str] = Query(None, description="Partial match on UPI"),
     min_area_sqm: Optional[float] = Query(None, ge=0, description="Minimum area in m²"),
     max_area_sqm: Optional[float] = Query(None, ge=0, description="Maximum area in m²"),
     db: AsyncSession = Depends(get_db),
@@ -67,6 +68,33 @@ async def list_parcels(
     return await service.list_parcels(page=page, size=size, filters=filters)
 
 
+@router.get(
+    "/",
+    response_model=ParcelListResponse,
+    summary="List parcels",
+    description="Return a paginated, filterable list of all active parcels.",
+)
+async def list_parcels(
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(20, ge=1, le=100, description="Items per page"),
+    parish_id: Optional[str] = Query(None, description="Filter by parish UUID"),
+    land_use_category_id: Optional[str] = Query(None, description="Filter by land use category UUID"),
+    owner_name: Optional[str] = Query(None, description="Partial match on owner name"),
+    upi: Optional[str] = Query(None, description="Partial match on UPI"),
+    min_area_sqm: Optional[float] = Query(None, ge=0, description="Minimum area in m²"),
+    max_area_sqm: Optional[float] = Query(None, ge=0, description="Maximum area in m²"),
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user_id),
+):
+    # Redirect to no-slash version for consistency
+    return await list_parcels_no_slash(
+        page=page, size=size, parish_id=parish_id,
+        land_use_category_id=land_use_category_id, owner_name=owner_name,
+        upi=upi, min_area_sqm=min_area_sqm,
+        max_area_sqm=max_area_sqm, db=db, _=None
+    )
+
+
 # ---------------------------------------------------------------------------
 # POST /parcels/  — create a new parcel
 # ---------------------------------------------------------------------------
@@ -76,7 +104,7 @@ async def list_parcels(
     response_model=ParcelResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create parcel",
-    description="Register a new land parcel. Parcel number must be unique. Parish must exist.",
+    description="Register a new land parcel. UPI must be unique. Parish must exist.",
 )
 async def create_parcel(
     payload: ParcelCreate,
@@ -98,27 +126,27 @@ async def create_parcel(
 
 
 # ---------------------------------------------------------------------------
-# GET /parcels/by-number/{parcel_number}  — lookup by business key
+# GET /parcels/by-upi/{upi}  — lookup by UPI
 # ---------------------------------------------------------------------------
 
 @router.get(
-    "/by-number/{parcel_number}",
+    "/by-upi/{upi}",
     response_model=ParcelResponse,
-    summary="Get parcel by number",
-    description="Look up a parcel using its unique parcel number (e.g. 'P-2024-001').",
+    summary="Get parcel by UPI",
+    description="Look up a parcel using its Unique Parcel Identifier (UPI) — e.g. '1/02/02/03/1390'.",
 )
-async def get_parcel_by_number(
-    parcel_number: str,
+async def get_parcel_by_upi(
+    upi: str,
     db: AsyncSession = Depends(get_db),
     _: str = Depends(get_current_user_id),
 ):
     service = ParcelService(db)
-    parcel = await service.get_parcel_by_number(parcel_number)
+    parcel = await service.get_parcel_by_upi(upi)
 
     if not parcel:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Parcel number '{parcel_number}' not found.",
+            detail=f"UPI '{upi}' not found.",
         )
 
     return parcel
@@ -214,7 +242,7 @@ async def get_parcel(
     "/{parcel_id}",
     response_model=ParcelResponse,
     summary="Update parcel",
-    description="Partially update a parcel. Uniqueness constraints on parcel_number and title_deed_number are enforced.",
+    description="Partially update a parcel. Uniqueness constraints on UPI and title_deed_number are enforced.",
 )
 async def update_parcel(
     parcel_id: str,
@@ -315,7 +343,7 @@ async def get_parcels_for_map(
     for parcel in parcels:
         parcel_dict = {
             "id": str(parcel.id),
-            "parcel_number": parcel.parcel_number,
+            "upi": parcel.upi,
             "parish_id": str(parcel.parish_id),
             "land_use_category_id": str(parcel.land_use_category_id) if parcel.land_use_category_id else None,
             "area_sqm": parcel.area_sqm,

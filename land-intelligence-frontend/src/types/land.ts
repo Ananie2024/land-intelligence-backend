@@ -26,7 +26,7 @@ export interface ParishCreate {
 
 export interface ParcelGeo {
   id: string;
-  parcel_number: string;
+  upi: string;
   owner_name: string;
   area_sqm: number;
   geometry: [number, number][][]; // Array of polygon rings
@@ -34,7 +34,7 @@ export interface ParcelGeo {
 }
 
 export interface Parcel extends BaseEntity {
-  parcel_number: string;
+  upi: string;
   parish_id: string;
   land_use_category_id?: string | null;
   area_sqm: number;
@@ -53,7 +53,7 @@ export interface Parcel extends BaseEntity {
 }
 
 export interface ParcelCreate {
-  parcel_number: string;
+  upi: string;
   parish_id: string;
   land_use_category_id?: string | null;
   area_sqm: number;
@@ -71,14 +71,14 @@ export interface ParcelFilters extends QueryFilters {
   parish_id?: string;
   land_use_category_id?: string;
   owner_name?: string;
-  parcel_number?: string;
+  upi?: string;
   title_deed_number?: string;
   min_area_sqm?: number;
   max_area_sqm?: number;
 }
 
 export interface ParcelOwnershipHistory extends BaseEntity {
-  parcel_id: string;
+  parcel_upi: string;
   owner_name: string;
   owner_contact?: string | null;
   transfer_date: string;
