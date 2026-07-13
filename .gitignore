@@ -60,9 +60,14 @@ backups/temp/*
 
 # Cloud Storage Credentials
 config/backup/credentials/
-*.json
 *-key.json
 service-account*.json
+
+# Frontend config files (essential for reproducible builds)
+!land-intelligence-frontend/package.json
+!land-intelligence-frontend/tsconfig.json
+!land-intelligence-frontend/tsconfig.app.json
+!land-intelligence-frontend/tsconfig.node.json
 
 # Temporary Files
 temp/
