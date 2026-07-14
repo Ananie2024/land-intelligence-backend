@@ -77,10 +77,10 @@ def generate_tax_pdf(
     )
     elements.append(Spacer(1, 12))
     
-    # Parcel Information
+# Parcel Information
     elements.append(Paragraph("Parcel Information", heading_style))
     parcel_info = [
-        ["Parcel Number", parcel_data.get("parcel_number", "N/A")],
+        ["UPI", parcel_data.get("upi", "N/A")],
         ["Owner", parcel_data.get("owner_name", "N/A")],
         ["Area (sqm)", f"{parcel_data.get('area_sqm', 0):,.2f}"],
         ["Total Outstanding", f"${parcel_data.get('total_outstanding', 0):,.2f}"],
@@ -207,13 +207,13 @@ def generate_parcels_pdf(
     elements.append(PageBreak())
     elements.append(Paragraph("Parcel Summary", heading_style))
     
-    # Build parcel data table
-    parcel_data = [["#", "Parcel #", "Owner", "Area (sqm)", "Valuation", "Parish"]]
+# Build parcel data table
+    parcel_data = [["#", "UPI", "Owner", "Area (sqm)", "Valuation", "Parish"]]
     
     for i, parcel in enumerate(parcels[:50], 1):  # Limit to 50 for PDF
         parcel_data.append([
             str(i),
-            parcel.get("parcel_number", "N/A"),
+            parcel.get("upi", "N/A"),
             parcel.get("owner_name", "N/A")[:25] + "..." if len(parcel.get("owner_name", "")) > 25 else parcel.get("owner_name", "N/A"),
             f"{parcel.get('area_sqm', 0):,.0f}",
             f"${parcel.get('valuation', 0) or 0:,.0f}",

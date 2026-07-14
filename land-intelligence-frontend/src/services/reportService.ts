@@ -7,8 +7,8 @@ import { APIResponse } from '@/types/api';
 export type ExportFormat = 'pdf' | 'excel';
 
 export interface TaxReportSummary {
-  parcel_id: string;
-  parcel_number: string;
+  parcel_upi: string;
+  upi: string;
   total_outstanding: number;
   overdue_amount: number;
   upcoming_amount: number;
@@ -72,12 +72,12 @@ export const reportService = {
   },
 
   getGisOverlayReport: async (
-    parcelId: string,
+    parcelUpi: string,
     zoningWkt: string,
     zoningCode: string
   ): Promise<APIResponse<GisComplianceReport>> => {
     return apiClient.post<GisComplianceReport>(ENDPOINTS.GIS.CHECK_OVERLAY, {
-      parcel_id: parcelId,
+      parcel_upi: parcelUpi,
       zoning_wkt: zoningWkt,
       zoning_code: zoningCode,
     });
@@ -85,9 +85,9 @@ export const reportService = {
 
   calculateDistance: async (payload: {
     geom1_wkt?: string;
-    parcel_id_1?: string;
+    parcel_upi_1?: string;
     geom2_wkt?: string;
-    parcel_id_2?: string;
+    parcel_upi_2?: string;
   }): Promise<APIResponse<{ distance_meters: number; message: string }>> => {
     return apiClient.post<{ distance_meters: number; message: string }>(ENDPOINTS.GIS.DISTANCE, payload);
   },
@@ -95,9 +95,9 @@ export const reportService = {
   // Additional GIS methods
   checkIntersection: async (payload: {
     geom1_wkt?: string;
-    parcel_id_1?: string;
+    parcel_upi_1?: string;
     geom2_wkt?: string;
-    parcel_id_2?: string;
+    parcel_upi_2?: string;
   }): Promise<APIResponse<{
     intersects: boolean;
     overlaps: boolean;
@@ -110,7 +110,7 @@ export const reportService = {
 
   containsPoint: async (payload: {
     geom_wkt?: string;
-    parcel_id?: string;
+    parcel_upi?: string;
     x: number;
     y: number;
   }): Promise<APIResponse<{ contains: boolean; intersects: boolean }>> => {

@@ -4,8 +4,9 @@ wheel==0.46.3
 # Core Framework
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
-pydantic==2.5.3
+pydantic[email]==2.5.3
 pydantic-settings==2.1.0
+email-validator==2.1.0
 python-multipart==0.0.6
 aiofiles==23.2.1
 httpx==0.26.0
@@ -32,6 +33,9 @@ slowapi==0.1.9
 # QR Code Generation
 qrcode[pil]==7.4.2
 pillow==10.2.0
+
+# Logging
+python-json-logger==2.0.7
 
 # Configuration & Environment
 python-dotenv==1.0.0

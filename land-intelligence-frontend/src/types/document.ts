@@ -28,7 +28,7 @@ export interface Document extends BaseEntity {
   is_active: boolean;
   // Nested data
   document_type_name?: string | null;
-  parcel_number?: string | null;
+  upi?: string | null;
   qr_code_count?: number;
 }
 
