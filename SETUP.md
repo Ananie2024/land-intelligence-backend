@@ -128,11 +128,11 @@ SECRET_KEY=paste_generated_key_here
 # File storage paths
 # Windows example:
 # STORAGE_ROOT=C:/LandIntelligence
-# DOCUMENTS_PATH=C:/LandIntelligence/documents
+# UPLOADED_DOCUMENTS_PATH=C:/LandIntelligence/uploaded_documents
 
 # Linux example:
 STORAGE_ROOT=/home/yourusername/LandIntelligence
-DOCUMENTS_PATH=/home/yourusername/LandIntelligence/documents
+UPLOADED_DOCUMENTS_PATH=/home/yourusername/LandIntelligence/uploaded_documents
 BACKUPS_LOCAL_PATH=/home/yourusername/LandIntelligence/backups
 LOGS_PATH=/home/yourusername/LandIntelligence/logs
 TEMP_PATH=/home/yourusername/LandIntelligence/temp
@@ -144,14 +144,14 @@ The application will auto-create directories, but you can create them manually:
 
 **Linux/Mac:**
 ```bash
-mkdir -p ~/LandIntelligence/{documents,backups,logs,temp,qr-codes,gis-data}
-mkdir -p ~/LandIntelligence/documents/{land-titles,contracts,tax-records,correspondence,surveys}
+mkdir -p ~/LandIntelligence/{uploaded_documents,backups,logs,temp,qr-codes,gis-data}
+mkdir -p ~/LandIntelligence/uploaded_documents/{land-titles,contracts,tax-records,correspondence,surveys}
 mkdir -p ~/LandIntelligence/backups/{daily,weekly,monthly,manifests,temp}
 ```
 
 **Windows (PowerShell):**
 ```powershell
-New-Item -ItemType Directory -Force -Path C:\LandIntelligence\documents
+New-Item -ItemType Directory -Force -Path C:\LandIntelligence\uploaded_documents
 New-Item -ItemType Directory -Force -Path C:\LandIntelligence\backups
 New-Item -ItemType Directory -Force -Path C:\LandIntelligence\logs
 New-Item -ItemType Directory -Force -Path C:\LandIntelligence\temp

@@ -155,7 +155,7 @@ SECRET_KEY=run_this_command_below_to_generate
 
 # File paths (use forward slashes!)
 STORAGE_ROOT=C:/LandIntelligence
-DOCUMENTS_PATH=C:/LandIntelligence/documents
+UPLOADED_DOCUMENTS_PATH=C:/LandIntelligence/uploaded_documents
 BACKUPS_LOCAL_PATH=C:/LandIntelligence/backups
 LOGS_PATH=C:/LandIntelligence/logs
 TEMP_PATH=C:/LandIntelligence/temp
@@ -174,11 +174,11 @@ Copy the output and paste it in `.env` file.
 ```powershell
 # Create all directories at once
 $dirs = @(
-    "C:\LandIntelligence\documents\land-titles",
-    "C:\LandIntelligence\documents\contracts",
-    "C:\LandIntelligence\documents\tax-records",
-    "C:\LandIntelligence\documents\correspondence",
-    "C:\LandIntelligence\documents\surveys",
+    "C:\LandIntelligence\uploaded_documents\land-titles",
+    "C:\LandIntelligence\uploaded_documents\contracts",
+    "C:\LandIntelligence\uploaded_documents\tax-records",
+    "C:\LandIntelligence\uploaded_documents\correspondence",
+    "C:\LandIntelligence\uploaded_documents\surveys",
     "C:\LandIntelligence\backups\daily",
     "C:\LandIntelligence\backups\weekly",
     "C:\LandIntelligence\backups\monthly",
@@ -200,7 +200,7 @@ Write-Host "All directories created successfully!" -ForegroundColor Green
 **Option B: File Explorer**
 - Navigate to `C:\`
 - Create folder `LandIntelligence`
-- Create subfolders: `documents`, `backups`, `logs`, `temp`, `qr-codes`, `gis-data`, `config`
+- Create subfolders: `uploaded_documents`, `backups`, `logs`, `temp`, `qr-codes`, `gis-data`, `config`
 
 ### 8. Verify Project Structure
 

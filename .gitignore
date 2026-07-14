@@ -102,7 +102,7 @@ dmypy.json
 alembic/versions/__pycache__/
 
 # Documents (actual uploaded files - don't commit)
-documents/
+uploaded_documents/
 qr-codes/generated/
 gis-data/
 
