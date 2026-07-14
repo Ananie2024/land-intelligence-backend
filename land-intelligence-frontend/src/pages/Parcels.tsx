@@ -85,7 +85,7 @@ export default function Parcels() {
   };
 
   const handleDelete = async (parcel: Parcel) => {
-    if (!confirm(`Delete parcel "${parcel.parcel_number}"? This action cannot be undone.`)) return;
+    if (!confirm(`Delete parcel "${parcel.upi}"? This action cannot be undone.`)) return;
     try {
       const response = await landService.deleteParcel(parcel.id);
       if (response.success) {

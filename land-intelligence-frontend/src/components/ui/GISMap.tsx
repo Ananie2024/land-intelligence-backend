@@ -17,9 +17,9 @@ delete ((L.Icon as any).Default.prototype as any)._getIconUrl;
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-interface ParcelGeoData {
+ interface ParcelGeoData {
   id: string;
-  parcel_number: string;
+  upi: string;
   owner_name: string;
   area_sqm: number;
   geometry: [number, number][][]; // Array of polygon rings

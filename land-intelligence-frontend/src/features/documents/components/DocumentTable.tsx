@@ -83,9 +83,9 @@ export const DocumentTable: React.FC<DocumentTableProps> = ({
                   ? new Date(document.document_date).toLocaleDateString() 
                   : '-'}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {document.parcel_number || '-'}
-              </td>
+               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                 {document.parcel_upi || '-'}
+               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex items-center justify-end gap-2">
                   <button

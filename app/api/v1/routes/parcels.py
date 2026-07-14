@@ -276,7 +276,7 @@ async def update_parcel(
 
 @router.delete(
     "/{parcel_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_200_OK,
     summary="Delete parcel",
     description="Soft-delete a parcel. The parish parcel count is updated automatically.",
 )
@@ -294,6 +294,9 @@ async def delete_parcel(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Parcel '{parcel_id}' not found.",
         )
+    
+    from app.schemas.api_response import success_response
+    return success_response(message=f"Parcel '{parcel_id}' deleted successfully")
 
 
 # ---------------------------------------------------------------------------

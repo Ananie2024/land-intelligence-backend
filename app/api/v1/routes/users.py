@@ -121,7 +121,7 @@ async def update_user(
 
 @router.delete(
     "/{user_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_200_OK,
     summary="Delete user",
     description="Soft-delete a user (sets is_active=False).",
 )
@@ -138,3 +138,6 @@ async def delete_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User '{user_id}' not found."
         )
+    
+    from app.schemas.api_response import success_response
+    return success_response(message=f"User '{user_id}' deleted successfully")

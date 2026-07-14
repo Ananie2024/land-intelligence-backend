@@ -7,10 +7,10 @@ import { qrService } from '@/services/qrService';
 
 export const QrVerifier: React.FC = () => {
   const [token, setToken] = useState('');
-  const [result, setResult] = useState<{ valid: boolean; parcelNumber?: string } | null>(null);
+  const [result, setResult] = useState<{ valid: boolean; parcelUpi?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-const verify = async () => {
+  const verify = async () => {
     if (!token) return;
     setIsLoading(true);
     try {
@@ -18,7 +18,7 @@ const verify = async () => {
       if (response.success && response.data) {
         setResult({
           valid: response.data.valid,
-          parcelNumber: response.data.parcel_number ?? undefined,
+          parcelUpi: response.data.parcel_upi ?? undefined,
         });
       }
     } catch (error) {
@@ -56,7 +56,7 @@ const verify = async () => {
           {result.valid ? <Check className="h-5 w-5" /> : <X className="h-5 w-5" />}
           <span>
             {result.valid 
-              ? `Valid QR Code - Parcel: ${result.parcelNumber}` 
+              ? `Valid QR Code - Parcel: ${result.parcelUpi}` 
               : 'Invalid QR Code'}
           </span>
         </div>

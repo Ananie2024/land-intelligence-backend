@@ -80,7 +80,7 @@ const [docsResponse, parcelsResponse] = await Promise.all([
                 setShowForm(false);
                 loadData();
               }}
-              parcels={parcels.map(p => ({ id: p.id, parcel_number: p.parcel_number }))}
+               parcels={parcels.map(p => ({ id: p.id, upi: p.upi }))}
             />
             <button
               onClick={() => setShowForm(false)}

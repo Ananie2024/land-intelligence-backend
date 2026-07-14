@@ -131,11 +131,18 @@ class VerificationService:
         # 4. Record Access
         await self.qr_repo.record_access(qr_string)
         
+        # Look up parcel UPI if parcel_id exists
+        parcel_upi = None
+        if qr_entry.parcel_id:
+            parcel = await self.parcel_repo.get(qr_entry.parcel_id)
+            if parcel:
+                parcel_upi = parcel.upi
+        
         return QRCodeVerifyResponse(
             is_valid=integrity_valid,
             code=qr_string,
             code_type=qr_entry.code_type,
-            parcel_id=str(qr_entry.parcel_id) if qr_entry.parcel_id else None,
+            parcel_upi=parcel_upi,
             document_id=str(qr_entry.document_id) if qr_entry.document_id else None,
             expires_at=qr_entry.expires_at,
             is_revoked=qr_entry.is_revoked,

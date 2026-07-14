@@ -16,7 +16,7 @@ import { parseWkbToCoordinates } from '@/utils/wkbParser';
 
 interface ParcelGeoData {
   id: string;
-  parcel_number: string;
+  upi: string;
   owner_name: string;
   area_sqm: number;
   geometry: [number, number][][]; // Array of polygon rings
@@ -46,7 +46,7 @@ export default function GisPage() {
         // API returns parcels with geometry_wkb (hex string), parse to coordinates
         const geoParcels: ParcelGeoData[] = response.data.map((parcel: Parcel) => ({
           id: parcel.id,
-          parcel_number: parcel.parcel_number,
+          upi: parcel.upi,
           owner_name: parcel.owner_name,
           area_sqm: parcel.area_sqm,
           valuation: parcel.valuation ?? undefined,
@@ -149,7 +149,7 @@ export default function GisPage() {
                 <MapPin className="w-5 h-5 text-slate-400 mt-0.5" />
                 <div>
                   <p className="text-xs text-slate-500">Parcel Number</p>
-                  <p className="font-medium text-white">{selectedParcel.parcel_number}</p>
+                  <p className="font-medium text-white">{selectedParcel.upi}</p>
                 </div>
               </div>
 

@@ -167,7 +167,7 @@ async def update_parish(
 
 @router.delete(
     "/{parish_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_200_OK,
     summary="Delete parish",
     description="Soft-delete a parish (sets is_active=False). Parcels are not removed.",
 )
@@ -188,6 +188,9 @@ async def delete_parish(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Parish '{parish_id}' not found.",
         )
+    
+    from app.schemas.api_response import success_response
+    return success_response(message=f"Parish '{parish_id}' deleted successfully")
 
 
 # ---------------------------------------------------------------------------

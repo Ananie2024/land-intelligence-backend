@@ -250,7 +250,7 @@ async def update_document(
     return document
 
 
-@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{document_id}", status_code=status.HTTP_200_OK)
 async def delete_document(
     document_id: str,
     hard_delete: bool = Query(False, description="Permanently delete file and record"),
@@ -269,7 +269,9 @@ async def delete_document(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Document {document_id} not found"
         )
-    return None
+    
+    from app.schemas.api_response import success_response
+    return success_response(message=f"Document '{document_id}' deleted successfully")
 
 
 @router.get("/{document_id}/physical-location")

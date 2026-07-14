@@ -7,7 +7,6 @@ Land Intelligence System
 
 import logging
 from typing import Optional
-from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -129,7 +128,7 @@ async def get_qr_details(
     return qr_entry
 
 
-@router.delete("/{qr_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{qr_id}", status_code=status.HTTP_200_OK)
 async def revoke_qr_code(
     qr_id: str,
     db: AsyncSession = Depends(get_db),
@@ -137,6 +136,7 @@ async def revoke_qr_code(
 ):
     """Revoke a QR code."""
     from app.repositories.qr_registry_repository import QRRegistryRepository
+    from app.schemas.api_response import success_response
     
     service = QRCodeService(
         db=db,
@@ -151,4 +151,4 @@ async def revoke_qr_code(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"QR Code {qr_id} not found"
         )
-    return None
+    return success_response(message=f"QR Code '{qr_id}' revoked successfully")

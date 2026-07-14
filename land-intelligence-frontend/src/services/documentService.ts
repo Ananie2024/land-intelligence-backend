@@ -26,7 +26,7 @@ export const documentService = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('document_type_id', data.document_type_id);
-    if (data.parcel_id) formData.append('parcel_id', data.parcel_id);
+    if (data.parcel_upi) formData.append('parcel_upi', data.parcel_upi);
     if (data.description) formData.append('description', data.description);
     if (data.document_date) formData.append('document_date', data.document_date);
     if (data.reference_number) formData.append('reference_number', data.reference_number);

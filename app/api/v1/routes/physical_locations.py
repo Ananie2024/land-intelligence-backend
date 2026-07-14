@@ -163,7 +163,7 @@ async def update_location(
 
 @router.delete(
     "/{location_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_200_OK,
     summary="Delete physical location",
     description="Soft-delete a physical location. Cascading constraints apply."
 )
@@ -180,6 +180,8 @@ async def delete_location(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Location with ID '{location_id}' not found."
             )
+        from app.schemas.api_response import success_response
+        return success_response(message=f"Location '{location_id}' deleted successfully")
     except HTTPException:
         raise
     except Exception as e:
