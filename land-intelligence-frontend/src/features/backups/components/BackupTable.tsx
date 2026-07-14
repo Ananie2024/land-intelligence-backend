@@ -22,8 +22,8 @@ const isCompleted = (status: string | undefined): boolean => {
 export const BackupTable: React.FC<BackupTableProps> = ({ backups, onDownload }) => {
   if (!backups || backups.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">No backups found</p>
+      <div className="text-center py-12 text-slate-400">
+        <p>No backups found</p>
       </div>
     );
   }
@@ -38,15 +38,15 @@ export const BackupTable: React.FC<BackupTableProps> = ({ backups, onDownload })
     const normalized = normalizeStatus(status);
     switch (normalized) {
       case 'COMPLETED':
-        return 'bg-green-100 text-green-800';
+        return 'bg-success/20 text-success';
       case 'FAILED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-500/20 text-red-400';
       case 'CANCELLED':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-700/50 text-slate-300';
       case 'PENDING':
       case 'IN_PROGRESS':
       default:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-warning/20 text-warning';
     }
   };
 
@@ -65,44 +65,44 @@ export const BackupTable: React.FC<BackupTableProps> = ({ backups, onDownload })
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+      <table className="min-w-full divide-y divide-slate-800">
+        <thead className="bg-slate-900/60">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
               Filename
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
               Size
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
               Type
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
               Status
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
               Created
             </th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">
               Actions
             </th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-slate-900/40 divide-y divide-slate-800">
           {backups.map((backup) => (
-            <tr key={backup.id} className="hover:bg-gray-50">
+            <tr key={backup.id} className="hover:bg-slate-900/60 transition-colors">
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
-                  <Database className="h-5 w-5 text-gray-400 mr-2" />
-                  <span className="font-mono text-sm text-gray-900">
+                  <Database className="h-5 w-5 text-slate-400 mr-2" />
+                  <span className="font-mono text-sm text-slate-200">
                     {backup.filename || backup.destination_path?.split('/').pop() || 'backup.zip'}
                   </span>
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
                 {formatSize(backup.file_size_bytes)}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 capitalize">
                 {getBackupTypeLabel(backup)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
@@ -113,14 +113,14 @@ export const BackupTable: React.FC<BackupTableProps> = ({ backups, onDownload })
                   {getStatusDisplay(backup.status)}
                 </span>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
                 {new Date(backup.created_at).toLocaleString()}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button
                   onClick={() => onDownload(backup)}
                   disabled={!isCompleted(backup.status)}
-                  className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                  className="text-slate-400 hover:text-slate-200 disabled:opacity-50"
                   title="Download"
                 >
                   <Download className="h-4 w-4" />

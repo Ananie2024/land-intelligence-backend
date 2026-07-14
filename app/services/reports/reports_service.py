@@ -103,28 +103,28 @@ class ReportsService:
         # Get parcels
         if parish_id:
             parcels_result = await self.parcel_service.list_parcels_by_parish(parish_id)
-            parcels = parcels_result.get("items", [])
+            parcels = parcels_result.items
         else:
             # Get all active parcels
             parcels_result = await self.parcel_service.list_parcels(1, 1000, {})
-            parcels = parcels_result.get("items", [])
+            parcels = parcels_result.items
         
         # Get statistics
         stats = {
             "total_parcels": len(parcels),
-            "total_area_sqm": sum(p.get("area_sqm", 0) for p in parcels),
-            "total_valuation": sum(p.get("valuation") or 0 for p in parcels),
+            "total_area_sqm": sum(getattr(p, "area_sqm", 0) or 0 for p in parcels),
+            "total_valuation": sum(getattr(p, "valuation", 0) or 0 for p in parcels),
         }
         
         # Convert to list of dicts for report generator
         parcel_list = [
             {
-                "upi": p.get("upi", ""),
-                "owner_name": p.get("owner_name", ""),
-                "area_sqm": p.get("area_sqm", 0),
-                "valuation": p.get("valuation"),
-                "parish_name": p.get("parish_name", ""),
-                "land_use_category_name": p.get("land_use_category_name", ""),
+                "upi": getattr(p, "upi", ""),
+                "owner_name": getattr(p, "owner_name", ""),
+                "area_sqm": getattr(p, "area_sqm", 0) or 0,
+                "valuation": getattr(p, "valuation", None),
+                "parish_name": getattr(p, "parish_name", ""),
+                "land_use_category_name": getattr(p, "land_use_category_name", ""),
             }
             for p in parcels
         ]

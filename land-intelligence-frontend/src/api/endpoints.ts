@@ -114,11 +114,18 @@ export const ENDPOINTS = {
      STATS_USERS: '/dashboard/stats/users',
    },
 
-   // Reports endpoints
-   REPORTS: {
-     BASE: '/reports',
-     TAX: (parcelId: string) => `/reports/tax/${parcelId}`,
-     PARCELS: '/reports/parcels',
-     DASHBOARD: '/reports/dashboard',
-   },
-   } as const;
+// Reports endpoints
+    REPORTS: {
+      BASE: '/reports',
+      TAX: (parcelId: string) => `/reports/tax/${parcelId}`,
+      PARCELS: '/reports/parcels',
+      DASHBOARD: '/reports/dashboard',
+    },
+
+    // Settings endpoints
+    SETTINGS: {
+      GET: '/settings',
+      UPDATE: '/settings',
+      LOGS: '/settings/logs',
+    },
+    } as const;

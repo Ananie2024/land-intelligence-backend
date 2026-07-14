@@ -1,34 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Map, Users, FileText, Database, CheckCircle2, Loader2, ArrowRight, LandPlot, Scan, Receipt } from 'lucide-react';
+import { Map, Users, FileText, Database, Loader2, ArrowRight, LandPlot, Scan, Receipt } from 'lucide-react';
 import { dashboardService } from '@/services/dashboardService';
 import type { SystemStats } from '@/types/dashboard';
 
 export default function Dashboard() {
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const statsResponse = await dashboardService.getSystemStats();
+      
+      if (statsResponse.success && statsResponse.data) {
+        setStats(statsResponse.data);
+      } else {
+        setError(statsResponse.message || 'Failed to load dashboard statistics');
+      }
+    } catch (error) {
+      console.error('Failed to load dashboard data', error);
+      setError('Failed to load dashboard data');
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const response = await dashboardService.getSystemStats();
-        if (response.success && response.data) {
-          setStats(response.data);
-        } else {
-          toast.error('Failed to load dashboard statistics');
-        }
-      } catch (error) {
-        console.error('Failed to load dashboard stats', error);
-        toast.error('Failed to load dashboard statistics');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadStats();
-  }, []);
+    loadData();
+  }, [loadData]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadData();
+    setIsRefreshing(false);
+  };
 
   const formatFileSize = (bytes: number): string => {
     const gb = bytes / (1024 * 1024 * 1024);
@@ -41,9 +54,9 @@ export default function Dashboard() {
 
   const statCards = stats ? [
     { 
-      title: 'Total Parcels', 
-      value: stats.parcels.total_parcels.toLocaleString(), 
-      desc: `${formatCurrency(stats.parcels.total_valuation)} valuation`, 
+      title: 'Total Valuation', 
+      value: formatCurrency(stats.parcels.total_valuation), 
+      desc: `${stats.parcels.total_parcels.toLocaleString()} total parcels`, 
       icon: Map, 
       color: 'text-primary-400 bg-primary-500/10',
       gradient: 'from-primary-500 to-primary-600'
@@ -65,9 +78,9 @@ export default function Dashboard() {
       gradient: 'from-info to-primary-500'
     },
     { 
-      title: 'Parishes', 
-      value: stats.parishes.total_parishes.toLocaleString(), 
-      desc: `${stats.parishes.total_parcels} total parcels`, 
+      title: 'Parish Parcels', 
+      value: stats.parishes.total_parcels.toLocaleString(), 
+      desc: `${stats.parishes.total_parishes.toLocaleString()} total parishes`, 
       icon: Database, 
       color: 'text-success bg-success/10',
       gradient: 'from-success to-gold-600'
@@ -218,33 +231,6 @@ export default function Dashboard() {
 
         {/* Informational Alerts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="overflow-hidden">
-            <CardHeader>
-              <CardTitle>System Log Status</CardTitle>
-              <CardDescription>Recent service log synchronizations</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3 p-3.5 rounded-lg bg-slate-950/40 border border-slate-900 hover:bg-slate-950/60 transition-colors">
-                <div className="p-1.5 rounded-full bg-success/20">
-                  <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" />
-                </div>
-                <div className="text-xs">
-                  <p className="text-white font-semibold">Automatic Database Backup Completed</p>
-                  <p className="text-slate-500 mt-0.5">Database snapshot synced with GCS cold store bucket.</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3.5 rounded-lg bg-slate-950/40 border border-slate-900 hover:bg-slate-950/60 transition-colors">
-                <div className="p-1.5 rounded-full bg-primary-500/20">
-                  <CheckCircle2 className="w-4 h-4 text-primary-400 flex-shrink-0" />
-                </div>
-                <div className="text-xs">
-                  <p className="text-white font-semibold">GIS Layer Loaded</p>
-                  <p className="text-slate-500 mt-0.5">Spatial boundary overlay successfully refreshed.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader>
               <CardTitle>Archdiocese Administration</CardTitle>

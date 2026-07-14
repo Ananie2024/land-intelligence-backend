@@ -5,6 +5,5 @@ export { UserTable } from './components/UserTable';
 export { UserForm } from './components/UserForm';
 export { RoleBadge } from './components/RoleBadge';
 export { PermissionGuard } from './components/PermissionGuard';
-export { UserListPage } from './pages/UserListPage';
-export { UserProfilePage } from './pages/UserProfilePage';
-export { UserDetailPage } from './pages/UserDetailPage';
+// List/detail pages in features are deprecated - use /pages/*.tsx instead
+// UserListPage, UserProfilePage, UserDetailPage are kept for reference but not exported

@@ -3,7 +3,8 @@
 
 import React, { useEffect, useMemo, useCallback } from 'react';
 import { useMap } from 'react-leaflet';
-import { MapContainer, TileLayer, Polygon, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Polygon } from 'react-leaflet';
+import { MapPin } from 'lucide-react';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -54,6 +55,15 @@ function MapBoundsController({ parcels }: { parcels: ParcelGeoData[] }) {
   return null;
 }
 
+// Empty state component
+const EmptyState: React.FC = () => (
+  <div className="flex flex-col items-center justify-center h-full min-h-[300px] bg-slate-900/60 rounded-lg border border-slate-800">
+    <MapPin className="w-12 h-12 text-slate-600 mb-3" />
+    <p className="text-slate-400 text-sm font-medium">No parcels to display</p>
+    <p className="text-slate-500 text-xs mt-1">Parcels will appear here when loaded or when filters match records</p>
+  </div>
+);
+
 export const GISMap: React.FC<GISMapProps> = ({
   parcels,
   height = '500px',
@@ -69,6 +79,15 @@ export const GISMap: React.FC<GISMapProps> = ({
     if (valuation < 5000000) return '#eab308';
     return '#f97316';
   }, []);
+
+  // Show empty state when no parcels
+  if (!parcels || parcels.length === 0) {
+    return (
+      <div className="rounded-xl overflow-hidden border border-slate-800/80 bg-slate-900/40">
+        <EmptyState />
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl overflow-hidden border border-slate-800/80 bg-slate-900/40">

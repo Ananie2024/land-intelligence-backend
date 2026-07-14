@@ -13,4 +13,5 @@ from . import (
     users,
     dashboard,
     reports,
+    settings,
 )

@@ -1,16 +1,18 @@
 import { apiClient } from '@/api/apiClient';
 import { ENDPOINTS } from '@/api/endpoints';
 import { Parish, ParishCreate, Parcel, ParcelCreate, ParcelFilters, ParcelOwnershipHistory } from '@/types/land';
-import { APIResponse } from '@/types/api';
+import { APIResponse, PaginatedResponse } from '@/types/api';
 
 export const landService = {
   // Parishes Services
-  getParishes: async (params?: { page?: number; size?: number; search?: string }): Promise<APIResponse<Parish[]>> => {
+  getParishes: async (params?: { page?: number; size?: number; search?: string }): Promise<APIResponse<Parish[]> & { total?: number; pages?: number }> => {
     const response = await apiClient.get<{ items: Parish[]; total: number; page: number; size: number; pages: number }>(ENDPOINTS.PARISHES.BASE, params);
     // Transform wrapped paginated response to expected format
     return {
       ...response,
       data: response.data?.items ?? null,
+      total: response.data?.total,
+      pages: response.data?.pages,
     };
   },
 
@@ -35,12 +37,16 @@ export const landService = {
   },
 
 // Parcels Services
-   getParcels: async (filters?: ParcelFilters): Promise<APIResponse<Parcel[]>> => {
+   getParcels: async (filters?: ParcelFilters): Promise<APIResponse<Parcel[]> & { total?: number; pages?: number; page?: number; size?: number }> => {
      const response = await apiClient.get<{ items: Parcel[]; total: number; page: number; size: number; pages: number }>(ENDPOINTS.PARCELS.BASE, filters);
      // Transform wrapped paginated response to expected format
      return {
        ...response,
        data: response.data?.items ?? null,
+       total: response.data?.total,
+       pages: response.data?.pages,
+       page: response.data?.page,
+       size: response.data?.size,
      };
    },
 

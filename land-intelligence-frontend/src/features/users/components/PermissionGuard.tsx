@@ -2,6 +2,7 @@
 // Land Intelligence System
 
 import React from 'react';
+import { useAuth } from '@/features/authentication/hooks/useAuth';
 import type { UserRole } from '@/types/user';
 
 interface PermissionGuardProps {
@@ -15,23 +16,25 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   allowedRoles,
   fallback = null 
 }) => {
-  // Get user from authentication - will use the hook from authentication feature
-  const isAuthenticated = false; // Placeholder - will be connected to useAuth
-  const userRole: UserRole | undefined = undefined; // Placeholder
+  // Get user from authentication context
+  const auth = useAuth();
+  const user = auth.state?.user;
+  const isAuthenticated = auth.state?.isAuthenticated;
+  const userRole = user?.role as UserRole | undefined;
   
   if (!isAuthenticated || !userRole) {
     return <>{fallback}</>;
   }
 
   // Role hierarchy check
-  const ROLE_HIERARCHY: Record<UserRole, number> = {
+  const ROLE_HIERARCHY: Record<string, number> = {
     admin: 3,
     client: 2,
     viewer: 1,
   };
 
   const hasAccess = allowedRoles.some(role => 
-    ROLE_HIERARCHY[role] <= ROLE_HIERARCHY[userRole]
+    ROLE_HIERARCHY[role] <= ROLE_HIERARCHY[userRole as string]
   );
 
   if (!hasAccess) {

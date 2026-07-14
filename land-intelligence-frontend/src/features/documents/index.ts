@@ -4,5 +4,5 @@
 export { DocumentTable } from './components/DocumentTable';
 export { DocumentForm } from './components/DocumentForm';
 export { DocumentDetail } from './components/DocumentDetail';
-export { DocumentListPage } from './pages/DocumentListPage';
-export { DocumentDetailPage } from './pages/DocumentDetailPage';
+// DocumentListPage is deprecated - use /pages/Documents.tsx instead
+// DocumentDetailPage is used in router for /documents/:id

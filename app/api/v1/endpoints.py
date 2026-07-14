@@ -22,6 +22,7 @@ from app.api.v1.routes import (
     users,
     dashboard,
     reports,
+    settings,
 )
 
 # Apply logging globally to v1
@@ -119,5 +120,12 @@ router.include_router(
     reports.router,
     prefix="/reports",
     tags=["Reports"],
+    dependencies=[Depends(get_current_user_data)]
+)
+
+router.include_router(
+    settings.router,
+    prefix="/settings",
+    tags=["Settings"],
     dependencies=[Depends(get_current_user_data)]
 )

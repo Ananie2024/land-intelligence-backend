@@ -9,9 +9,9 @@ interface RoleBadgeProps {
 }
 
 const ROLE_STYLES: Record<UserRole, string> = {
-  admin: 'bg-purple-100 text-purple-800',
-  client: 'bg-blue-100 text-blue-800',
-  viewer: 'bg-gray-100 text-gray-800',
+  admin: 'bg-purple-500/20 text-purple-400',
+  client: 'bg-primary-500/20 text-primary-400',
+  viewer: 'bg-slate-700/50 text-slate-300',
 };
 
 export const RoleBadge: React.FC<RoleBadgeProps> = ({ role, className = '' }) => {

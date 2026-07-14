@@ -3,4 +3,4 @@
 
 export { QrGenerator } from './components/QrGenerator';
 export { QrVerifier } from './components/QrVerifier';
-export { QrListPage } from './pages/QrListPage';
+// QrListPage is deprecated - use /pages/QrCodes.tsx instead

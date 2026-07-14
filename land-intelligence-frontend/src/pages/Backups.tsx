@@ -1,7 +1,7 @@
 // Backup List Page with Download Functionality
 // Land Intelligence System
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
 import { Database, RefreshCw } from 'lucide-react';
@@ -14,23 +14,28 @@ import { toast } from 'react-hot-toast';
 export default function Backups() {
   const [backups, setBackups] = useState<Backup[]>([]);
   const [verifyData, setVerifyData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
 
-  const loadBackups = async () => {
+  const loadBackups = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const response = await backupService.getBackups();
       if (response.success && response.data) {
         setBackups(response.data);
+      } else {
+        setError(response.message || 'Failed to load backups');
       }
     } catch (error) {
       console.error('Failed to load backups', error);
+      setError('Failed to load backups');
       toast.error('Failed to load backups');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const handleVerify = async () => {
     setIsVerifying(true);
@@ -94,6 +99,11 @@ export default function Backups() {
     }
   };
 
+  // Retry function
+  const handleRetry = () => {
+    loadBackups();
+  };
+
   return (
     <PageContainer
       title="System Snapshots & Backups"
@@ -111,10 +121,18 @@ export default function Backups() {
       <div className="space-y-6">
         <div className="flex items-center gap-3 p-6 rounded-xl border border-slate-800/80 bg-slate-900/30">
           <Database className="w-6 h-6 text-info" />
-          <div className="text-sm">
+          <div className="text-sm flex-1">
             <p className="text-white font-bold">Cloud Sync Active</p>
             <p className="text-slate-400 mt-1">Automated cron runs sync snapshots to secure GCS bucket daily at 11:00 AM UTC.</p>
           </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={loadBackups}
+            disabled={isLoading}
+          >
+            Refresh
+          </Button>
         </div>
 
         <BackupVerifyCard 
@@ -125,6 +143,16 @@ export default function Backups() {
 
         {isLoading ? (
           <div className="text-center py-12 text-slate-400">Loading backups...</div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-400 mb-4">{error}</p>
+            <button 
+              onClick={handleRetry}
+              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
         ) : (
           <BackupTable 
             backups={backups}
