@@ -5,6 +5,7 @@ description = "Land Intelligence & Stewardship System - GIS-enabled property man
 authors = ["Church IT Department <it@church.org>"]
 readme = "README.md"
 license = "Proprietary"
+packages = [{include = "app", from = "."}]
 
 [tool.poetry.dependencies]
 python = "^3.11"

@@ -10,12 +10,7 @@ from uuid import uuid4
 
 from app.models.parcel import Parcel
 from app.models.tax_record import TaxRecord
-from app.models.tax_payment import TaxPayment
 from app.models.enums import TaxRecordStatus
-from app.repositories.parcel_repository import ParcelRepository
-from app.repositories.parish_repository import ParishRepository
-from app.repositories.land_use_category_repository import LandUseCategoryRepository
-from app.repositories.tax_repository import TaxRepository
 from app.services.tax.tax_service import TaxService
 
 
@@ -38,7 +33,7 @@ class TestTaxService:
     def mock_parcel(self):
         parcel = MagicMock(spec=Parcel)
         parcel.id = str(uuid4())
-        parcel.parcel_number = "P-001"
+        parcel.upi = "UPI-001"
         parcel.area_sqm = 1000.0
         parcel.valuation = 500000.0
         parcel.land_use_category_id = None
@@ -58,13 +53,13 @@ class TestTaxService:
 
     async def test_calculate_tax_parcel_not_found_raises(self, service):
         """Raises ValueError when parcel not found."""
-        service.parcel_repo.get = AsyncMock(return_value=None)
+        service.parcel_repo.get_by_upi = AsyncMock(return_value=None)
         with pytest.raises(ValueError):
-            await service.calculate_tax(parcel_id="missing", assessment_year=2024)
+            await service.calculate_tax(parcel_upi="missing", assessment_year=2024)
 
     async def test_calculate_tax_success(self, service, mock_parcel):
         """Returns calculated tax details."""
-        service.parcel_repo.get = AsyncMock(return_value=mock_parcel)
+        service.parcel_repo.get_by_upi = AsyncMock(return_value=mock_parcel)
         service.tax_calculator.calculate_tax = AsyncMock(return_value={
             "assessed_value": Decimal("500000.00"),
             "tax_rate_applied": Decimal("0.05"),
@@ -80,29 +75,29 @@ class TestTaxService:
             "interest_accrued": Decimal("0.00"),
             "total_due": Decimal("0.00"),
         })
-        result = await service.calculate_tax(str(mock_parcel.id), 2024, include_penalties=False)
+        result = await service.calculate_tax(mock_parcel.upi, 2024, include_penalties=False)
         assert result["assessment_year"] == 2024
         assert result["total_amount"] == 50.0
 
     async def test_generate_assessment_parcel_not_found_raises(self, service):
         """Raises ValueError when parcel not found."""
-        service.parcel_repo.get = AsyncMock(return_value=None)
+        service.parcel_repo.get_by_upi = AsyncMock(return_value=None)
         with pytest.raises(ValueError):
-            await service.generate_assessment(parcel_id="missing", assessment_year=2024, user_id="u-1")
+            await service.generate_assessment(parcel_upi="missing", assessment_year=2024, user_id="u-1")
 
     async def test_generate_assessment_duplicate_raises(self, service, mock_parcel):
         """Raises ValueError when assessment already exists."""
-        service.parcel_repo.get = AsyncMock(return_value=mock_parcel)
+        service.parcel_repo.get_by_upi = AsyncMock(return_value=mock_parcel)
         service.repo.get_by_parcel_and_year = AsyncMock(return_value=MagicMock(spec=TaxRecord))
         with pytest.raises(ValueError):
-            await service.generate_assessment(parcel_id=str(mock_parcel.id), assessment_year=2024, user_id="u-1")
+            await service.generate_assessment(parcel_upi=mock_parcel.upi, assessment_year=2024, user_id="u-1")
 
     async def test_generate_assessment_success(self, service, mock_parcel):
         """Creates a new assessment record."""
-        service.parcel_repo.get = AsyncMock(return_value=mock_parcel)
+        service.parcel_repo.get_by_upi = AsyncMock(return_value=mock_parcel)
         service.repo.get_by_parcel_and_year = AsyncMock(return_value=None)
         service.assessment_generator.generate_assessment = AsyncMock(return_value=MagicMock(spec=TaxRecord))
-        result = await service.generate_assessment(parcel_id=str(mock_parcel.id), assessment_year=2024, user_id="u-1")
+        result = await service.generate_assessment(parcel_upi=mock_parcel.upi, assessment_year=2024, user_id="u-1")
         assert result is not None
 
     async def test_generate_parish_assessments_parish_not_found_raises(self, service):
@@ -151,15 +146,15 @@ class TestTaxService:
 
     async def test_get_outstanding_tax_parcel_not_found_raises(self, service):
         """Raises ValueError when parcel not found."""
-        service.parcel_repo.get = AsyncMock(return_value=None)
+        service.parcel_repo.get_by_upi = AsyncMock(return_value=None)
         with pytest.raises(ValueError):
-            await service.get_outstanding_tax(parcel_id="missing", user_id="u-1")
+            await service.get_outstanding_tax(parcel_upi="missing", user_id="u-1")
 
     async def test_get_payment_history_parcel_not_found_raises(self, service):
         """Raises ValueError when parcel not found."""
-        service.parcel_repo.get = AsyncMock(return_value=None)
+        service.parcel_repo.get_by_upi = AsyncMock(return_value=None)
         with pytest.raises(ValueError):
-            await service.get_payment_history(parcel_id="missing", user_id="u-1")
+            await service.get_payment_history(parcel_upi="missing", user_id="u-1")
 
     async def test_get_tax_record_returns_record(self, service):
         """Fetch tax record by id."""

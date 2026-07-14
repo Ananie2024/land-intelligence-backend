@@ -70,10 +70,10 @@ class TestEncryptionService:
     def service(self):
         return EncryptionService()
 
-    def test_encrypt_raises_not_implemented(self, service):
-        with pytest.raises(NotImplementedError):
+    def test_encrypt_raises_file_not_found(self, service):
+        with pytest.raises(FileNotFoundError):
             service.encrypt("/path/to/file")
 
-    def test_decrypt_raises_not_implemented(self, service):
-        with pytest.raises(NotImplementedError):
+    def test_decrypt_raises_file_not_found(self, service):
+        with pytest.raises(FileNotFoundError):
             service.decrypt("/path/to/file")

@@ -39,6 +39,7 @@ class TestAssessmentGenerator:
     def mock_parcel(self):
         parcel = MagicMock(spec=Parcel)
         parcel.id = str(uuid4())
+        parcel.upi = "UPI-001"
         parcel.area_sqm = 1000.0
         parcel.valuation = 500000.0
         return parcel
@@ -125,7 +126,7 @@ class TestAssessmentGenerator:
         mock_repo.get_parcel.return_value = mock_parcel
         result = await generator.get_assessment_document(mock_parcel.id, 2024)
         assert result["assessment_id"] == str(record.id)
-        assert result["parcel"]["parcel_number"] == mock_parcel.parcel_number
+        assert result["parcel"]["upi"] == mock_parcel.upi
 
     def test_get_due_date_for_year(self, generator):
         """Due date is March 31 of the following year."""

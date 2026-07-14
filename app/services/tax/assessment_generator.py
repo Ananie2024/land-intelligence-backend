@@ -73,7 +73,7 @@ class AssessmentGenerator:
         due_date = self._get_due_date_for_year(assessment_year)
 
         tax_record = TaxRecordCreate(
-            parcel_id=parcel.id,
+            parcel_upi=parcel.upi,
             assessment_year=str(assessment_year),
             assessed_value=float(calculation["assessed_value"]),
             tax_rate_applied=float(calculation["tax_rate_applied"]),

@@ -53,39 +53,29 @@ class TestResolveGeometry:
     async def test_resolves_from_parcel_id(self, service, mock_db):
         parcel = MagicMock()
         parcel.geometry_wkb = wkt.loads(SQUARE_WKT).wkb
-
-        async def _fake_get(parcel_id):
-            return parcel
-
-        service.parcel_repo.get = _fake_get
-        # Ensure parcel_repo is already initialised on the service (it is, via fixture).
-        geom = await service._resolve_geometry(None, "parcel-uuid-1", "geom1")
+        service.parcel_repo.get_by_upi = AsyncMock(return_value=parcel)
+        geom = await service._resolve_geometry(None, "UPI-001", "geom1")
         assert isinstance(geom, Polygon)
 
     async def test_parcel_not_found_raises(self, service, mock_db):
-        async def _fake_get(parcel_id):
-            return None
-        service.parcel_repo.get = _fake_get
+        service.parcel_repo.get_by_upi = AsyncMock(return_value=None)
         with pytest.raises(ValueError, match="not found"):
-            await service._resolve_geometry(None, "bad-id", "geom1")
+            await service._resolve_geometry(None, "UPI-BAD", "geom1")
 
     async def test_no_geom_data_raises(self, service):
-        with pytest.raises(ValueError, match="Either WKT or parcel ID must be specified"):
+        with pytest.raises(ValueError, match="Either WKT or parcel UPI must be specified"):
             await service._resolve_geometry(None, None, "geom1")
 
     async def test_invalid_wkt_raises(self, service):
-        with pytest.raises(ValueError, match="Invalid WKT"):
+        with pytest.raises(ValueError, match="Invalid WKT format"):
             await service._resolve_geometry("BAD WKT", None, "geom1")
 
     async def test_parcel_without_geometry_raises(self, service, mock_db):
         parcel = MagicMock()
         parcel.geometry_wkb = None
-
-        async def _fake_get(parcel_id):
-            return parcel
-        service.parcel_repo.get = _fake_get
+        service.parcel_repo.get_by_upi = AsyncMock(return_value=parcel)
         with pytest.raises(ValueError, match="does not have spatial geometry"):
-            await service._resolve_geometry(None, "parcel-uuid-1", "geom1")
+            await service._resolve_geometry(None, "UPI-001", "geom1")
 
 
 # ===================================================================
@@ -104,11 +94,11 @@ class TestCalculateDistance:
         assert result["distance_meters"] > 0
 
     async def test_missing_both_sides_raises(self, service):
-        with pytest.raises(ValueError, match="Either WKT or parcel ID must be specified"):
+        with pytest.raises(ValueError, match="Either WKT or parcel UPI must be specified"):
             await service.calculate_distance(None, None, None, None)
 
     async def test_one_invalid_wkt_raises(self, service):
-        with pytest.raises(ValueError, match="Invalid WKT"):
+        with pytest.raises(ValueError, match="Invalid WKT format"):
             await service.calculate_distance("BAD WKT", None, SQUARE_WKT, None)
 
 
@@ -170,13 +160,13 @@ class TestContainsPoint:
 class TestCheckZoningOverlay:
     async def test_overlapping_parcel_and_zone(self, service):
         square = Polygon([(0, 0), (0, 2), (2, 2), (2, 0), (0, 0)])
-        original = GisAnalysisService._resolve_geometry
+        original_resolve = GisAnalysisService._resolve_geometry
         async def _fake_resolve(self, *a, **kw):
             return square
         GisAnalysisService._resolve_geometry = _fake_resolve
         try:
             result = await service.check_zoning_overlay(
-                "parcel-uuid-1",
+                "UPI-001",
                 "POLYGON((0 0,0 2,2 2,2 0,0 0))",
                 "RES-01",
             )
@@ -184,40 +174,40 @@ class TestCheckZoningOverlay:
             assert result["intersection_area"] > 0
             assert result["zoning_code"] == "RES-01"
         finally:
-            GisAnalysisService._resolve_geometry = original
+            GisAnalysisService._resolve_geometry = original_resolve
 
     async def test_non_overlapping_parcel_and_zone(self, service):
         square = Polygon([(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)])
-        original = GisAnalysisService._resolve_geometry
+        original_resolve = GisAnalysisService._resolve_geometry
         async def _fake_resolve(self, *a, **kw):
             return square
         GisAnalysisService._resolve_geometry = _fake_resolve
         try:
             result = await service.check_zoning_overlay(
-                "parcel-uuid-1",
+                "UPI-001",
                 "POLYGON((100 100,100 200,200 200,200 100,100 100))",
                 "FAR-01",
             )
             assert result["intersects"] is False
             assert result["intersection_area"] == 0.0
         finally:
-            GisAnalysisService._resolve_geometry = original
+            GisAnalysisService._resolve_geometry = original_resolve
 
     async def test_invalid_zoning_wkt_raises(self, service):
         square = Polygon([(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)])
-        original = GisAnalysisService._resolve_geometry
+        original_resolve = GisAnalysisService._resolve_geometry
         async def _fake_resolve(self, *a, **kw):
             return square
         GisAnalysisService._resolve_geometry = _fake_resolve
         try:
-            with pytest.raises(ValueError, match="Invalid WKT"):
+            with pytest.raises(ValueError, match="Invalid WKT format"):
                 await service.check_zoning_overlay(
-                    "parcel-uuid-1",
+                    "UPI-001",
                     "NOT VALID WKT",
                     "RES-01",
                 )
         finally:
-            GisAnalysisService._resolve_geometry = original
+            GisAnalysisService._resolve_geometry = original_resolve
 
 
 # ===================================================================

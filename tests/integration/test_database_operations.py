@@ -169,9 +169,9 @@ class TestParcelEndpointMethods:
         assert response.status_code == 401
 
     def test_parcel_by_number_methods(self):
-        """Parcel lookup by number supports GET."""
+        """Parcel lookup by UPI supports GET."""
         client = TestClient(app)
-        response = client.get("/api/v1/parcels/by-number/P-001")
+        response = client.get("/api/v1/parcels/by-upi/UPI-001")
         assert response.status_code == 401
 
     def test_parcel_by_deed_methods(self):
