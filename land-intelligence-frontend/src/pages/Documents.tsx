@@ -5,9 +5,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
-import { FileText, Upload } from 'lucide-react';
+import { FileText, Upload, Archive, Loader2, MapPin } from 'lucide-react';
 import { landService } from '@/services/landService';
 import { documentService } from '@/services/documentService';
+import { locationService } from '@/services/locationService';
 import type { Document, DocumentCreate, DocumentFilters } from '@/types/document';
 import type { Parcel } from '@/types/land';
 import { DocumentTable } from '@/features/documents/components/DocumentTable';
@@ -15,6 +16,18 @@ import { DocumentForm } from '@/features/documents/components/DocumentForm';
 import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
 import { toast } from 'react-hot-toast';
+
+interface PhysicalLocationResult {
+  location_name?: string;
+  location_code?: string;
+  cabinet_number?: string;
+  row?: string;
+  column?: string;
+  building?: string;
+  floor?: string;
+  room?: string;
+  message?: string;
+}
 
 export default function Documents() {
   const navigate = useNavigate();
@@ -32,6 +45,12 @@ export default function Documents() {
   });
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  // Location tracking state
+  const [locatingDoc, setLocatingDoc] = useState<Document | null>(null);
+  const [locationResult, setLocationResult] = useState<PhysicalLocationResult | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -157,6 +176,38 @@ export default function Documents() {
     setFilters(prev => ({ ...prev, size, page: 1 }));
   };
 
+  // Locate document in physical archive
+  const handleLocate = async (doc: Document) => {
+    setLocatingDoc(doc);
+    setLocationResult(null);
+    setLocationError(null);
+    setShowLocationModal(true);
+    setLocationLoading(true);
+    try {
+      const res = await locationService.findDocument({
+        document_id: doc.id,
+        parcel_id: doc.parcel_upi || undefined,
+      });
+      if (res.success && res.data) {
+        setLocationResult(res.data as PhysicalLocationResult);
+      } else {
+        setLocationResult({ message: res.message || 'No physical location found for this document.' });
+      }
+    } catch (error) {
+      console.error('Failed to locate document:', error);
+      setLocationError('Location lookup failed. The service may be unavailable.');
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+
+  const handleCloseLocationModal = () => {
+    setShowLocationModal(false);
+    setLocatingDoc(null);
+    setLocationResult(null);
+    setLocationError(null);
+  };
+
   // Retry function
   const handleRetry = () => {
     loadData();
@@ -220,6 +271,7 @@ export default function Documents() {
               }}
               onDelete={handleDelete}
               onDownload={handleDownload}
+              onLocate={handleLocate}
             />
             {totalPages > 1 && (
               <Pagination
@@ -253,6 +305,67 @@ export default function Documents() {
               { id: '4', name: 'Survey' },
             ]}
           />
+        </Modal>
+
+        {/* Physical Location Result Modal */}
+        <Modal
+          isOpen={showLocationModal}
+          onClose={handleCloseLocationModal}
+          title={locatingDoc ? `Archive Location: ${locatingDoc.filename}` : 'Physical Archive Location'}
+          size="md"
+        >
+          {locationLoading ? (
+            <div className="flex items-center justify-center gap-3 py-8 text-slate-400">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>Looking up physical archive location...</span>
+            </div>
+          ) : locationError ? (
+            <div className="py-4">
+              <div className="flex items-center gap-2 text-amber-500 mb-2">
+                <Archive className="h-5 w-5" />
+                <span className="font-medium">Location Unavailable</span>
+              </div>
+              <p className="text-sm text-slate-400">{locationError}</p>
+            </div>
+          ) : locationResult ? (
+            locationResult.location_name ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-accent-400">
+                  <MapPin className="h-5 w-5" />
+                  <span className="font-medium text-white">Found in Archive</span>
+                </div>
+                <div className="bg-slate-900/60 rounded-lg p-4 space-y-2">
+                  <p className="text-sm text-white font-medium">{locationResult.location_name}</p>
+                  <p className="text-xs text-slate-400">Code: {locationResult.location_code}</p>
+                  {locationResult.building && (
+                    <p className="text-xs text-slate-400">Building: {locationResult.building}</p>
+                  )}
+                  {locationResult.floor && (
+                    <p className="text-xs text-slate-400">Floor: {locationResult.floor}</p>
+                  )}
+                  {locationResult.room && (
+                    <p className="text-xs text-slate-400">Room: {locationResult.room}</p>
+                  )}
+                  {locationResult.cabinet_number && (
+                    <p className="text-xs text-slate-400">Cabinet: {locationResult.cabinet_number}</p>
+                  )}
+                  {locationResult.row && locationResult.column && (
+                    <p className="text-xs text-slate-400">
+                      Grid Position: Row {locationResult.row}, Column {locationResult.column}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="py-4">
+                <div className="flex items-center gap-2 text-slate-400 mb-2">
+                  <Archive className="h-5 w-5" />
+                  <span className="font-medium text-white">No Location Found</span>
+                </div>
+                <p className="text-sm text-slate-500">{locationResult.message || 'This document has no physical archive location assigned.'}</p>
+              </div>
+            )
+          ) : null}
         </Modal>
       </div>
     </PageContainer>

@@ -120,7 +120,7 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        {/* Tax Report Note */}
+        {/* Tax Report Note - updated to reference working export */}
         <Card>
           <CardHeader>
             <CardTitle>Tax Assessment Reports</CardTitle>
@@ -130,7 +130,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-slate-400">
-              Navigate to the Tax section and select a parcel to export its tax assessment report.
+              Go to the <strong>Tax</strong> section, enter a parcel UPI, and use the <strong>Export PDF</strong> or <strong>Export Excel</strong> buttons to download its tax assessment report. You can also create new assessments and record payments directly from that page.
             </p>
           </CardContent>
         </Card>

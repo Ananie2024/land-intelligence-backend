@@ -54,14 +54,6 @@ export const backupService = {
     });
     return response.data as Blob;
   },
-
-  createBackup: async (options?: { 
-    jobType?: string; 
-    tier?: string; 
-    sourcePath?: string 
-  }): Promise<APIResponse<any>> => {
-    return apiClient.post<any>(ENDPOINTS.BACKUPS.BASE, options);
-  },
 };
 
 export default backupService;

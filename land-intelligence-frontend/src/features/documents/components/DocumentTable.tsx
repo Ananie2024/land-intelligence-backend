@@ -1,7 +1,7 @@
 // Document Table Component
 // Land Intelligence System
 
-import { Pencil, Trash2, Eye, FileText, Download } from 'lucide-react';
+import { Pencil, Trash2, Eye, FileText, Download, MapPin } from 'lucide-react';
 import type { Document } from '@/types/document';
 
 interface DocumentTableProps {
@@ -10,6 +10,7 @@ interface DocumentTableProps {
   onDelete: (document: Document) => void;
   onView: (document: Document) => void;
   onDownload: (document: Document) => void;
+  onLocate?: (document: Document) => void;
 }
 
 export const DocumentTable: React.FC<DocumentTableProps> = ({ 
@@ -17,7 +18,8 @@ export const DocumentTable: React.FC<DocumentTableProps> = ({
   onEdit, 
   onDelete, 
   onView,
-  onDownload 
+  onDownload,
+  onLocate 
 }) => {
   if (!documents || documents.length === 0) {
     return (
@@ -102,6 +104,15 @@ export const DocumentTable: React.FC<DocumentTableProps> = ({
                   >
                     <Eye className="h-4 w-4" />
                   </button>
+                  {onLocate && (
+                    <button
+                      onClick={() => onLocate(document)}
+                      className="text-accent-400 hover:text-accent-300"
+                      title="Locate in archive"
+                    >
+                      <MapPin className="h-4 w-4" />
+                    </button>
+                  )}
                   <button
                     onClick={() => onEdit(document)}
                     className="text-primary-400 hover:text-primary-300"

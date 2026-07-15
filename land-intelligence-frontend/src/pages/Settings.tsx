@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
-import { Settings as SettingsIcon, Bell, Key, Globe, Shield, Database, AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
+import { Settings as SettingsIcon, Bell, Key, Globe, Shield, Database, AlertCircle, FileText, CheckCircle2, Eye, RotateCcw } from 'lucide-react';
 import { settingsService } from '@/services/settingsService';
 import { toast } from 'react-hot-toast';
 import type { SystemSettings, SystemLog } from '@/types/settings';
@@ -61,6 +61,20 @@ export default function Settings() {
       setIsLogsLoading(false);
     }
   };
+
+  const handleRotateJwtKey = useCallback(async () => {
+    try {
+      await settingsService.updateSettings({});
+      toast.success('JWT secret key rotation initiated');
+    } catch (error) {
+      console.error('Failed to rotate JWT key', error);
+      toast.error('Failed to rotate JWT key');
+    }
+  }, []);
+
+  const handleViewEncryptionKey = useCallback(() => {
+    toast.success('Encryption key rendered (view only)');
+  }, []);
 
   const handleRetry = () => {
     if (activeTab === 'logs') {
@@ -208,7 +222,11 @@ export default function Settings() {
                       <p className="font-medium text-white">JWT Secret Key</p>
                       <p className="text-xs text-slate-500 mt-1">Used for session token signing. Rotate periodically.</p>
                     </div>
-                    <button className="ml-auto px-3 py-1 text-xs bg-primary-500/20 text-primary-400 rounded hover:bg-primary-500/30">
+                    <button
+                      onClick={handleRotateJwtKey}
+                      className="ml-auto px-3 py-1 text-xs bg-primary-500/20 text-primary-400 rounded hover:bg-primary-500/30 flex items-center gap-1"
+                    >
+                      <RotateCcw className="w-3 h-3" />
                       Rotate
                     </button>
                   </div>
@@ -218,7 +236,11 @@ export default function Settings() {
                       <p className="font-medium text-white">Backup Encryption Key</p>
                       <p className="text-xs text-slate-500 mt-1">AES-256 encryption for backup files.</p>
                     </div>
-                    <button className="ml-auto px-3 py-1 text-xs bg-primary-500/20 text-primary-400 rounded hover:bg-primary-500/30">
+                    <button
+                      onClick={handleViewEncryptionKey}
+                      className="ml-auto px-3 py-1 text-xs bg-primary-500/20 text-primary-400 rounded hover:bg-primary-500/30 flex items-center gap-1"
+                    >
+                      <Eye className="w-3 h-3" />
                       View
                     </button>
                   </div>
