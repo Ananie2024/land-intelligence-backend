@@ -88,6 +88,18 @@ async def trigger_backup(
     return result
 
 
+@router.post("/verify", response_model=dict, summary="Verify backup integrity", description="Verify the integrity of existing backups.")
+async def verify_backups(
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(get_current_user_id),
+    _admin: str = Depends(require_admin),
+):
+    """Verify integrity of backup archives."""
+    orchestrator = BackupOrchestrator(db)
+    result = await orchestrator.verify_backups()
+    return result
+
+
 @router.get("/jobs/{job_id}", response_model=dict, summary="Get job status", description="Get the status of a specific backup job.")
 async def get_backup_job(
     job_id: str,

@@ -3,4 +3,3 @@
 
 export { BackupTable } from './components/BackupTable';
 export { BackupVerifyCard } from './components/BackupVerifyCard';
-export { BackupListPage } from './pages/BackupListPage';

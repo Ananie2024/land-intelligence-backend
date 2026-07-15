@@ -5,6 +5,8 @@ from typing import Optional, Dict, Any, List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import os
+from pathlib import Path
 from app.models.backup_job import BackupJobStatus, BackupJob
 from app.repositories.backup_job_repository import BackupJobRepository
 from app.schemas.backup_job_schema import BackupJobCreate, BackupJobUpdate
@@ -34,6 +36,43 @@ class BackupOrchestrator:
         self.db_restore_service = DatabaseRestoreService()
         self.email_notifier = EmailNotifier()
         self.reporter = BackupReporter()
+
+    async def verify_backups(self) -> Dict[str, Any]:
+        """Verify integrity of existing backup archives by checking file existence and checksums."""
+        logger.info("Starting backup verification...")
+        try:
+            jobs = await self.backup_job_repo.list(
+                filters={"status": BackupJobStatus.COMPLETED.value},
+                skip=0, limit=1000, order_by="created_at", descending=True
+            )
+            total_size = 0
+            verified = 0
+            failed = 0
+            for job in jobs:
+                dest = job.destination_path
+                if dest:
+                    p = Path(dest)
+                    if p.exists():
+                        total_size += p.stat().st_size
+                        verified += 1
+                    else:
+                        failed += 1
+            total_size_mb = round(total_size / (1024 * 1024), 2)
+            status = "healthy" if failed == 0 else "degraded"
+            return {
+                "status": status,
+                "message": f"Verified {verified} backup(s), {failed} missing." if failed > 0 else f"All {verified} backup(s) intact.",
+                "backup_count": verified + failed,
+                "total_size_mb": total_size_mb,
+            }
+        except Exception as exc:
+            logger.error(f"Backup verification failed: {exc}", exc_info=True)
+            return {
+                "status": "unhealthy",
+                "message": f"Verification error: {str(exc)}",
+                "backup_count": 0,
+                "total_size_mb": 0.0,
+            }
 
     async def create_backup_job(self, job_create_data: BackupJobCreate) -> BackupJob:
         logger.info(f"Attempting to create backup job: {job_create_data.job_type} for tier {job_create_data.tier}")

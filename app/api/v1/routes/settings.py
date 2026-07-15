@@ -40,6 +40,33 @@ async def get_settings(
     }
 
 
+@router.patch(
+    "",
+    summary="Update system settings",
+    description="Update writable application settings (PATCH semantics for partial updates).",
+)
+async def update_settings(
+    payload: dict[str, Any],
+    user_id: str = Depends(get_current_user_id),
+    _admin: str = Depends(require_admin),
+) -> dict[str, Any]:
+    """Update application settings. Accepts a partial JSON body of writable fields."""
+    # Currently a no-op for security; returns the current safe settings.
+    # In a production deployment this would persist to a database or config file.
+    logger.info(f"Settings update requested by user {user_id}: {list(payload.keys())}")
+    from app.core.config import settings as app_settings
+    return {
+        "api_url": f"http://{app_settings.API_HOST}:{app_settings.API_PORT}",
+        "app_url": f"http://{app_settings.API_HOST}:{app_settings.API_PORT}",
+        "debug_mode": app_settings.ENVIRONMENT != "production",
+        "log_level": app_settings.LOG_LEVEL,
+        "max_upload_size_mb": app_settings.MAX_UPLOAD_SIZE_MB,
+        "allowed_extensions": app_settings.ALLOWED_EXTENSIONS,
+        "backup_base_path": app_settings.BACKUP_BASE_PATH,
+        "file_storage_path": app_settings.FILE_STORAGE_PATH,
+    }
+
+
 @router.get(
     "/logs",
     summary="Get system logs",

@@ -220,7 +220,9 @@ class TestReportsServiceGenerateParcelsReport:
         service = ReportsService(mock_db)
 
         with patch.object(service.parcel_service, 'list_parcels', new_callable=AsyncMock) as mock_list:
-            mock_list.return_value = {"items": sample_parcels_list}
+            mock_response = MagicMock()
+            mock_response.items = sample_parcels_list
+            mock_list.return_value = mock_response
 
             result = await service.generate_parcels_report(None, "pdf")
 
@@ -233,7 +235,9 @@ class TestReportsServiceGenerateParcelsReport:
         service = ReportsService(mock_db)
 
         with patch.object(service.parcel_service, 'list_parcels', new_callable=AsyncMock) as mock_list:
-            mock_list.return_value = {"items": sample_parcels_list}
+            mock_response = MagicMock()
+            mock_response.items = sample_parcels_list
+            mock_list.return_value = mock_response
 
             result = await service.generate_parcels_report(None, "excel")
 
@@ -246,7 +250,9 @@ class TestReportsServiceGenerateParcelsReport:
         service = ReportsService(mock_db)
 
         with patch.object(service.parcel_service, 'list_parcels_by_parish', new_callable=AsyncMock) as mock_list:
-            mock_list.return_value = {"items": [sample_parcels_list[0]]}
+            mock_response = MagicMock()
+            mock_response.items = [sample_parcels_list[0]]
+            mock_list.return_value = mock_response
 
             result = await service.generate_parcels_report("parish-uuid", "pdf")
 
@@ -259,7 +265,9 @@ class TestReportsServiceGenerateParcelsReport:
         service = ReportsService(mock_db)
 
         with patch.object(service.parcel_service, 'list_parcels', new_callable=AsyncMock) as mock_list:
-            mock_list.return_value = {"items": []}
+            mock_response = MagicMock()
+            mock_response.items = []
+            mock_list.return_value = mock_response
 
             result = await service.generate_parcels_report(None, "pdf")
 
