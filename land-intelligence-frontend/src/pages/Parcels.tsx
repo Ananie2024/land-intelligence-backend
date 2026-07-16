@@ -61,8 +61,8 @@ export default function Parcels() {
   const parishOptions = (parishes || []).map(p => ({ id: p.id, name: p.name }));
 
   const handleCreate = async (data: ParcelCreate) => {
-    await createMutation.mutate(data);
-    if (!createMutation.error) {
+    const success = await createMutation.mutate(data);
+    if (success) {
       setShowForm(false);
       toast.success('Parcel created successfully');
     }
@@ -70,8 +70,8 @@ export default function Parcels() {
 
   const handleUpdate = async (data: ParcelCreate) => {
     if (!editingParcel) return;
-    await updateMutation.mutate(data);
-    if (!updateMutation.error) {
+    const success = await updateMutation.mutate(data);
+    if (success) {
       setEditingParcel(null);
       setShowForm(false);
       toast.success('Parcel updated successfully');
@@ -80,8 +80,8 @@ export default function Parcels() {
 
   const handleDelete = async (parcel: Parcel) => {
     if (!confirm(`Delete parcel "${parcel.upi}"? This action cannot be undone.`)) return;
-    await deleteMutation.mutate(parcel.id);
-    if (!deleteMutation.error) {
+    const success = await deleteMutation.mutate(parcel.id);
+    if (success) {
       toast.success('Parcel deleted successfully');
     }
   };

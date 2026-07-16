@@ -116,7 +116,7 @@ export default function Settings() {
             <Card>
               <CardHeader>
                 <CardTitle>System Information</CardTitle>
-                <CardDescription>Archdiocese of Kigali land registrar connection configs</CardDescription>
+                <CardDescription>Archdiocese of Kigali land assets digital archive connection configs</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 text-sm text-slate-300">
                 {error && (
@@ -218,7 +218,7 @@ export default function Settings() {
                       <p className="font-medium text-white">Backup Completion</p>
                       <p className="text-xs text-slate-500 mt-1">Notify when daily backup completes</p>
                     </div>
-                    <label className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" title="Toggle notification">
+                    <label className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" aria-label="Toggle notification for Backup Completion" role="switch">
                       <input type="checkbox" className="sr-only" defaultChecked />
                       <span className="translate-x-0 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" />
                     </label>
@@ -228,7 +228,7 @@ export default function Settings() {
                       <p className="font-medium text-white">Parcel Registration</p>
                       <p className="text-xs text-slate-500 mt-1">Notify on new parcel creation</p>
                     </div>
-                    <label className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" title="Toggle notification">
+                    <label className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" aria-label="Toggle notification for Parcel Registration" role="switch">
                       <input type="checkbox" className="sr-only" defaultChecked />
                       <span className="translate-x-0 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" />
                     </label>

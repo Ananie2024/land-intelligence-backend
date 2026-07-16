@@ -92,6 +92,7 @@ export const TaxTable: React.FC<TaxTableProps> = ({ records, onView }) => {
                   onClick={() => onView(record)}
                   className="text-slate-400 hover:text-slate-200"
                   title="View"
+                  aria-label={`View tax record for ${record.assessment_year}`}
                 >
                   <Eye className="h-4 w-4" />
                 </button>

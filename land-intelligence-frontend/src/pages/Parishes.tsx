@@ -53,8 +53,8 @@ export default function Parishes() {
   const parishes = data || [];
 
   const handleCreate = async (data: ParishCreate) => {
-    await createMutation.mutate(data);
-    if (!createMutation.error) {
+    const success = await createMutation.mutate(data);
+    if (success) {
       setShowForm(false);
       toast.success('Parish created successfully');
     }
@@ -62,8 +62,8 @@ export default function Parishes() {
 
   const handleUpdate = async (data: ParishCreate) => {
     if (!editingParish) return;
-    await updateMutation.mutate(data);
-    if (!updateMutation.error) {
+    const success = await updateMutation.mutate(data);
+    if (success) {
       setEditingParish(null);
       setShowForm(false);
       toast.success('Parish updated successfully');
@@ -72,8 +72,8 @@ export default function Parishes() {
 
   const handleDelete = async (parish: Parish) => {
     if (!confirm(`Delete parish "${parish.name}"? This action cannot be undone.`)) return;
-    await deleteMutation.mutate(parish.id);
-    if (!deleteMutation.error) {
+    const success = await deleteMutation.mutate(parish.id);
+    if (success) {
       toast.success('Parish deleted successfully');
     }
   };

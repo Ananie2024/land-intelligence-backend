@@ -52,16 +52,16 @@ export default function UsersPage() {
   const users = data || [];
 
   const handleCreate = async (formData: UserCreate) => {
-    await createMutation.mutate(formData);
-    if (!createMutation.error) {
+    const success = await createMutation.mutate(formData);
+    if (success) {
       setShowForm(false);
     }
   };
 
   const handleUpdate = async (formData: UserCreate) => {
     if (!editingUser) return;
-    await updateMutation.mutate(formData);
-    if (!updateMutation.error) {
+    const success = await updateMutation.mutate(formData);
+    if (success) {
       setEditingUser(null);
       setShowForm(false);
     }

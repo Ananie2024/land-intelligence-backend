@@ -72,27 +72,30 @@ export const ParishTable: React.FC<ParishTableProps> = ({ parishes, onEdit, onDe
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex items-center justify-end gap-2">
-                  <button
-                    onClick={() => onView(parish)}
-                    className="text-slate-400 hover:text-slate-200"
-                    title="View"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => onEdit(parish)}
-                    className="text-primary-400 hover:text-primary-300"
-                    title="Edit"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => onDelete(parish)}
-                    className="text-red-400 hover:text-red-300"
-                    title="Delete"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                   <button
+                     onClick={() => onView(parish)}
+                     className="text-slate-400 hover:text-slate-200"
+                     title="View"
+                     aria-label={`View ${parish.name} parish`}
+                   >
+                     <Eye className="h-4 w-4" />
+                   </button>
+                   <button
+                     onClick={() => onEdit(parish)}
+                     className="text-primary-400 hover:text-primary-300"
+                     title="Edit"
+                     aria-label={`Edit ${parish.name} parish`}
+                   >
+                     <Pencil className="h-4 w-4" />
+                   </button>
+                   <button
+                     onClick={() => onDelete(parish)}
+                     className="text-red-400 hover:text-red-300"
+                     title="Delete"
+                     aria-label={`Delete ${parish.name} parish`}
+                   >
+                     <Trash2 className="h-4 w-4" />
+                   </button>
                 </div>
               </td>
             </tr>

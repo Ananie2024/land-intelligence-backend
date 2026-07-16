@@ -15,7 +15,7 @@ from sqlalchemy import text
 
 from app.api.v1.endpoints import router as v1_router
 from app.api.middleware.exception_handler import register_exception_handler
-from app.api.middleware.response_middleware import StandardizeResponseMiddleware, PaginationMiddleware
+from app.api.middleware.response_middleware import StandardizeResponseMiddleware
 from app.core.config import settings
 from app.core.database import engine, get_db
 from app.core.logging_config import setup_logging
@@ -129,7 +129,6 @@ app.add_middleware(
 
 # Add response standardization middleware
 app.add_middleware(StandardizeResponseMiddleware)
-app.add_middleware(PaginationMiddleware)
 
 
 # ------------------------------------------------------------------
@@ -160,14 +159,24 @@ async def root():
 # Health Check
 # ------------------------------------------------------------------
 
-@app.get("/health", tags=["System"])
-async def health_check():
+@app.get("/health/live", tags=["System"])
+async def health_live():
     """
-    Health check endpoint that verifies database connectivity.
+    Liveness check to verify the API process is running.
+    Returns the process status regardless of dependency health.
     """
+    return {"status": "alive"}
 
+
+@app.get("/health/ready", tags=["System"])
+async def health_ready():
+    """
+    Readiness check to verify external dependencies (Database, Redis) are reachable.
+    """
     db_status = "unhealthy"
+    redis_status = "unhealthy"
 
+    # Verify Database
     db_gen = get_db()
     try:
         async for db in db_gen:
@@ -175,21 +184,38 @@ async def health_check():
             db_status = "healthy"
             break
     except Exception as e:
-        logger.error(
-            f"Database health check failed: {str(e)}"
-        )
+        logger.error(f"Database health check failed: {str(e)}")
     finally:
         await db_gen.aclose()
 
-    return {
-        "status": (
-            "healthy"
-            if db_status == "healthy"
-            else "degraded"
-        ),
-        "api": "healthy",
-        "database": db_status,
-        "version": "1.0.0",
-    }
+    # Verify Redis
+    try:
+        from app.core.token_blacklist import get_redis_client
+        redis_client = get_redis_client()
+        await redis_client.ping()
+        redis_status = "healthy"
+    except Exception as e:
+        logger.error(f"Redis health check failed: {str(e)}")
+
+    is_ready = db_status == "healthy" and redis_status == "healthy"
+    status_code = 200 if is_ready else 503
+
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "status": "healthy" if is_ready else "unhealthy",
+            "api": "healthy",
+            "database": db_status,
+            "redis": redis_status,
+            "version": "1.0.0",
+        }
+    )
 
 
+@app.get("/health", tags=["System"])
+async def health_check():
+    """
+    Fallback health check endpoint. Maps to readiness check for backwards compatibility.
+    """
+    return await health_ready()

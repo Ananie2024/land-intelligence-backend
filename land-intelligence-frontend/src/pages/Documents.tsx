@@ -86,8 +86,8 @@ export default function Documents() {
       toast.error('Please select a file to upload');
       return;
     }
-    await createMutation.mutate({ data, file });
-    if (!createMutation.error) {
+    const success = await createMutation.mutate({ data, file });
+    if (success) {
       setShowForm(false);
       toast.success('Document uploaded successfully');
     }
@@ -95,8 +95,8 @@ export default function Documents() {
 
   const handleUpdate = async (data: DocumentCreate) => {
     if (!editingDocument) return;
-    await updateMutation.mutate(data);
-    if (!updateMutation.error) {
+    const success = await updateMutation.mutate(data);
+    if (success) {
       setEditingDocument(null);
       setShowForm(false);
       toast.success('Document updated successfully');
@@ -105,8 +105,8 @@ export default function Documents() {
 
   const handleDelete = async (document: Document) => {
     if (!confirm(`Delete document "${document.filename}"? This action cannot be undone.`)) return;
-    await deleteMutation.mutate(document.id);
-    if (!deleteMutation.error) {
+    const success = await deleteMutation.mutate(document.id);
+    if (success) {
       toast.success('Document deleted successfully');
     }
   };

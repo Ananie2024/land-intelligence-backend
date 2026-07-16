@@ -109,7 +109,7 @@ export function useResourceMutation<TData, TVariables>(
     onError?: (error: Error) => void;
   }
 ): {
-  mutate: (variables: TVariables) => Promise<void>;
+  mutate: (variables: TVariables) => Promise<boolean>;
   isLoading: boolean;
   error: string | null;
 } {
@@ -118,7 +118,7 @@ export function useResourceMutation<TData, TVariables>(
   const [error, setError] = useState<string | null>(null);
 
   return {
-    mutate: async (variables: TVariables) => {
+    mutate: async (variables: TVariables): Promise<boolean> => {
       setIsLoading(true);
       setError(null);
       try {
@@ -130,15 +130,18 @@ export function useResourceMutation<TData, TVariables>(
           if (response.data) {
             config?.onSuccess?.(response.data);
           }
+          return true;
         } else {
           const msg = response.message || 'Operation failed';
           setError(msg);
           config?.onError?.(new Error(msg));
+          return false;
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'An unexpected error occurred';
         setError(message);
         config?.onError?.(new Error(message));
+        return false;
       } finally {
         setIsLoading(false);
       }

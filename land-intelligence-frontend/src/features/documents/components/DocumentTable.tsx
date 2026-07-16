@@ -90,43 +90,48 @@ export const DocumentTable: React.FC<DocumentTableProps> = ({
                </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex items-center justify-end gap-2">
-                  <button
-                    onClick={() => onDownload(document)}
-                    className="text-slate-400 hover:text-slate-200"
-                    title="Download"
-                  >
-                    <Download className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => onView(document)}
-                    className="text-slate-400 hover:text-slate-200"
-                    title="View"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </button>
-                  {onLocate && (
-                    <button
-                      onClick={() => onLocate(document)}
-                      className="text-accent-400 hover:text-accent-300"
-                      title="Locate in archive"
-                    >
-                      <MapPin className="h-4 w-4" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => onEdit(document)}
-                    className="text-primary-400 hover:text-primary-300"
-                    title="Edit"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => onDelete(document)}
-                    className="text-red-400 hover:text-red-300"
-                    title="Delete"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                   <button
+                     onClick={() => onDownload(document)}
+                     className="text-slate-400 hover:text-slate-200"
+                     title="Download"
+                     aria-label={`Download ${document.filename}`}
+                   >
+                     <Download className="h-4 w-4" />
+                   </button>
+                   <button
+                     onClick={() => onView(document)}
+                     className="text-slate-400 hover:text-slate-200"
+                     title="View"
+                     aria-label={`View ${document.filename}`}
+                   >
+                     <Eye className="h-4 w-4" />
+                   </button>
+                   {onLocate && (
+                     <button
+                       onClick={() => onLocate(document)}
+                       className="text-accent-400 hover:text-accent-300"
+                       title="Locate in archive"
+                       aria-label={`Locate ${document.filename} in archive`}
+                     >
+                       <MapPin className="h-4 w-4" />
+                     </button>
+                   )}
+                   <button
+                     onClick={() => onEdit(document)}
+                     className="text-primary-400 hover:text-primary-300"
+                     title="Edit"
+                     aria-label={`Edit ${document.filename}`}
+                   >
+                     <Pencil className="h-4 w-4" />
+                   </button>
+                   <button
+                     onClick={() => onDelete(document)}
+                     className="text-red-400 hover:text-red-300"
+                     title="Delete"
+                     aria-label={`Delete ${document.filename}`}
+                   >
+                     <Trash2 className="h-4 w-4" />
+                   </button>
                 </div>
               </td>
             </tr>
