@@ -1,16 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { PageContainer } from '@/components/layout/PageContainer';
-import { DollarSign, FileDown, Plus, CreditCard, RotateCcw, Search, MapPin } from 'lucide-react';
+import { DollarSign, FileDown, Plus, CreditCard, Search, MapPin } from 'lucide-react';
 import { reportService, ExportFormat, TaxReportSummary } from '@/services/reportService';
-import { apiClient } from '@/api/apiClient';
-import { ENDPOINTS } from '@/api/endpoints';
+import { taxService } from '@/services/taxService';
+import { useResourceQuery } from '@/hooks/useResourceList';
 import { toast } from 'react-hot-toast';
 import { Pagination } from '@/components/ui/Pagination';
 
 export default function Tax() {
-  const [taxReport, setTaxReport] = useState<TaxReportSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [parcelId, setParcelId] = useState('');
   const [isExporting, setIsExporting] = useState(false);
   const [isAssessing, setIsAssessing] = useState(false);
@@ -31,27 +29,12 @@ export default function Tax() {
   const [recordsPage, setRecordsPage] = useState(1);
   const [recordsPageSize, setRecordsPageSize] = useState(10);
 
-  const loadTaxReport = useCallback(async () => {
-    if (!parcelId) return;
-
-    setIsLoading(true);
-    setError(null);
-    setRecordsPage(1);
-    try {
-      const response = await reportService.getTaxReport(parcelId);
-      if (response.success && response.data) {
-        setTaxReport(response.data);
-      } else {
-        setError(response.message || 'Failed to load tax report');
-      }
-    } catch (error) {
-      console.error('Failed to load tax report', error);
-      setError('Failed to load tax report');
-      toast.error('Failed to load tax report');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [parcelId]);
+  // Load tax report reactively based on selected parcelId
+  const { data: taxReport, isLoading, refetch } = useResourceQuery<TaxReportSummary>(
+    ['tax-report', parcelId],
+    () => reportService.getTaxReport(parcelId),
+    { enabled: !!parcelId }
+  );
 
   // Search parcels by UPI or number
   const searchParcels = useCallback(async (query: string) => {
@@ -62,16 +45,12 @@ export default function Tax() {
     }
     setIsSearchingParcels(true);
     try {
-      const response = await apiClient.get<{ items: { id: string; upi: string }[] }>(ENDPOINTS.PARCELS.BASE, {
-        search: query,
-        size: 10,
-      });
+      const response = await taxService.searchParcels(query, 10);
       if (response.success && response.data) {
         setParcelSuggestions(response.data.items);
         setShowSuggestions(true);
       }
     } catch {
-      // Silently fail search
       setParcelSuggestions([]);
     } finally {
       setIsSearchingParcels(false);
@@ -88,27 +67,6 @@ export default function Tax() {
     setParcelId(upi);
     setParcelSearch(upi);
     setShowSuggestions(false);
-    loadTaxReportFor(upi);
-  };
-
-  const loadTaxReportFor = async (upi: string) => {
-    setIsLoading(true);
-    setError(null);
-    setRecordsPage(1);
-    try {
-      const response = await reportService.getTaxReport(upi);
-      if (response.success && response.data) {
-        setTaxReport(response.data);
-      } else {
-        setError(response.message || 'Failed to load tax report');
-      }
-    } catch (error) {
-      console.error('Failed to load tax report', error);
-      setError('Failed to load tax report');
-      toast.error('Failed to load tax report');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const handleExport = useCallback(async (format: ExportFormat) => {
@@ -128,8 +86,8 @@ export default function Tax() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       toast.success(`Tax report exported as ${format.toUpperCase()}`);
-    } catch (error) {
-      console.error('Failed to export tax report', error);
+    } catch (err) {
+      console.error('Failed to export tax report', err);
       toast.error('Failed to export tax report');
     } finally {
       setIsExporting(false);
@@ -143,7 +101,7 @@ export default function Tax() {
     }
     setIsAssessing(true);
     try {
-      const response = await apiClient.post(ENDPOINTS.TAX.ASSESS, {
+      const response = await taxService.createAssessment({
         parcel_upi: parcelId,
         assessment_year: assessmentYear,
         land_use_category_id: null,
@@ -151,17 +109,17 @@ export default function Tax() {
       });
       if (response.success) {
         toast.success(`Assessment for ${parcelId} (${assessmentYear}) created`);
-        loadTaxReport();
+        refetch();
       } else {
         toast.error(response.message || 'Failed to create assessment');
       }
-    } catch (error) {
-      console.error('Failed to create tax assessment', error);
+    } catch (err) {
+      console.error('Failed to create tax assessment', err);
       toast.error('Failed to create tax assessment');
     } finally {
       setIsAssessing(false);
     }
-  }, [parcelId, assessmentYear, loadTaxReport]);
+  }, [parcelId, assessmentYear, refetch]);
 
   const handleRecordPayment = useCallback(async () => {
     if (!taxReport || taxReport.records.length === 0) {
@@ -175,7 +133,7 @@ export default function Tax() {
     }
     setIsPaying(true);
     try {
-      const response = await apiClient.post(ENDPOINTS.TAX.PAYMENTS, {
+      const response = await taxService.recordPayment({
         tax_record_id: taxReport.records[0].id,
         payment_amount: amount,
         payment_method: paymentMethod,
@@ -187,26 +145,26 @@ export default function Tax() {
         setShowPaymentForm(false);
         setPaymentAmount('');
         setPaymentReference('');
-        loadTaxReport();
+        refetch();
       } else {
         toast.error(response.message || 'Failed to record payment');
       }
-    } catch (error) {
-      console.error('Failed to record payment', error);
+    } catch (err) {
+      console.error('Failed to record payment', err);
       toast.error('Failed to record payment');
     } finally {
       setIsPaying(false);
     }
-  }, [taxReport, paymentAmount, paymentMethod, paymentReference, loadTaxReport]);
+  }, [taxReport, paymentAmount, paymentMethod, paymentReference, refetch]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && parcelId) {
-      loadTaxReport();
+      refetch();
     }
   };
 
   const handleRetry = () => {
-    loadTaxReport();
+    refetch();
   };
 
   // Client-side pagination logic
@@ -226,6 +184,9 @@ export default function Tax() {
     setRecordsPageSize(size);
     setRecordsPage(1);
   };
+
+  // Derive error from local + query state
+  const displayError = error || (!isLoading && !taxReport && parcelId ? 'No tax data found' : null);
 
   return (
     <PageContainer
@@ -265,7 +226,7 @@ export default function Tax() {
             )}
           </div>
           <button
-            onClick={loadTaxReport}
+            onClick={() => refetch()}
             disabled={!parcelId || isLoading}
             className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 disabled:opacity-50 transition-colors"
           >
@@ -294,9 +255,9 @@ export default function Tax() {
         </div>
       </div>
 
-      {error && (
+      {displayError && !isLoading && (
         <div className="text-center py-8">
-          <p className="text-red-400 mb-4">{error}</p>
+          <p className="text-red-400 mb-4">{displayError}</p>
           <button
             onClick={handleRetry}
             className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
@@ -306,7 +267,11 @@ export default function Tax() {
         </div>
       )}
 
-      {taxReport && !error && (
+      {isLoading && (
+        <div className="text-center py-12 text-slate-400">Loading tax report...</div>
+      )}
+
+      {taxReport && !isLoading && (
         <div className="space-y-6">
           {/* Summary cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

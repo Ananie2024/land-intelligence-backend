@@ -1,9 +1,8 @@
 // Parish List Page with Full CRUD - Integrated into main Parishes page
 // Land Intelligence System
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
 import { Building2, Plus } from 'lucide-react';
@@ -13,95 +12,69 @@ import { ParishTable } from '@/features/land/components/ParishTable';
 import { ParishForm } from '@/features/land/components/ParishForm';
 import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
+import { useResourceList, useResourceMutation } from '@/hooks/useResourceList';
+import toast from 'react-hot-toast';
 
 export default function Parishes() {
   const navigate = useNavigate();
-  const [parishes, setParishes] = useState<Parish[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingParish, setEditingParish] = useState<Parish | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [filters, setFilters] = useState({
     page: 1,
     size: 20,
     search: '',
   });
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
 
-  const loadParishes = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await landService.getParishes(filters);
-      if (response.success && response.data) {
-        setParishes(response.data);
-        setTotalItems(response.total ?? 0);
-        setTotalPages(response.pages ?? 0);
-      } else {
-        setError(response.message || 'Failed to load parishes');
-      }
-    } catch (error) {
-      console.error('Failed to load parishes', error);
-      setError('Failed to load parishes');
-      toast.error('Failed to load parishes');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [filters]);
+  const { data, isLoading, error, totalItems, totalPages, refetch } = useResourceList<Parish>(
+    ['parishes'],
+    (f) => landService.getParishes(f),
+    filters,
+    { defaultFilters: { page: 1, size: 20, search: '' } }
+  );
 
-  useEffect(() => {
-    loadParishes();
-  }, [loadParishes]);
+  const createMutation = useResourceMutation(
+    (data: ParishCreate) => landService.createParish(data),
+    { invalidateKeys: ['parishes'] }
+  );
+
+  const updateMutation = useResourceMutation(
+    (data: ParishCreate) => {
+      if (!editingParish) throw new Error('No parish selected');
+      return landService.updateParish(editingParish.id, data);
+    },
+    { invalidateKeys: ['parishes'] }
+  );
+
+  const deleteMutation = useResourceMutation(
+    (id: string) => landService.deleteParish(id),
+    { invalidateKeys: ['parishes'] }
+  );
+
+  const parishes = data || [];
 
   const handleCreate = async (data: ParishCreate) => {
-    setIsSubmitting(true);
-    try {
-      const response = await landService.createParish(data);
-      if (response.success) {
-        setShowForm(false);
-        toast.success('Parish created successfully');
-        loadParishes();
-      }
-    } catch (error) {
-      console.error('Failed to create parish', error);
-      toast.error('Failed to create parish');
-    } finally {
-      setIsSubmitting(false);
+    await createMutation.mutate(data);
+    if (!createMutation.error) {
+      setShowForm(false);
+      toast.success('Parish created successfully');
     }
   };
 
   const handleUpdate = async (data: ParishCreate) => {
     if (!editingParish) return;
-    setIsSubmitting(true);
-    try {
-      const response = await landService.updateParish(editingParish.id, data);
-      if (response.success) {
-        setEditingParish(null);
-        setShowForm(false);
-        toast.success('Parish updated successfully');
-        loadParishes();
-      }
-    } catch (error) {
-      console.error('Failed to update parish', error);
-      toast.error('Failed to update parish');
-    } finally {
-      setIsSubmitting(false);
+    await updateMutation.mutate(data);
+    if (!updateMutation.error) {
+      setEditingParish(null);
+      setShowForm(false);
+      toast.success('Parish updated successfully');
     }
   };
 
   const handleDelete = async (parish: Parish) => {
     if (!confirm(`Delete parish "${parish.name}"? This action cannot be undone.`)) return;
-    try {
-      const response = await landService.deleteParish(parish.id);
-      if (response.success) {
-        toast.success('Parish deleted successfully');
-        loadParishes();
-      }
-    } catch (error) {
-      console.error('Failed to delete parish', error);
-      toast.error('Failed to delete parish');
+    await deleteMutation.mutate(parish.id);
+    if (!deleteMutation.error) {
+      toast.success('Parish deleted successfully');
     }
   };
 
@@ -110,25 +83,23 @@ export default function Parishes() {
     setEditingParish(null);
   };
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }));
   };
 
-  // Handle page change
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }));
   };
 
-  // Handle page size change
   const handlePageSizeChange = (size: number) => {
     setFilters(prev => ({ ...prev, size, page: 1 }));
   };
 
-  // Retry function
   const handleRetry = () => {
-    loadParishes();
+    refetch();
   };
+
+  const isSubmitting = createMutation.isLoading || updateMutation.isLoading;
 
   return (
     <PageContainer

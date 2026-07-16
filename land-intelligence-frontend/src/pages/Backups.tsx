@@ -1,7 +1,7 @@
 // Backup List Page with Download Functionality
 // Land Intelligence System
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
 import { Database, RefreshCw } from 'lucide-react';
@@ -9,33 +9,19 @@ import { backupService } from '@/services/backupService';
 import type { Backup } from '@/types/backup';
 import { BackupTable } from '@/features/backups/components/BackupTable';
 import { BackupVerifyCard } from '@/features/backups/components/BackupVerifyCard';
-import { toast } from 'react-hot-toast';
+import { useResourceQuery } from '@/hooks/useResourceList';
+import toast from 'react-hot-toast';
 
 export default function Backups() {
-  const [backups, setBackups] = useState<Backup[]>([]);
   const [verifyData, setVerifyData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
 
-  const loadBackups = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await backupService.getBackups();
-      if (response.success && response.data) {
-        setBackups(response.data);
-      } else {
-        setError(response.message || 'Failed to load backups');
-      }
-    } catch (error) {
-      console.error('Failed to load backups', error);
-      setError('Failed to load backups');
-      toast.error('Failed to load backups');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const { data, isLoading, error, refetch } = useResourceQuery<Backup[]>(
+    ['backups'],
+    () => backupService.getBackups(),
+  );
+
+  const backups = data || [];
 
   const handleVerify = async () => {
     setIsVerifying(true);
@@ -45,44 +31,37 @@ export default function Backups() {
         setVerifyData(response.data);
         toast.success('Backup verification completed');
       }
-    } catch (error) {
-      console.error('Failed to verify backups', error);
+    } catch (err) {
+      console.error('Failed to verify backups', err);
       toast.error('Failed to verify backups');
     } finally {
       setIsVerifying(false);
     }
   };
 
-  useEffect(() => {
-    loadBackups();
-  }, []);
-
   const handleCreateBackup = async () => {
     try {
       await backupService.triggerBackup({ jobType: 'backup' });
       toast.success('Backup initiated successfully');
-      loadBackups();
-    } catch (error) {
-      console.error('Failed to create backup', error);
+      refetch();
+    } catch (err) {
+      console.error('Failed to create backup', err);
       toast.error('Failed to create backup');
     }
   };
 
   const handleDownload = async (backup: Backup) => {
-    // Handle both uppercase (backend) and lowercase (frontend) status values
     const normalizedStatus = (backup.status || '').toUpperCase();
     if (normalizedStatus !== 'COMPLETED') {
       toast.error('Only completed backups can be downloaded');
       return;
     }
-    
+
     try {
       const blob = await backupService.downloadBackup(backup.id);
-      
-      // Derive filename from destination_path or use fallback
       const filename = backup.destination_path?.split('/').pop() || 
                        `backup_${backup.id}.zip`;
-      
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
@@ -93,15 +72,14 @@ export default function Backups() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       toast.success('Backup downloaded successfully');
-    } catch (error) {
-      console.error('Failed to download backup', error);
+    } catch (err) {
+      console.error('Failed to download backup', err);
       toast.error('Failed to download backup');
     }
   };
 
-  // Retry function
   const handleRetry = () => {
-    loadBackups();
+    refetch();
   };
 
   return (
@@ -128,7 +106,7 @@ export default function Backups() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={loadBackups}
+            onClick={() => refetch()}
             disabled={isLoading}
           >
             Refresh

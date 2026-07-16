@@ -3,6 +3,46 @@ import { APIResponse } from '@/types/api';
 import { AxiosRequestConfig } from 'axios';
 
 /**
+ * PaginatedEnvelope represents the server's paginated response wrapper.
+ * Backend returns { items: T[], total, page, size, pages } inside the `data` field.
+ */
+export type PaginatedEnvelope<T> = {
+  items: T[];
+  total: number;
+  pages: number;
+  page: number;
+  size: number;
+};
+
+/**
+ * Unwrap a paginated API response into a flat shape.
+ * Transforms `APIResponse<PaginatedEnvelope<T>>` → `APIResponse<T[]> & { total, pages, page, size }`.
+ * Use this in service methods that need to return the flat array format.
+ */
+export function unwrapPaginated<T>(
+  response: APIResponse<PaginatedEnvelope<T>>
+): APIResponse<T[]> & { total?: number; pages?: number; page?: number; size?: number } {
+  if (response.success && response.data) {
+    return {
+      ...response,
+      data: response.data.items,
+      total: response.data.total,
+      pages: response.data.pages,
+      page: response.data.page,
+      size: response.data.size,
+    };
+  }
+  return {
+    ...response,
+    data: [],
+    total: 0,
+    pages: 0,
+    page: 1,
+    size: 20,
+  };
+}
+
+/**
  * apiClient Helper Wrapper
  * Simplifies API calls by resolving the AxiosResponse outer envelope
  * and directly returning the backend's standardized APIResponse<T>.

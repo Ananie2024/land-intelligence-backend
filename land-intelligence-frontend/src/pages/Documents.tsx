@@ -1,7 +1,7 @@
 // Document List Page with Full CRUD
 // Land Intelligence System
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
@@ -9,13 +9,14 @@ import { FileText, Upload, Archive, Loader2, MapPin } from 'lucide-react';
 import { landService } from '@/services/landService';
 import { documentService } from '@/services/documentService';
 import { locationService } from '@/services/locationService';
-import type { Document, DocumentCreate, DocumentFilters } from '@/types/document';
+import type { Document, DocumentCreate } from '@/types/document';
 import type { Parcel } from '@/types/land';
 import { DocumentTable } from '@/features/documents/components/DocumentTable';
 import { DocumentForm } from '@/features/documents/components/DocumentForm';
 import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
-import { toast } from 'react-hot-toast';
+import { useResourceList, useResourceMutation } from '@/hooks/useResourceList';
+import toast from 'react-hot-toast';
 
 interface PhysicalLocationResult {
   location_name?: string;
@@ -31,20 +32,14 @@ interface PhysicalLocationResult {
 
 export default function Documents() {
   const navigate = useNavigate();
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [parcels, setParcels] = useState<Parcel[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [filters, setFilters] = useState<DocumentFilters & { search?: string }>({
+  const [filters, setFilters] = useState({
     page: 1,
     size: 20,
     search: '',
   });
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+
   // Location tracking state
   const [locatingDoc, setLocatingDoc] = useState<Document | null>(null);
   const [locationResult, setLocationResult] = useState<PhysicalLocationResult | null>(null);
@@ -52,89 +47,67 @@ export default function Documents() {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const [docsResponse, parcelsResponse] = await Promise.all([
-        documentService.getDocuments(filters),
-        landService.getParcels(),
-      ]);
-      
-      if (docsResponse.success && docsResponse.data) {
-        setDocuments(docsResponse.data);
-        setTotalItems(docsResponse.total ?? 0);
-        setTotalPages(docsResponse.pages ?? 0);
-      } else {
-        setError(docsResponse.message || 'Failed to load documents');
-      }
-      if (parcelsResponse.success && parcelsResponse.data) {
-        setParcels(parcelsResponse.data);
-      }
-    } catch (error) {
-      console.error('Failed to load data', error);
-      setError('Failed to load documents');
-      toast.error('Failed to load documents');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [filters]);
+  const { data, isLoading, error, totalItems, totalPages, refetch } = useResourceList<Document>(
+    ['documents'],
+    (f) => documentService.getDocuments(f),
+    filters,
+    { defaultFilters: { page: 1, size: 20, search: '' } }
+  );
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  // Load parcels for form dropdown
+  const { data: parcels } = useResourceList<Parcel>(
+    ['parcels-all'],
+    (f) => landService.getParcels(f),
+    { page: 1, size: 999, search: '' }
+  );
+
+  const createMutation = useResourceMutation(
+    (args: { data: DocumentCreate; file: File }) => documentService.uploadDocument(args.file, args.data),
+    { invalidateKeys: ['documents'] }
+  );
+
+  const updateMutation = useResourceMutation(
+    (data: DocumentCreate) => {
+      if (!editingDocument) throw new Error('No document selected');
+      return documentService.updateDocument(editingDocument.id, data);
+    },
+    { invalidateKeys: ['documents'] }
+  );
+
+  const deleteMutation = useResourceMutation(
+    (id: string) => documentService.deleteDocument(id),
+    { invalidateKeys: ['documents'] }
+  );
+
+  const documents = data || [];
 
   const handleCreate = async (data: DocumentCreate, file?: File) => {
-    setIsSubmitting(true);
-    try {
-      if (!file) {
-        toast.error('Please select a file to upload');
-        return;
-      }
-      const response = await documentService.uploadDocument(file, data);
-      if (response.success) {
-        setShowForm(false);
-        toast.success('Document uploaded successfully');
-        loadData();
-      }
-    } catch (error) {
-      console.error('Failed to upload document', error);
-      toast.error('Failed to upload document');
-    } finally {
-      setIsSubmitting(false);
+    if (!file) {
+      toast.error('Please select a file to upload');
+      return;
+    }
+    await createMutation.mutate({ data, file });
+    if (!createMutation.error) {
+      setShowForm(false);
+      toast.success('Document uploaded successfully');
     }
   };
 
   const handleUpdate = async (data: DocumentCreate) => {
     if (!editingDocument) return;
-    setIsSubmitting(true);
-    try {
-      const response = await documentService.updateDocument(editingDocument.id, data);
-      if (response.success) {
-        setEditingDocument(null);
-        setShowForm(false);
-        toast.success('Document updated successfully');
-        loadData();
-      }
-    } catch (error) {
-      console.error('Failed to update document', error);
-      toast.error('Failed to update document');
-    } finally {
-      setIsSubmitting(false);
+    await updateMutation.mutate(data);
+    if (!updateMutation.error) {
+      setEditingDocument(null);
+      setShowForm(false);
+      toast.success('Document updated successfully');
     }
   };
 
   const handleDelete = async (document: Document) => {
     if (!confirm(`Delete document "${document.filename}"? This action cannot be undone.`)) return;
-    try {
-      const response = await documentService.deleteDocument(document.id);
-      if (response.success) {
-        toast.success('Document deleted successfully');
-        loadData();
-      }
-    } catch (error) {
-      console.error('Failed to delete document', error);
-      toast.error('Failed to delete document');
+    await deleteMutation.mutate(document.id);
+    if (!deleteMutation.error) {
+      toast.success('Document deleted successfully');
     }
   };
 
@@ -150,8 +123,8 @@ export default function Documents() {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Failed to download document', error);
+    } catch (err) {
+      console.error('Failed to download document', err);
       toast.error('Failed to download document');
     }
   };
@@ -161,17 +134,14 @@ export default function Documents() {
     setEditingDocument(null);
   };
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }));
   };
 
-  // Handle page change
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }));
   };
 
-  // Handle page size change
   const handlePageSizeChange = (size: number) => {
     setFilters(prev => ({ ...prev, size, page: 1 }));
   };
@@ -193,8 +163,8 @@ export default function Documents() {
       } else {
         setLocationResult({ message: res.message || 'No physical location found for this document.' });
       }
-    } catch (error) {
-      console.error('Failed to locate document:', error);
+    } catch (err) {
+      console.error('Failed to locate document:', err);
       setLocationError('Location lookup failed. The service may be unavailable.');
     } finally {
       setLocationLoading(false);
@@ -208,10 +178,11 @@ export default function Documents() {
     setLocationError(null);
   };
 
-  // Retry function
   const handleRetry = () => {
-    loadData();
+    refetch();
   };
+
+  const isSubmitting = createMutation.isLoading || updateMutation.isLoading;
 
   return (
     <PageContainer
@@ -297,7 +268,7 @@ export default function Documents() {
             document={editingDocument}
             onSubmit={editingDocument ? handleUpdate : handleCreate}
             isLoading={isSubmitting}
-            parcels={parcels.map(p => ({ id: p.id, upi: p.upi }))}
+            parcels={(parcels || []).map(p => ({ id: p.id, upi: p.upi }))}
             documentTypes={[
               { id: '1', name: 'Deed' },
               { id: '2', name: 'Title' },

@@ -1,7 +1,7 @@
 // User List Page with Full CRUD
 // Land Intelligence System
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
@@ -12,97 +12,47 @@ import { UserTable } from '@/features/users/components/UserTable';
 import { UserForm } from '@/features/users/components/UserForm';
 import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
-import { toast } from 'react-hot-toast';
+import { useResourceList, useResourceMutation } from '@/hooks/useResourceList';
 
 export default function UsersPage() {
   const navigate = useNavigate();
-  const [users, setUsers] = useState<UserResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<UserResponse | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [filters, setFilters] = useState({
     page: 1,
     size: 20,
     search: '',
   });
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
 
-  const loadUsers = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await userService.getUsers(filters);
-      if (response.success && response.data) {
-        setUsers(response.data);
-        setTotalItems(response.total ?? 0);
-        setTotalPages(response.pages ?? 0);
-      } else {
-        setError(response.message || 'Failed to load users');
-      }
-    } catch (error) {
-      console.error('Failed to load users', error);
-      setError('Failed to load users');
-      toast.error('Failed to load users');
-    } finally {
-      setIsLoading(false);
+  const { data, isLoading, error, totalItems, totalPages, refetch } = useResourceList<UserResponse>(
+    ['users'],
+    (f) => userService.getUsers(f),
+    filters,
+    { defaultFilters: { page: 1, size: 20, search: '' } }
+  );
+
+  const deleteMutation = useResourceMutation(
+    (userId: string) => userService.deleteUser(userId),
+    {
+      invalidateKeys: ['users'],
     }
-  }, [filters]);
+  );
 
-  useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+  const users = data || [];
 
-  const handleCreate = async (data: UserCreate) => {
-    setIsSubmitting(true);
-    try {
-      const response = await userService.createUser(data);
-      if (response.success) {
-        setShowForm(false);
-        toast.success('User created successfully');
-        loadUsers();
-      }
-    } catch (error) {
-      console.error('Failed to create user', error);
-      toast.error('Failed to create user');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleCreate = async (formData: UserCreate) => {
+    setShowForm(false);
   };
 
-  const handleUpdate = async (data: UserCreate) => {
+  const handleUpdate = async (formData: UserCreate) => {
     if (!editingUser) return;
-    setIsSubmitting(true);
-    try {
-      const response = await userService.updateUser(editingUser.id, data);
-      if (response.success) {
-        setEditingUser(null);
-        setShowForm(false);
-        toast.success('User updated successfully');
-        loadUsers();
-      }
-    } catch (error) {
-      console.error('Failed to update user', error);
-      toast.error('Failed to update user');
-    } finally {
-      setIsSubmitting(false);
-    }
+    setEditingUser(null);
+    setShowForm(false);
   };
 
   const handleDelete = async (user: UserResponse) => {
     if (!confirm(`Delete user "${user.username}"? This action cannot be undone.`)) return;
-    try {
-      const response = await userService.deleteUser(user.id);
-      if (response.success) {
-        toast.success('User deleted successfully');
-        loadUsers();
-      }
-    } catch (error) {
-      console.error('Failed to delete user', error);
-      toast.error('Failed to delete user');
-    }
+    await deleteMutation.mutate(user.id);
   };
 
   const handleCloseForm = () => {
@@ -110,25 +60,23 @@ export default function UsersPage() {
     setEditingUser(null);
   };
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }));
   };
 
-  // Handle page change
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }));
   };
 
-  // Handle page size change
   const handlePageSizeChange = (size: number) => {
     setFilters(prev => ({ ...prev, size, page: 1 }));
   };
 
-  // Retry function
   const handleRetry = () => {
-    loadUsers();
+    refetch();
   };
+
+  const isSubmitting = false;
 
   return (
     <PageContainer

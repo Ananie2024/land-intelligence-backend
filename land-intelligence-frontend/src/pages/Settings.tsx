@@ -1,33 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
-import { Settings as SettingsIcon, Bell, Key, Globe, Shield, Database, AlertCircle, FileText, CheckCircle2, Eye, RotateCcw } from 'lucide-react';
+import { Settings as SettingsIcon, Bell, Key, Globe, Shield, Database, AlertCircle, Eye, RotateCcw } from 'lucide-react';
 import { settingsService } from '@/services/settingsService';
 import { toast } from 'react-hot-toast';
-import type { SystemSettings, SystemLog } from '@/types/settings';
+import type { SystemSettings } from '@/types/settings';
 
-type SettingsTab = 'general' | 'security' | 'notifications' | 'region' | 'logs';
+type SettingsTab = 'general' | 'security' | 'notifications' | 'region';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [settings, setSettings] = useState<SystemSettings | null>(null);
-  const [systemLogs, setSystemLogs] = useState<SystemLog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLogsLoading, setIsLogsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [logsError, setLogsError] = useState<string | null>(null);
 
   useEffect(() => {
     loadSettings();
-    loadSystemLogs();
   }, []);
-
-  // Reload logs when tab changes to 'logs'
-  useEffect(() => {
-    if (activeTab === 'logs') {
-      loadSystemLogs();
-    }
-  }, [activeTab]);
 
   const loadSettings = async () => {
     setIsLoading(true);
@@ -41,24 +30,6 @@ export default function Settings() {
       setError('Failed to load settings');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const loadSystemLogs = async () => {
-    setIsLogsLoading(true);
-    setLogsError(null);
-    try {
-      const response = await settingsService.getSystemLogs(20);
-      if (response.success && response.data) {
-        setSystemLogs(response.data);
-      } else {
-        setLogsError(response.message || 'Failed to load system logs');
-      }
-    } catch (error) {
-      console.error('Failed to load system logs', error);
-      setLogsError('Failed to load system logs');
-    } finally {
-      setIsLogsLoading(false);
     }
   };
 
@@ -77,11 +48,7 @@ export default function Settings() {
   }, []);
 
   const handleRetry = () => {
-    if (activeTab === 'logs') {
-      loadSystemLogs();
-    } else {
-      loadSettings();
-    }
+    loadSettings();
   };
 
   // Get values from settings or environment
@@ -140,17 +107,6 @@ export default function Settings() {
           >
             <Globe className="w-4 h-4" />
             Language & Region
-          </button>
-          <button 
-            onClick={() => setActiveTab('logs')}
-            className={`flex items-center gap-3 w-full text-left px-4 py-2.5 rounded-lg transition-colors ${
-              activeTab === 'logs' 
-                ? 'bg-slate-900 border border-slate-800 text-white font-bold text-sm' 
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 font-semibold text-sm'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            System Logs
           </button>
         </div>
 
@@ -307,59 +263,6 @@ export default function Settings() {
             </Card>
           )}
 
-          {activeTab === 'logs' && (
-            <Card className="overflow-hidden">
-              <CardHeader>
-                <CardTitle>System Logs</CardTitle>
-                <CardDescription>Recent application service log entries</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {logsError && (
-                  <div className="flex items-center gap-2 text-red-400 mb-4">
-                    <AlertCircle className="w-4 h-4" />
-                    <span className="text-sm">{logsError}</span>
-                    <button 
-                      onClick={handleRetry}
-                      className="ml-auto px-3 py-1 text-xs bg-primary-500/20 text-primary-400 rounded hover:bg-primary-500/30"
-                    >
-                      Retry
-                    </button>
-                  </div>
-                )}
-                {isLogsLoading ? (
-                  <div className="text-center py-4 text-slate-400">Loading logs...</div>
-                ) : systemLogs.length > 0 ? (
-                  systemLogs.map((log) => {
-                    const isError = log.type === 'error' || log.type === 'warning';
-                    return (
-                      <div key={log.id} className="flex items-start gap-3 p-3.5 rounded-lg bg-slate-950/40 border border-slate-900 hover:bg-slate-950/60 transition-colors">
-                        <div className={`p-1.5 rounded-full flex-shrink-0 mt-0.5 ${
-                          isError ? 'bg-red-500/20' : log.type === 'warning' ? 'bg-warning/20' : 'bg-success/20'
-                        }`}>
-                          <CheckCircle2 className={`w-4 h-4 ${
-                            isError ? 'text-red-400' : log.type === 'warning' ? 'text-warning' : 'text-success'
-                          }`} />
-                        </div>
-                        <div className="text-xs flex-1 min-w-0">
-                          <p className="text-white font-semibold break-words">{log.message}</p>
-                          <p className="text-slate-500 mt-0.5">
-                            {new Date(log.timestamp).toLocaleString()}
-                          </p>
-                          {log.metadata && Object.keys(log.metadata).length > 0 && (
-                            <pre className="mt-1 text-[10px] text-slate-600 bg-slate-950/60 p-2 rounded overflow-x-auto">
-                              {JSON.stringify(log.metadata, null, 2)}
-                            </pre>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center py-4 text-slate-500">No system logs available</div>
-                )}
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
     </PageContainer>

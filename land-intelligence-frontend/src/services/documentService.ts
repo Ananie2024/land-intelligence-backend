@@ -1,21 +1,12 @@
 import { api } from '@/api/axios';
-import { apiClient } from '@/api/apiClient';
+import { apiClient, PaginatedEnvelope } from '@/api/apiClient';
 import { ENDPOINTS } from '@/api/endpoints';
 import { Document, DocumentCreate, DocumentUpdate, DocumentFilters } from '@/types/document';
 import { APIResponse } from '@/types/api';
 
 export const documentService = {
-  getDocuments: async (filters?: DocumentFilters): Promise<APIResponse<Document[]> & { total?: number; pages?: number; page?: number; size?: number }> => {
-    const response = await apiClient.get<{ items: Document[]; total: number; page: number; size: number; pages: number }>(ENDPOINTS.DOCUMENTS.BASE, filters);
-    // Transform paginated response to expected format
-    return {
-      ...response,
-      data: response.data?.items ?? null,
-      total: response.data?.total,
-      pages: response.data?.pages,
-      page: response.data?.page,
-      size: response.data?.size,
-    };
+  getDocuments: async (filters?: DocumentFilters): Promise<APIResponse<PaginatedEnvelope<Document>>> => {
+    return apiClient.get<PaginatedEnvelope<Document>>(ENDPOINTS.DOCUMENTS.BASE, filters);
   },
 
   getDocumentById: async (id: string): Promise<APIResponse<Document>> => {

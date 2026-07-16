@@ -1,115 +1,88 @@
 // Parcel List Page with Full CRUD
 // Land Intelligence System
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
 import { MapPin, Plus } from 'lucide-react';
 import { landService } from '@/services/landService';
-import type { Parcel, ParcelCreate, ParcelFilters } from '@/types/land';
+import type { Parcel, ParcelCreate, Parish } from '@/types/land';
 import { ParcelTable } from '@/features/land/components/ParcelTable';
 import { ParcelForm } from '@/features/land/components/ParcelForm';
 import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
-import { toast } from 'react-hot-toast';
+import { useResourceList, useResourceMutation } from '@/hooks/useResourceList';
+import toast from 'react-hot-toast';
 
 export default function Parcels() {
   const navigate = useNavigate();
-  const [parcels, setParcels] = useState<Parcel[]>([]);
-  const [parishes, setParishes] = useState<Array<{ id: string; name: string }>>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingParcel, setEditingParcel] = useState<Parcel | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [filters, setFilters] = useState<ParcelFilters & { search?: string }>({
+  const [filters, setFilters] = useState({
     page: 1,
     size: 20,
     search: '',
   });
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const [parcelsResponse, parishesResponse] = await Promise.all([
-        landService.getParcels(filters),
-        landService.getParishes(),
-      ]);
-      
-      if (parcelsResponse.success && parcelsResponse.data) {
-        setParcels(parcelsResponse.data);
-        setTotalItems(parcelsResponse.total ?? 0);
-        setTotalPages(parcelsResponse.pages ?? 0);
-      } else {
-        setError(parcelsResponse.message || 'Failed to load parcels');
-      }
-      if (parishesResponse.success && parishesResponse.data) {
-        setParishes(parishesResponse.data.map(p => ({ id: p.id, name: p.name })));
-      }
-    } catch (error) {
-      console.error('Failed to load data', error);
-      setError('Failed to load parcels');
-      toast.error('Failed to load parcels');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [filters]);
+  const { data, isLoading, error, totalItems, totalPages, refetch } = useResourceList<Parcel>(
+    ['parcels'],
+    (f) => landService.getParcels(f),
+    filters,
+    { defaultFilters: { page: 1, size: 20, search: '' } }
+  );
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  // Load parishes for the form dropdown (all, no pagination)
+  const { data: parishes } = useResourceList<Parish>(
+    ['parishes-all'],
+    (f) => landService.getParishes(f),
+    { page: 1, size: 999, search: '' }
+  );
+
+  const createMutation = useResourceMutation(
+    (data: ParcelCreate) => landService.createParcel(data),
+    { invalidateKeys: ['parcels'] }
+  );
+
+  const updateMutation = useResourceMutation(
+    (data: ParcelCreate) => {
+      if (!editingParcel) throw new Error('No parcel selected');
+      return landService.updateParcel(editingParcel.id, data);
+    },
+    { invalidateKeys: ['parcels'] }
+  );
+
+  const deleteMutation = useResourceMutation(
+    (id: string) => landService.deleteParcel(id),
+    { invalidateKeys: ['parcels'] }
+  );
+
+  const parcels = data || [];
+  const parishOptions = (parishes || []).map(p => ({ id: p.id, name: p.name }));
 
   const handleCreate = async (data: ParcelCreate) => {
-    setIsSubmitting(true);
-    try {
-      const response = await landService.createParcel(data);
-      if (response.success) {
-        setShowForm(false);
-        toast.success('Parcel created successfully');
-        loadData();
-      }
-    } catch (error) {
-      console.error('Failed to create parcel', error);
-      toast.error('Failed to create parcel');
-    } finally {
-      setIsSubmitting(false);
+    await createMutation.mutate(data);
+    if (!createMutation.error) {
+      setShowForm(false);
+      toast.success('Parcel created successfully');
     }
   };
 
   const handleUpdate = async (data: ParcelCreate) => {
     if (!editingParcel) return;
-    setIsSubmitting(true);
-    try {
-      const response = await landService.updateParcel(editingParcel.id, data);
-      if (response.success) {
-        setEditingParcel(null);
-        setShowForm(false);
-        toast.success('Parcel updated successfully');
-        loadData();
-      }
-    } catch (error) {
-      console.error('Failed to update parcel', error);
-      toast.error('Failed to update parcel');
-    } finally {
-      setIsSubmitting(false);
+    await updateMutation.mutate(data);
+    if (!updateMutation.error) {
+      setEditingParcel(null);
+      setShowForm(false);
+      toast.success('Parcel updated successfully');
     }
   };
 
   const handleDelete = async (parcel: Parcel) => {
     if (!confirm(`Delete parcel "${parcel.upi}"? This action cannot be undone.`)) return;
-    try {
-      const response = await landService.deleteParcel(parcel.id);
-      if (response.success) {
-        toast.success('Parcel deleted successfully');
-        loadData();
-      }
-    } catch (error) {
-      console.error('Failed to delete parcel', error);
-      toast.error('Failed to delete parcel');
+    await deleteMutation.mutate(parcel.id);
+    if (!deleteMutation.error) {
+      toast.success('Parcel deleted successfully');
     }
   };
 
@@ -118,25 +91,23 @@ export default function Parcels() {
     setEditingParcel(null);
   };
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }));
   };
 
-  // Handle page change
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }));
   };
 
-  // Handle page size change
   const handlePageSizeChange = (size: number) => {
     setFilters(prev => ({ ...prev, size, page: 1 }));
   };
 
-  // Retry function
   const handleRetry = () => {
-    loadData();
+    refetch();
   };
+
+  const isSubmitting = createMutation.isLoading || updateMutation.isLoading;
 
   return (
     <PageContainer
@@ -222,7 +193,7 @@ export default function Parcels() {
             parcel={editingParcel}
             onSubmit={editingParcel ? handleUpdate : handleCreate}
             isLoading={isSubmitting}
-            parishes={parishes}
+            parishes={parishOptions}
           />
         </Modal>
       </div>
