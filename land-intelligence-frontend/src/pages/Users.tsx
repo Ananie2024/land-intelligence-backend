@@ -31,23 +31,40 @@ export default function UsersPage() {
     { defaultFilters: { page: 1, size: 20, search: '' } }
   );
 
+  const createMutation = useResourceMutation(
+    (data: UserCreate) => userService.createUser(data),
+    { invalidateKeys: ['users'] }
+  );
+
+  const updateMutation = useResourceMutation(
+    (data: UserCreate) => {
+      if (!editingUser) throw new Error('No user selected');
+      return userService.updateUser(editingUser.id, data);
+    },
+    { invalidateKeys: ['users'] }
+  );
+
   const deleteMutation = useResourceMutation(
     (userId: string) => userService.deleteUser(userId),
-    {
-      invalidateKeys: ['users'],
-    }
+    { invalidateKeys: ['users'] }
   );
 
   const users = data || [];
 
   const handleCreate = async (formData: UserCreate) => {
-    setShowForm(false);
+    await createMutation.mutate(formData);
+    if (!createMutation.error) {
+      setShowForm(false);
+    }
   };
 
   const handleUpdate = async (formData: UserCreate) => {
     if (!editingUser) return;
-    setEditingUser(null);
-    setShowForm(false);
+    await updateMutation.mutate(formData);
+    if (!updateMutation.error) {
+      setEditingUser(null);
+      setShowForm(false);
+    }
   };
 
   const handleDelete = async (user: UserResponse) => {
@@ -76,7 +93,7 @@ export default function UsersPage() {
     refetch();
   };
 
-  const isSubmitting = false;
+  const isSubmitting = createMutation.isLoading || updateMutation.isLoading;
 
   return (
     <PageContainer
