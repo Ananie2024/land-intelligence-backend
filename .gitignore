@@ -134,6 +134,12 @@ create_config_files.sh
 create_structure.sh
 create_gitkeep_files.sh
 
+# Stray scratch scripts (one-off patches, ad-hoc utilities)
+scratch_*.py
+monkey_patch_*.py
+one_off_*.py
+tmp_*.py
+
 # Encryption keys (NEVER commit)
 *.key
 *.pem
