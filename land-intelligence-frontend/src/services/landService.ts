@@ -9,6 +9,10 @@ export const landService = {
     return apiClient.get<PaginatedEnvelope<Parish>>(ENDPOINTS.PARISHES.BASE, params);
   },
 
+  getParishesAll: async (): Promise<APIResponse<Parish[]>> => {
+    return apiClient.get<Parish[]>(ENDPOINTS.PARISHES.ALL);
+  },
+
   getParishById: async (id: string): Promise<APIResponse<Parish>> => {
     return apiClient.get<Parish>(ENDPOINTS.PARISHES.BY_ID(id));
   },
@@ -25,14 +29,14 @@ export const landService = {
     return apiClient.delete<{ message: string }>(ENDPOINTS.PARISHES.BY_ID(id));
   },
 
-  refreshParishCount: async (id: string): Promise<APIResponse<Parish>> => {
-    return apiClient.post<Parish>(ENDPOINTS.PARISHES.REFRESH_COUNT(id));
-  },
-
-// Parcels Services
+  // Parcels Services
    getParcels: async (filters?: ParcelFilters): Promise<APIResponse<PaginatedEnvelope<Parcel>>> => {
      return apiClient.get<PaginatedEnvelope<Parcel>>(ENDPOINTS.PARCELS.BASE, filters);
    },
+
+  getParcelsAll: async (): Promise<APIResponse<Parcel[]>> => {
+    return apiClient.get<Parcel[]>(ENDPOINTS.PARCELS.ALL);
+  },
 
   getParcelById: async (id: string): Promise<APIResponse<Parcel>> => {
     return apiClient.get<Parcel>(ENDPOINTS.PARCELS.BY_ID(id));
@@ -40,10 +44,6 @@ export const landService = {
 
   getParcelByNumber: async (parcelNumber: string): Promise<APIResponse<Parcel>> => {
     return apiClient.get<Parcel>(ENDPOINTS.PARCELS.BY_NUMBER(parcelNumber));
-  },
-
-  getParcelByDeed: async (titleDeedNumber: string): Promise<APIResponse<Parcel>> => {
-    return apiClient.get<Parcel>(ENDPOINTS.PARCELS.BY_DEED(titleDeedNumber));
   },
 
   getParcelsByParish: async (

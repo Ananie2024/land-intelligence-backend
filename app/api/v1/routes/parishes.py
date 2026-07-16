@@ -1,5 +1,4 @@
 # app/api/v1/routes/parishes.py
-
 """
 Parish Routes
 Phase 3 — Section 4.1
@@ -44,7 +43,7 @@ async def list_parishes_no_slash(
     size: int = Query(20, ge=1, le=100, description="Items per page"),
     name: Optional[str] = Query(None, description="Search by parish name (partial match)"),
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user_id),
+    _: Optional[str] = Depends(get_current_user_id),
 ):
     service = ParishService(db)
     
@@ -62,9 +61,27 @@ async def list_parishes(
     size: int = Query(20, ge=1, le=100, description="Items per page"),
     name: Optional[str] = Query(None, description="Search by parish name (partial match)"),
     db: AsyncSession = Depends(get_db),
+    _user_id: str = Depends(get_current_user_id),
+):
+     return await list_parishes_no_slash(page=page, size=size, name=name, db=db, _=None)
+
+
+# ---------------------------------------------------------------------------
+# GET /parishes/all  — list all parishes without pagination (for dropdowns)
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/all",
+    response_model=list[ParishResponse],
+    summary="List all parishes",
+    description="Return all active parishes without pagination. Used for dropdown/select inputs.",
+)
+async def list_all_parishes(
+    db: AsyncSession = Depends(get_db),
     _: str = Depends(get_current_user_id),
 ):
-    return await list_parishes_no_slash(page=page, size=size, name=name, db=db, _=None)
+    service = ParishService(db)
+    return await service.list_all_parishes()
 
 
 # ---------------------------------------------------------------------------
@@ -76,7 +93,7 @@ async def list_parishes(
     response_model=ParishResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create parish",
-    description="Create a new parish. Parish code must be unique.",
+    description="Create a new parish.",
 )
 async def create_parish(
     payload: ParishCreate,
@@ -86,14 +103,8 @@ async def create_parish(
 ):
     service = ParishService(db)
     
-    try:
-        parish = await service.create_parish(payload, user_id)
-        return parish
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(e),
-        )
+    parish = await service.create_parish(payload, user_id)
+    return parish
 
 
 # ---------------------------------------------------------------------------
@@ -144,13 +155,7 @@ async def update_parish(
     
     service = ParishService(db)
     
-    try:
-        parish = await service.update_parish(parish_id, payload, user_id)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(e),
-        )
+    parish = await service.update_parish(parish_id, payload, user_id)
 
     if not parish:
         raise HTTPException(
@@ -191,31 +196,3 @@ async def delete_parish(
     
     from app.schemas.api_response import success_response
     return success_response(message=f"Parish '{parish_id}' deleted successfully")
-
-
-# ---------------------------------------------------------------------------
-# POST /parishes/{parish_id}/refresh-count  — sync cached parcel count
-# ---------------------------------------------------------------------------
-
-@router.post(
-    "/{parish_id}/refresh-count",
-    response_model=ParishResponse,
-    summary="Refresh parcel count",
-    description="Recalculate and update the cached parcel count for a parish.",
-)
-async def refresh_parcel_count(
-    parish_id: str,
-    db: AsyncSession = Depends(get_db),
-    user_id: str = Depends(get_current_user_id),
-    _admin: str = Depends(require_admin),
-):
-    service = ParishService(db)
-    parish = await service.refresh_parcel_count(parish_id, user_id)
-
-    if not parish:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Parish '{parish_id}' not found.",
-        )
-
-    return parish

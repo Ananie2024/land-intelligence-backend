@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Database, RefreshCw } from 'lucide-react';
 import { backupService } from '@/services/backupService';
 import type { Backup } from '@/types/backup';
@@ -120,7 +121,10 @@ export default function Backups() {
         />
 
         {isLoading ? (
-          <div className="text-center py-12 text-slate-400">Loading backups...</div>
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <LoadingSpinner size="md" className="border-t-primary-500" />
+            <span className="text-slate-400 text-xs">Loading backups...</span>
+          </div>
         ) : error ? (
           <div className="text-center py-12">
             <p className="text-red-400 mb-4">{error}</p>

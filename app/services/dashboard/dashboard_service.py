@@ -37,20 +37,22 @@ class DashboardService:
         """
         Get comprehensive system statistics for the dashboard.
         """
-        # Parish statistics
+        # Parish statistics - count parishes and parcels directly
         parish_result = await self.db.execute(
-            select(
-                func.count(Parish.id).label("total_parishes"),
-                func.coalesce(func.sum(Parish.parcel_count), 0).label("total_parcels"),
-            ).where(Parish.is_active)
+            select(func.count(Parish.id).label("total_parishes"))
+            .where(Parish.is_active)
         )
         parish_row = parish_result.first()
-        if parish_row is None:
-            total_parishes = 0
-            total_parcels = 0
-        else:
-            total_parishes = parish_row.total_parishes or 0
-            total_parcels = int(parish_row.total_parcels) or 0
+        total_parishes = parish_row.total_parishes or 0 if parish_row else 0
+
+        # Get total parcels separately (no longer stored in parish)
+        parcel_count_result = await self.db.execute(
+            select(func.count(Parcel.id).label("total_parcels"))
+            .where(Parcel.is_active)
+        )
+        parcel_count_row = parcel_count_result.first()
+        total_parcels = int(parcel_count_row.total_parcels) if parcel_count_row and parcel_count_row.total_parcels else 0
+
         avg_parcels = total_parcels / total_parishes if total_parishes > 0 else 0
 
         parish_stats = ParishStats(
@@ -65,16 +67,27 @@ class DashboardService:
                 func.count(Parcel.id).label("total_parcels"),
                 func.coalesce(func.sum(Parcel.area_sqm), 0).label("total_area_sqm"),
                 func.coalesce(func.sum(Parcel.valuation), 0).label("total_valuation"),
-                func.count(Parcel.title_deed_number).label("parcels_with_deeds"),
             ).where(Parcel.is_active)
         )
         parcel_row = parcel_result.first()
+
+        # Count parcels with title deeds via subquery
+        deeds_result = await self.db.execute(text("""
+            SELECT count(DISTINCT parcels.id) AS parcels_with_deeds
+            FROM parcels
+            JOIN documents ON documents.parcel_id = parcels.id
+            JOIN document_types ON document_types.id = documents.document_type_id
+            WHERE parcels.is_active = true
+            AND document_types.code = 'TITLE'
+        """))
+        deeds_row = deeds_result.first()
+        parcels_with_deeds = deeds_row.parcels_with_deeds if deeds_row else 0
 
         parcel_stats = ParcelStats(
             total_parcels=parcel_row.total_parcels if parcel_row else 0,
             total_area_sqm=float(parcel_row.total_area_sqm) if parcel_row and parcel_row.total_area_sqm else 0.0,
             total_valuation=float(parcel_row.total_valuation) if parcel_row and parcel_row.total_valuation else 0.0,
-            parcels_with_deeds=parcel_row.parcels_with_deeds if parcel_row else 0,
+            parcels_with_deeds=parcels_with_deeds,
         )
 
         # User statistics - use raw SQL text to avoid enum casting issues
@@ -126,23 +139,22 @@ class DashboardService:
 
     async def get_parish_stats(self) -> ParishStats:
         """Get parish statistics only."""
-        result = await self.db.execute(
-            select(
-                func.count(Parish.id).label("total_parishes"),
-                func.coalesce(func.sum(Parish.parcel_count), 0).label("total_parcels"),
-            ).where(Parish.is_active)
+        # Count parishes
+        parish_count_result = await self.db.execute(
+            select(func.count(Parish.id).label("total_parishes"))
+            .where(Parish.is_active)
         )
-        row = result.first()
-        
-        if row is None:
-            return ParishStats(
-                total_parishes=0,
-                total_parcels=0,
-                avg_parcels_per_parish=0.0,
-            )
-        
-        total_parishes = row.total_parishes or 0
-        total_parcels = int(row.total_parcels) or 0
+        parish_row = parish_count_result.first()
+        total_parishes = parish_row.total_parishes or 0 if parish_row else 0
+
+        # Count parcels directly (no longer stored in parish)
+        parcel_count_result = await self.db.execute(
+            select(func.count(Parcel.id).label("total_parcels"))
+            .where(Parcel.is_active)
+        )
+        parcel_count_row = parcel_count_result.first()
+        total_parcels = int(parcel_count_row.total_parcels) if parcel_count_row and parcel_count_row.total_parcels else 0
+
         avg_parcels = total_parcels / total_parishes if total_parishes > 0 else 0
 
         return ParishStats(
@@ -158,7 +170,6 @@ class DashboardService:
                 func.count(Parcel.id).label("total_parcels"),
                 func.coalesce(func.sum(Parcel.area_sqm), 0).label("total_area_sqm"),
                 func.coalesce(func.sum(Parcel.valuation), 0).label("total_valuation"),
-                func.count(Parcel.title_deed_number).label("parcels_with_deeds"),
             ).where(Parcel.is_active)
         )
         row = result.first()
@@ -171,11 +182,23 @@ class DashboardService:
                 parcels_with_deeds=0,
             )
 
+        # Count parcels with title deeds via subquery
+        deeds_result = await self.db.execute(text("""
+            SELECT count(DISTINCT parcels.id) AS parcels_with_deeds
+            FROM parcels
+            JOIN documents ON documents.parcel_id = parcels.id
+            JOIN document_types ON document_types.id = documents.document_type_id
+            WHERE parcels.is_active = true
+            AND document_types.code = 'TITLE'
+        """))
+        deeds_row = deeds_result.first()
+        parcels_with_deeds = deeds_row.parcels_with_deeds if deeds_row else 0
+
         return ParcelStats(
             total_parcels=row.total_parcels or 0,
             total_area_sqm=float(row.total_area_sqm) if row.total_area_sqm else 0.0,
             total_valuation=float(row.total_valuation) if row.total_valuation else 0.0,
-            parcels_with_deeds=row.parcels_with_deeds or 0,
+            parcels_with_deeds=parcels_with_deeds,
         )
 
     async def get_user_stats(self) -> UserStats:

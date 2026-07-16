@@ -2,26 +2,10 @@ import { BaseEntity, QueryFilters } from './common';
 
 export interface Parish extends BaseEntity {
   name: string;
-  code: string;
-  registry_path?: string | null;
-  description?: string | null;
-  address?: string | null;
-  contact_person?: string | null;
-  contact_phone?: string | null;
-  contact_email?: string | null;
-  boundary_wkb?: string | null;
-  parcel_count: number;
 }
 
 export interface ParishCreate {
   name: string;
-  code: string;
-  description?: string | null;
-  address?: string | null;
-  contact_person?: string | null;
-  contact_phone?: string | null;
-  contact_email?: string | null;
-  boundary_wkb?: string | null;
 }
 
 export interface ParcelGeo {
@@ -39,7 +23,6 @@ export interface Parcel extends BaseEntity {
   land_use_category_id?: string | null;
   area_sqm: number;
   geometry_wkb?: string | null;
-  title_deed_number?: string | null;
   owner_name: string;
   owner_contact?: string | null;
   location_description?: string | null;
@@ -58,7 +41,6 @@ export interface ParcelCreate {
   land_use_category_id?: string | null;
   area_sqm: number;
   geometry_wkb?: string | null;
-  title_deed_number?: string | null;
   owner_name: string;
   owner_contact?: string | null;
   location_description?: string | null;
@@ -72,7 +54,6 @@ export interface ParcelFilters extends QueryFilters {
   land_use_category_id?: string;
   owner_name?: string;
   upi?: string;
-  title_deed_number?: string;
   min_area_sqm?: number;
   max_area_sqm?: number;
 }

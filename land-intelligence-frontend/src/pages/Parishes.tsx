@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Building2, Plus } from 'lucide-react';
 import { landService } from '@/services/landService';
 import type { Parish, ParishCreate } from '@/types/land';
@@ -137,7 +138,10 @@ export default function Parishes() {
         </div>
 
         {isLoading ? (
-          <div className="text-center py-12 text-slate-400">Loading parishes...</div>
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <LoadingSpinner size="md" className="border-t-primary-500" />
+            <span className="text-slate-400 text-xs">Loading parishes...</span>
+          </div>
         ) : error ? (
           <div className="text-center py-12">
             <p className="text-red-400 mb-4">{error}</p>

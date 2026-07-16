@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
-import { FileText, Upload, Archive, Loader2, MapPin } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { FileText, Upload, Archive, MapPin } from 'lucide-react';
 import { landService } from '@/services/landService';
 import { documentService } from '@/services/documentService';
 import { locationService } from '@/services/locationService';
@@ -15,7 +16,7 @@ import { DocumentTable } from '@/features/documents/components/DocumentTable';
 import { DocumentForm } from '@/features/documents/components/DocumentForm';
 import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
-import { useResourceList, useResourceMutation } from '@/hooks/useResourceList';
+import { useResourceList, useResourceMutation, useResourceQuery } from '@/hooks/useResourceList';
 import toast from 'react-hot-toast';
 
 interface PhysicalLocationResult {
@@ -54,11 +55,10 @@ export default function Documents() {
     { defaultFilters: { page: 1, size: 20, search: '' } }
   );
 
-  // Load parcels for form dropdown
-  const { data: parcels } = useResourceList<Parcel>(
+  // Load parcels for form dropdown (all, no pagination)
+  const { data: parcels } = useResourceQuery<Parcel[]>(
     ['parcels-all'],
-    (f) => landService.getParcels(f),
-    { page: 1, size: 999, search: '' }
+    () => landService.getParcelsAll()
   );
 
   const createMutation = useResourceMutation(
@@ -219,8 +219,11 @@ export default function Documents() {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="text-center py-12 text-slate-400">Loading documents...</div>
+{isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <LoadingSpinner size="md" className="border-t-primary-500" />
+            <span className="text-slate-400 text-xs">Loading documents...</span>
+          </div>
         ) : error ? (
           <div className="text-center py-12">
             <p className="text-red-400 mb-4">{error}</p>
@@ -285,9 +288,9 @@ export default function Documents() {
           title={locatingDoc ? `Archive Location: ${locatingDoc.filename}` : 'Physical Archive Location'}
           size="md"
         >
-          {locationLoading ? (
+{locationLoading ? (
             <div className="flex items-center justify-center gap-3 py-8 text-slate-400">
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <LoadingSpinner size="sm" className="border-t-primary-500" />
               <span>Looking up physical archive location...</span>
             </div>
           ) : locationError ? (

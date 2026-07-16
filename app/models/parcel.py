@@ -25,7 +25,6 @@ class Parcel(BaseModel):
         land_use_category_id: Foreign key to land use category
         area_sqm: Area in square meters
         geometry: Spatial geometry (POLYGON) in WGS84 (SRID 4326)
-        title_deed_number: Official title deed reference
         owner_name: Name of land owner
         owner_contact: Contact information for owner
         location_description: Text description of location
@@ -71,13 +70,6 @@ class Parcel(BaseModel):
         Geometry(geometry_type='POLYGON', srid=4326),
         nullable=True,
         comment="Spatial geometry (POLYGON) in WGS84"
-    )
-    
-    title_deed_number = Column(
-        String(100),
-        nullable=True,
-        index=True,
-        comment="Official title deed reference"
     )
     
     owner_name = Column(
@@ -156,7 +148,6 @@ class Parcel(BaseModel):
     __table_args__ = (
         Index('idx_parcel_upi', 'upi'),
         Index('idx_owner_name', 'owner_name'),
-        Index('idx_title_deed', 'title_deed_number'),
         # Note: Spatial index for 'geometry' column
     )
     

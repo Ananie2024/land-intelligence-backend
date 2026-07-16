@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Settings as SettingsIcon, Bell, Key, Globe, Shield, Database, AlertCircle, Eye, RotateCcw } from 'lucide-react';
 import { settingsService } from '@/services/settingsService';
 import { toast } from 'react-hot-toast';
@@ -132,7 +133,10 @@ export default function Settings() {
                   </div>
                 )}
                 {!settings && !error && isLoading && (
-                  <div className="text-slate-400">Loading settings...</div>
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <LoadingSpinner size="sm" className="border-t-primary-500" />
+                    <span className="text-slate-400 text-xs">Loading settings...</span>
+                  </div>
                 )}
                 {settings && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

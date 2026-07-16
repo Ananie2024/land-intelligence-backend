@@ -8,7 +8,7 @@ Land Intelligence System
 import math
 import logging
 from datetime import datetime, date, timezone
-from typing import Optional, List, Any, Dict
+from typing import Optional, Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -105,20 +105,15 @@ class ParcelService:
         if existing:
             raise ValueError(f"UPI '{payload.upi}' already exists.")
 
-        if payload.title_deed_number:
-            deed_conflict = await self.parcel_repo.get_by_title_deed(payload.title_deed_number)
-            if deed_conflict:
-                raise ValueError(f"Title deed '{payload.title_deed_number}' is already registered.")
-
         parcel = await self.parcel_repo.create(payload)
 
-        # Initial ownership record
+        # Initial ownership record - use UPI as document reference since title_deed_number is removed
         await self.ownership_repo.add_entry(
             parcel_id=str(parcel.id),
             owner_name=payload.owner_name,
             owner_contact=payload.owner_contact,
             transfer_date=date.today(),
-            document_reference=payload.title_deed_number,
+            document_reference=payload.upi,
             notes="Initial ownership record on parcel creation",
         )
 
@@ -141,12 +136,6 @@ class ParcelService:
         Look up a parcel using its Unique Parcel Identifier (UPI).
         """
         return await self.parcel_repo.get_by_upi(upi)
-
-    async def get_parcel_by_deed(self, title_deed_number: str) -> Optional[Parcel]:
-        """
-        Look up a parcel using its official title deed number.
-        """
-        return await self.parcel_repo.get_by_title_deed(title_deed_number)
 
     async def list_parcels_by_parish(
         self,
@@ -187,11 +176,6 @@ class ParcelService:
             if conflict and conflict.id != parcel_id:
                 raise ValueError(f"UPI '{payload.upi}' is already in use.")
 
-        if payload.title_deed_number is not None:
-            conflict = await self.parcel_repo.get_by_title_deed(payload.title_deed_number)
-            if conflict and conflict.id != parcel_id:
-                raise ValueError(f"Title deed '{payload.title_deed_number}' is already registered.")
-
         old_owner_name = str(parcel.owner_name)
         old_owner_contact = str(parcel.owner_contact) if parcel.owner_contact else None
 
@@ -210,7 +194,7 @@ class ParcelService:
                 owner_name=new_owner_name,
                 owner_contact=new_owner_contact,
                 transfer_date=date.today(),
-                document_reference=payload.title_deed_number if payload.title_deed_number is not None else str(parcel.title_deed_number),
+                document_reference=str(parcel.upi),
                 notes="Ownership updated",
             )
 

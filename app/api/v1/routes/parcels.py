@@ -96,6 +96,25 @@ async def list_parcels(
 
 
 # ---------------------------------------------------------------------------
+# GET /parcels/all  — list all parcels without pagination (for dropdowns)
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/all",
+    response_model=list[ParcelResponse],
+    summary="List all parcels",
+    description="Return all active parcels without pagination. Used for dropdown/select inputs.",
+)
+async def list_all_parcels(
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user_id),
+):
+    service = ParcelService(db)
+    items = await service.parcel_repo.list(filters={"is_active": True}, order_by="upi")
+    return items
+
+
+# ---------------------------------------------------------------------------
 # POST /parcels/  — create a new parcel
 # ---------------------------------------------------------------------------
 
@@ -147,33 +166,6 @@ async def get_parcel_by_upi(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"UPI '{upi}' not found.",
-        )
-
-    return parcel
-
-
-# ---------------------------------------------------------------------------
-# GET /parcels/by-deed/{title_deed_number}  — lookup by title deed
-# ---------------------------------------------------------------------------
-
-@router.get(
-    "/by-deed/{title_deed_number}",
-    response_model=ParcelResponse,
-    summary="Get parcel by title deed",
-    description="Look up a parcel using its official title deed number.",
-)
-async def get_parcel_by_deed(
-    title_deed_number: str,
-    db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user_id),
-):
-    service = ParcelService(db)
-    parcel = await service.get_parcel_by_deed(title_deed_number)
-
-    if not parcel:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Title deed '{title_deed_number}' not found.",
         )
 
     return parcel
@@ -242,7 +234,7 @@ async def get_parcel(
     "/{parcel_id}",
     response_model=ParcelResponse,
     summary="Update parcel",
-    description="Partially update a parcel. Uniqueness constraints on UPI and title_deed_number are enforced.",
+    description="Partially update a parcel. Uniqueness constraint on UPI is enforced.",
 )
 async def update_parcel(
     parcel_id: str,
@@ -278,7 +270,7 @@ async def update_parcel(
     "/{parcel_id}",
     status_code=status.HTTP_200_OK,
     summary="Delete parcel",
-    description="Soft-delete a parcel. The parish parcel count is updated automatically.",
+    description="Soft-delete a parcel.",
 )
 async def delete_parcel(
     parcel_id: str,
@@ -351,7 +343,6 @@ async def get_parcels_for_map(
             "land_use_category_id": str(parcel.land_use_category_id) if parcel.land_use_category_id else None,
             "area_sqm": parcel.area_sqm,
             "geometry_wkb": parcel.geometry_wkb,
-            "title_deed_number": parcel.title_deed_number,
             "owner_name": parcel.owner_name,
             "owner_contact": parcel.owner_contact,
             "location_description": parcel.location_description,

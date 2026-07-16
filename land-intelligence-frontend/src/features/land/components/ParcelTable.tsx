@@ -37,9 +37,6 @@ export const ParcelTable: React.FC<ParcelTableProps> = ({ parcels, onEdit, onDel
             <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
               Owner
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
-              Deed Number
-            </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">
               Actions
             </th>
@@ -63,35 +60,32 @@ export const ParcelTable: React.FC<ParcelTableProps> = ({ parcels, onEdit, onDel
               <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">
                 {parcel.owner_name}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
-                {parcel.title_deed_number || '-'}
-              </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex items-center justify-end gap-2">
                    <button
-                     onClick={() => onView(parcel)}
-                     className="text-slate-400 hover:text-slate-200"
-                     title="View"
-                     aria-label={`View parcel ${parcel.upi}`}
-                   >
-                     <Eye className="h-4 w-4" />
-                   </button>
-                   <button
-                     onClick={() => onEdit(parcel)}
-                     className="text-primary-400 hover:text-primary-300"
-                     title="Edit"
-                     aria-label={`Edit parcel ${parcel.upi}`}
-                   >
-                     <Pencil className="h-4 w-4" />
-                   </button>
-                   <button
-                     onClick={() => onDelete(parcel)}
-                     className="text-red-400 hover:text-red-300"
-                     title="Delete"
-                     aria-label={`Delete parcel ${parcel.upi}`}
-                   >
-                     <Trash2 className="h-4 w-4" />
-                   </button>
+                      onClick={() => onView(parcel)}
+                      className="text-slate-400 hover:text-slate-200"
+                      title="View"
+                      aria-label={`View parcel ${parcel.upi}`}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => onEdit(parcel)}
+                      className="text-primary-400 hover:text-primary-300"
+                      title="Edit"
+                      aria-label={`Edit parcel ${parcel.upi}`}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => onDelete(parcel)}
+                      className="text-red-400 hover:text-red-300"
+                      title="Delete"
+                      aria-label={`Delete parcel ${parcel.upi}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                 </div>
               </td>
             </tr>

@@ -21,16 +21,16 @@ export const ENDPOINTS = {
   },
   
    // Users endpoints (admin managed)
-   USERS: {
-     BASE: '/users/',
-     BY_ID: (id: string) => `/users/${id}`,
-   },
-  
+    USERS: {
+      BASE: '/users/',
+      BY_ID: (id: string) => `/users/${id}`,
+    },
+    
   // Parishes endpoints
   PARISHES: {
     BASE: '/parishes',
     BY_ID: (id: string) => `/parishes/${id}`,
-    REFRESH_COUNT: (id: string) => `/parishes/${id}/refresh-count`,
+    ALL: '/parishes/all',
   },
   
   // Parcels endpoints
@@ -38,10 +38,10 @@ export const ENDPOINTS = {
     BASE: '/parcels',
     BY_ID: (id: string) => `/parcels/${id}`,
     BY_NUMBER: (number: string) => `/parcels/by-number/${number}`,
-    BY_DEED: (deed: string) => `/parcels/by-deed/${deed}`,
     BY_PARISH: (parishId: string) => `/parcels/parish/${parishId}`,
     OWNERSHIP_HISTORY: (id: string) => `/parcels/${id}/ownership-history`,
     FOR_MAP: '/parcels/map',
+    ALL: '/parcels/all',
   },
   
   // Documents endpoints
@@ -94,25 +94,25 @@ export const ENDPOINTS = {
   },
   
 // Backups endpoints
-   BACKUPS: {
-      BASE: '/backups',
-      TRIGGER: '/backups/trigger',
-      VERIFY: '/backups/verify',
-      JOBS: '/backups/jobs',
-      BY_JOB_ID: (jobId: string) => `/backups/jobs/${jobId}`,
-      DOWNLOAD: (jobId: string) => `/backups/jobs/${jobId}/download`,
-      RESTORE: '/backups/restore',
-      RESTORE_BY_ID: (jobId: string) => `/backups/restore/${jobId}`,
+    BACKUPS: {
+       BASE: '/backups',
+       TRIGGER: '/backups/trigger',
+       VERIFY: '/backups/verify',
+       JOBS: '/backups/jobs',
+       BY_JOB_ID: (jobId: string) => `/backups/jobs/${jobId}`,
+       DOWNLOAD: (jobId: string) => `/backups/jobs/${jobId}/download`,
+       RESTORE: '/backups/restore',
+       RESTORE_BY_ID: (jobId: string) => `/backups/restore/${jobId}`,
     },
-
-   // Dashboard endpoints
-   DASHBOARD: {
-     BASE: '/dashboard',
-     STATS: '/dashboard/stats',
-     STATS_PARISHES: '/dashboard/stats/parishes',
-     STATS_PARCELS: '/dashboard/stats/parcels',
-     STATS_USERS: '/dashboard/stats/users',
-   },
+  
+    // Dashboard endpoints
+    DASHBOARD: {
+      BASE: '/dashboard',
+      STATS: '/dashboard/stats',
+      STATS_PARISHES: '/dashboard/stats/parishes',
+      STATS_PARCELS: '/dashboard/stats/parcels',
+      STATS_USERS: '/dashboard/stats/users',
+    },
 
 // Reports endpoints
     REPORTS: {
@@ -121,7 +121,7 @@ export const ENDPOINTS = {
       PARCELS: '/reports/parcels',
       DASHBOARD: '/reports/dashboard',
     },
-
+  
     // Settings endpoints
     SETTINGS: {
       GET: '/settings',

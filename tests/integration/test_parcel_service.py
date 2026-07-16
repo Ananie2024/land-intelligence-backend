@@ -26,7 +26,7 @@ from app.schemas.parcel_schema import ParcelCreate, ParcelUpdate
 
 def _make_parcel(**overrides) -> MagicMock:
     """Build a minimal Parcel-like object for testing.
-    
+
     NOTE: extra_data (aliased as "metadata") must be explicitly set to None
     to prevent MagicMock from auto-creating a mock object that Pydantic
     will reject as not-a-dict.
@@ -41,7 +41,6 @@ def _make_parcel(**overrides) -> MagicMock:
     p.parish_id = overrides.get("parish_id", "parish-uuid-001")
     p.land_use_category_id = overrides.get("land_use_category_id", None)
     p.area_sqm = overrides.get("area_sqm", 500.0)
-    p.title_deed_number = overrides.get("title_deed_number", None)
     p.owner_name = overrides.get("owner_name", "John Doe")
     p.owner_contact = overrides.get("owner_contact", None)
     p.location_description = overrides.get("location_description", None)
@@ -176,7 +175,6 @@ class TestCreateParcel:
             parish_id="parish-uuid-001",
             area_sqm=1000.0,
             owner_name="Jane Smith",
-            title_deed_number="TD-099",
         )
         parish = _make_parish(id="parish-uuid-001")
         created = _make_parcel(
@@ -188,7 +186,6 @@ class TestCreateParcel:
 
         service.parish_repo.get = AsyncMock(return_value=parish)
         service.parcel_repo.get_by_upi = AsyncMock(return_value=None)
-        service.parcel_repo.get_by_title_deed = AsyncMock(return_value=None)
         service.parcel_repo.create = AsyncMock(return_value=created)
         service.ownership_repo.add_entry = AsyncMock(return_value=_make_ownership_entry())
         service.parish_repo.update_parcel_count = AsyncMock(return_value=parish)
@@ -198,7 +195,6 @@ class TestCreateParcel:
         assert result is created
         service.parish_repo.get.assert_awaited_once_with("parish-uuid-001")
         service.parcel_repo.get_by_upi.assert_awaited_once_with("UPI-099")
-        service.parcel_repo.get_by_title_deed.assert_awaited_once_with("TD-099")
         service.parcel_repo.create.assert_awaited_once_with(payload)
         service.ownership_repo.add_entry.assert_awaited_once()
         service.parish_repo.update_parcel_count.assert_awaited_once_with("parish-uuid-001")
@@ -241,28 +237,6 @@ class TestCreateParcel:
 
         mock_db.commit.assert_not_called()
 
-    async def test_create_duplicate_title_deed_raises(self, service, mock_db):
-        """Raises ValueError when the title deed number is already registered."""
-        parish = _make_parish(id="parish-uuid-001")
-        conflict = _make_parcel(title_deed_number="TD-099")
-
-        service.parish_repo.get = AsyncMock(return_value=parish)
-        service.parcel_repo.get_by_upi = AsyncMock(return_value=None)
-        service.parcel_repo.get_by_title_deed = AsyncMock(return_value=conflict)
-
-        payload = ParcelCreate(
-            upi="UPI-100",
-            parish_id="parish-uuid-001",
-            area_sqm=500.0,
-            owner_name="Test",
-            title_deed_number="TD-099",
-        )
-
-        with pytest.raises(ValueError, match="Title deed 'TD-099' is already registered"):
-            await service.create_parcel(payload, user_id="user-1")
-
-        mock_db.commit.assert_not_called()
-
 
 # ---------------------------------------------------------------------------
 # Tests — get_parcel
@@ -291,13 +265,13 @@ class TestGetParcel:
 
 
 # ---------------------------------------------------------------------------
-# Tests — get_parcel_by_number / get_parcel_by_deed
+# Tests — get_parcel_by_upi
 # ---------------------------------------------------------------------------
 
-class TestGetParcelByLookup:
+class TestGetParcelByUPI:
     """Integration tests for lookup methods."""
 
-    async def test_get_by_number_found(self, service):
+    async def test_get_by_upi_found(self, service):
         parcel = _make_parcel(upi="UPI-001")
         service.parcel_repo.get_by_upi = AsyncMock(return_value=parcel)
 
@@ -306,26 +280,10 @@ class TestGetParcelByLookup:
         assert result is parcel
         service.parcel_repo.get_by_upi.assert_awaited_once_with("UPI-001")
 
-    async def test_get_by_number_not_found(self, service):
+    async def test_get_by_upi_not_found(self, service):
         service.parcel_repo.get_by_upi = AsyncMock(return_value=None)
 
         result = await service.get_parcel_by_upi("NONEXISTENT")
-
-        assert result is None
-
-    async def test_get_by_deed_found(self, service):
-        parcel = _make_parcel(title_deed_number="TD-001")
-        service.parcel_repo.get_by_title_deed = AsyncMock(return_value=parcel)
-
-        result = await service.get_parcel_by_deed("TD-001")
-
-        assert result is parcel
-        service.parcel_repo.get_by_title_deed.assert_awaited_once_with("TD-001")
-
-    async def test_get_by_deed_not_found(self, service):
-        service.parcel_repo.get_by_title_deed = AsyncMock(return_value=None)
-
-        result = await service.get_parcel_by_deed("NONEXISTENT")
 
         assert result is None
 
@@ -375,13 +333,11 @@ class TestUpdateParcel:
         """Updates a parcel successfully and commits."""
         existing = _make_parcel(
             id="parcel-1",
-            parcel_number="PLC-001",
             owner_name="John Doe",
             owner_contact="john@example.com",
         )
         updated = _make_parcel(
             id="parcel-1",
-            parcel_number="PLC-001",
             owner_name="John Doe Updated",
             owner_contact="john@example.com",
         )
@@ -423,21 +379,6 @@ class TestUpdateParcel:
 
         mock_db.commit.assert_not_called()
 
-    async def test_update_duplicate_title_deed_raises(self, service, mock_db):
-        """Raises ValueError when updating to a title deed already in use."""
-        existing = _make_parcel(id="parcel-1", title_deed_number="TD-001")
-        conflict = _make_parcel(id="parcel-2", title_deed_number="TD-002")
-
-        service.parcel_repo.get = AsyncMock(return_value=existing)
-        service.parcel_repo.get_by_title_deed = AsyncMock(return_value=conflict)
-
-        payload = ParcelUpdate(title_deed_number="TD-002")
-
-        with pytest.raises(ValueError, match="Title deed 'TD-002' is already registered"):
-            await service.update_parcel("parcel-1", payload, "user-1")
-
-        mock_db.commit.assert_not_called()
-
     async def test_update_owner_unchanged_no_history_entry(self, service, mock_db):
         """Does not create an ownership history entry when owner_name is unchanged."""
         existing = _make_parcel(id="parcel-1", owner_name="John Doe")
@@ -463,7 +404,7 @@ class TestDeleteParcel:
     """Integration tests for ParcelService.delete_parcel()."""
 
     async def test_delete_success(self, service, mock_db):
-        """Soft-deletes a parcel, updates parish count, and commits."""
+        """Soft-deletes a parcel and commits."""
         parcel = _make_parcel(id="parcel-1", parish_id="parish-1")
         parish = _make_parish(id="parish-1")
 

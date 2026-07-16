@@ -22,7 +22,6 @@ export const ParcelForm: React.FC<ParcelFormProps> = ({ parcel, onSubmit, isLoad
       parish_id: parcel.parish_id,
       area_sqm: parcel.area_sqm,
       owner_name: parcel.owner_name,
-      title_deed_number: parcel.title_deed_number || '',
       location_description: parcel.location_description || '',
       geometry_wkb: parcel.geometry_wkb || '',
     } : undefined,
@@ -94,19 +93,6 @@ export const ParcelForm: React.FC<ParcelFormProps> = ({ parcel, onSubmit, isLoad
         {errors.owner_name && (
           <p className="mt-1 text-sm text-red-600">{errors.owner_name.message}</p>
         )}
-      </div>
-
-      <div>
-        <label htmlFor="title_deed_number" className="block text-sm font-medium text-gray-700">
-          Title Deed Number
-        </label>
-        <input
-          {...register('title_deed_number')}
-          type="text"
-          id="title_deed_number"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
       </div>
 
       <div>

@@ -25,10 +25,6 @@ export const ParcelDetail: React.FC<ParcelDetailProps> = ({ parcel }) => {
           <p className="mt-1 text-gray-900">{parcel.owner_name}</p>
         </div>
         <div>
-          <h3 className="text-sm font-medium text-gray-700">Title Deed</h3>
-          <p className="mt-1 text-gray-900">{parcel.title_deed_number || 'Not registered'}</p>
-        </div>
-        <div>
           <h3 className="text-sm font-medium text-gray-700">Owner Contact</h3>
           <p className="mt-1 text-gray-900">{parcel.owner_contact || '-'}</p>
         </div>

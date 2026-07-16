@@ -107,24 +107,6 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
         )
         return result.scalar_one_or_none()
     
-    async def get_by_title_deed(self, title_deed_number: str) -> Optional[Parcel]:
-        """
-        Get parcel by title deed number.
-        
-        Args:
-            title_deed_number: Official title deed reference
-            
-        Returns:
-            Parcel instance if found, None otherwise
-        """
-        result = await self.db.execute(
-            select(Parcel).where(
-                Parcel.title_deed_number == title_deed_number,
-                Parcel.is_active
-            )
-        )
-        return result.scalar_one_or_none()
-    
     async def search(
         self,
         owner_name: Optional[str] = None,

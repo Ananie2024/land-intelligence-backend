@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 class ParishService:
     """
     Business logic layer for parish operations.
+    Simplified to only manage parish name.
     """
 
     def __init__(self, db: AsyncSession):
@@ -56,12 +57,8 @@ class ParishService:
 
     async def create_parish(self, payload: ParishCreate, user_id: str) -> Parish:
         """
-        Create a new parish. Enforces unique code constraint.
+        Create a new parish.
         """
-        existing = await self.repo.get_by_code(payload.code)
-        if existing:
-            raise ValueError(f"Parish with code '{payload.code}' already exists.")
-
         parish = await self.repo.create(payload)
         await self.db.commit()
         await self.db.refresh(parish)
@@ -69,21 +66,23 @@ class ParishService:
         logger.info(f"Parish created: {parish.id} by user {user_id}")
         return parish
 
+    async def list_all_parishes(self) -> list[Parish]:
+        """
+        Return all active parishes without pagination.
+        Used for dropdown/select inputs.
+        """
+        return await self.repo.list(filters={"is_active": True}, order_by="name")
+
     async def get_parish(self, parish_id: str) -> Optional[Parish]:
         """
         Retrieve a single parish by its UUID.
         """
-        return await self.repo.get_with_parcel_count(parish_id)
+        return await self.repo.get(parish_id)
 
     async def update_parish(self, parish_id: str, payload: ParishUpdate, user_id: str) -> Optional[Parish]:
         """
-        Partially update a parish. Enforces unique code if changed.
+        Partially update a parish.
         """
-        if payload.code is not None:
-            existing = await self.repo.get_by_code(payload.code)
-            if existing is not None and existing.id != parish_id:
-                raise ValueError(f"Parish code '{payload.code}' is already in use.")
-
         parish = await self.repo.update(parish_id, payload)
 
         if parish is None:
@@ -107,18 +106,3 @@ class ParishService:
         await self.db.commit()
         logger.info(f"Parish soft-deleted: {parish_id} by user {user_id}")
         return True
-
-    async def refresh_parcel_count(self, parish_id: str, user_id: str) -> Optional[Parish]:
-        """
-        Recalculate and update the cached parcel count for a parish.
-        """
-        parish = await self.repo.update_parcel_count(parish_id)
-
-        if not parish:
-            return None
-
-        await self.db.commit()
-        await self.db.refresh(parish)
-
-        logger.info(f"Parish parcel count refreshed: {parish_id} by user {user_id}")
-        return parish

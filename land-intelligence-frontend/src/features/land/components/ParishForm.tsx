@@ -2,7 +2,6 @@
 // Land Intelligence System
 
 import { useForm } from 'react-hook-form';
-import { MapPin } from 'lucide-react';
 import type { Parish, ParishCreate } from '@/types/land';
 
 interface ParishFormProps {
@@ -19,11 +18,6 @@ export const ParishForm: React.FC<ParishFormProps> = ({ parish, onSubmit, isLoad
   } = useForm<ParishCreate>({
     defaultValues: parish ? {
       name: parish.name,
-      code: parish.code,
-      description: parish.description || '',
-      contact_email: parish.contact_email || '',
-      contact_phone: parish.contact_phone || '',
-      boundary_wkb: parish.boundary_wkb || '',
     } : undefined,
   });
 
@@ -43,75 +37,6 @@ export const ParishForm: React.FC<ParishFormProps> = ({ parish, onSubmit, isLoad
         {errors.name && (
           <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
         )}
-      </div>
-
-      <div>
-        <label htmlFor="code" className="block text-sm font-medium text-gray-700">
-          Parish Code
-        </label>
-        <input
-          {...register('code', { required: 'Code is required' })}
-          type="text"
-          id="code"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
-        {errors.code && (
-          <p className="mt-1 text-sm text-red-600">{errors.code.message}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-          Description
-        </label>
-        <textarea
-          {...register('description')}
-          id="description"
-          rows={3}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="contact_email" className="block text-sm font-medium text-gray-700">
-          Contact Email
-        </label>
-        <input
-          {...register('contact_email')}
-          type="email"
-          id="contact_email"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="contact_phone" className="block text-sm font-medium text-gray-700">
-          Contact Phone
-        </label>
-        <input
-          {...register('contact_phone')}
-          type="tel"
-          id="contact_phone"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="boundary_wkb" className="block text-sm font-medium text-gray-700">
-          Boundary (WKB)
-        </label>
-        <textarea
-          {...register('boundary_wkb')}
-          id="boundary_wkb"
-          rows={3}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-xs"
-          disabled={isLoading}
-          placeholder="Hex-encoded Well-Known Binary geometry (optional)"
-        />
       </div>
 
       <div className="flex justify-end">

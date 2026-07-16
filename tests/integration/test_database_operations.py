@@ -175,10 +175,11 @@ class TestParcelEndpointMethods:
         assert response.status_code == 401
 
     def test_parcel_by_deed_methods(self):
-        """Parcel lookup by deed supports GET."""
+        """Parcel lookup by deed endpoint is removed (title_deed was deprecated)."""
         client = TestClient(app)
         response = client.get("/api/v1/parcels/by-deed/DEED-001")
-        assert response.status_code == 401
+        # Endpoint was removed along with title_deed_number column
+        assert response.status_code == 404
 
     def test_parcel_update_methods(self):
         """Parcel update supports PATCH."""
