@@ -4,14 +4,14 @@ import { env } from '@/utils/env';
 
 export default function AuthLayout() {
   return (
-    <div className="min-h-screen w-screen bg-slate-950 flex flex-col items-center justify-center p-4 md:p-6 font-sans relative">
+    <div className="min-h-screen w-screen bg-bg-base flex flex-col items-center justify-center p-4 md:p-6 font-sans relative">
       {/* Background visual graphics */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gold-500/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute inset-0 bg-dot-pattern pointer-events-none opacity-30 z-0" />
 
       {/* Main glass box container */}
-      <div className="w-full max-w-[440px] glass-panel rounded-2xl shadow-2xl p-8 z-10 relative border border-slate-800/80 bg-slate-900/40">
+      <div className="w-full max-w-[440px] glass-panel rounded-2xl shadow-2xl p-8 z-10 relative">
         
         {/* App Logo & Branding */}
         <div className="flex flex-col items-center text-center mb-8">
@@ -34,7 +34,7 @@ export default function AuthLayout() {
       </div>
 
       {/* System Status info */}
-      <div className="absolute bottom-6 text-[10px] text-slate-500 font-medium z-10 select-none">
+      <div className="absolute bottom-6 text-[10px] text-slate-400 font-medium z-10 select-none">
         Kigali Archdiocese Land Records System • Secure Access Required
       </div>
     </div>

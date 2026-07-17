@@ -39,7 +39,7 @@ export default function Login() {
       <div className="space-y-1.5">
         <label className="text-xs font-bold text-slate-300 block">Username or Email</label>
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <Mail className="w-4 h-4" />
           </div>
           <input
@@ -48,7 +48,7 @@ export default function Login() {
             placeholder="Enter your username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full bg-slate-950/60 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-600 outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"
+            className="w-full bg-slate-900/60 border border-slate-700 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-500 outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"
           />
         </div>
       </div>
@@ -62,7 +62,7 @@ export default function Login() {
           </a>
         </div>
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <KeyRound className="w-4 h-4" />
           </div>
           <input
@@ -71,16 +71,16 @@ export default function Login() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-slate-950/60 border border-slate-800 rounded-lg py-2.5 pl-10 pr-10 text-sm text-white placeholder-slate-600 outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"
+            className="w-full bg-slate-900/60 border border-slate-700 rounded-lg py-2.5 pl-10 pr-10 text-sm text-white placeholder-slate-500 outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"
           />
            <button
-             type="button"
-             onClick={() => setShowPassword(!showPassword)}
-             className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
-             aria-label={showPassword ? 'Hide password' : 'Show password'}
-           >
-             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-           </button>
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white transition-colors"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
         </div>
       </div>
 

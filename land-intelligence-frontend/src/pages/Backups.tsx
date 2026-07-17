@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ListState } from '@/components/ui/ListState';
 import { Database, RefreshCw } from 'lucide-react';
 import { backupService } from '@/services/backupService';
 import type { Backup } from '@/types/backup';
@@ -120,27 +120,17 @@ export default function Backups() {
           onVerify={handleVerify}
         />
 
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <LoadingSpinner size="md" className="border-t-primary-500" />
-            <span className="text-slate-400 text-xs">Loading backups...</span>
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-400 mb-4">{error}</p>
-            <button 
-              onClick={handleRetry}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : (
+        <ListState 
+          isLoading={isLoading} 
+          error={error} 
+          onRetry={handleRetry} 
+          label="backups"
+        >
           <BackupTable 
             backups={backups}
             onDownload={handleDownload}
           />
-        )}
+        </ListState>
       </div>
     </PageContainer>
   );

@@ -47,8 +47,11 @@ project_analysis_and_roadmap.md
 *.sql
 
 # Logs
-logs/*.log
+logs/*.log*
 *.log
+
+# MyPy HTML Report
+mypy_html/
 
 # Backups (local backup storage - don't commit)
 backups/daily/*

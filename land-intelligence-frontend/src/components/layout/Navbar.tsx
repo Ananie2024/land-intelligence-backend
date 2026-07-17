@@ -39,11 +39,11 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
   };
 
   return (
-    <header className="h-16 px-4 sm:px-6 border-b border-slate-900 bg-slate-950/40 backdrop-blur-md flex items-center justify-between sticky top-0 z-30">
+    <header className="h-16 px-4 sm:px-6 border-b border-slate-700 bg-bg-surface/80 backdrop-blur-md flex items-center justify-between sticky top-0 z-30">
       {/* Mobile Toggle Button */}
       <button
         onClick={onToggleSidebar}
-        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors lg:hidden"
+        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors lg:hidden"
         aria-label="Toggle sidebar menu"
       >
         <Menu className="w-5 h-5" />
@@ -81,16 +81,16 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
       {/* Right side operations */}
       <div className="flex items-center gap-2 sm:gap-4 ml-auto">
         {/* Notifications Bell */}
-        <button className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors relative">
+        <button className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors relative">
           <Bell className="w-4 h-4" />
-          <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 w-1.5 h-1.5 rounded-full bg-primary-500 ring-1 sm:ring-2 ring-slate-950" />
+          <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 w-1.5 h-1.5 rounded-full bg-primary-500 ring-1 sm:ring-2 ring-bg-base" />
         </button>
 
         {/* User Profile Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-1.5 sm:gap-2.5 p-1 px-1.5 sm:px-2.5 rounded-xl hover:bg-slate-800/50 transition-colors"
+            className="flex items-center gap-1.5 sm:gap-2.5 p-1 px-1.5 sm:px-2.5 rounded-xl hover:bg-slate-700/50 transition-colors"
           >
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr from-primary-500 via-gold-500 to-burgundy-500 flex items-center justify-center font-bold text-white text-xs sm:text-sm shadow-md">
               {userInfo.full_name?.charAt(0) || userInfo.username?.charAt(0) || 'U'}
@@ -103,15 +103,15 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2.5 w-56 rounded-xl border border-slate-800 bg-slate-900 p-2 shadow-2xl z-50">
-              <div className="px-3.5 py-2.5 border-b border-slate-800">
+            <div className="absolute right-0 mt-2.5 w-56 rounded-xl border border-slate-700 bg-bg-surface p-2 shadow-2xl z-50">
+              <div className="px-3.5 py-2.5 border-b border-slate-700">
                 <p className="text-xs text-slate-400 font-medium">Logged in as</p>
                 <p className="text-sm font-bold text-white truncate mt-0.5">{userInfo.email}</p>
               </div>
               <div className="py-1">
                 <a
                   href="/profile"
-                  className="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-300 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"
+                  className="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-300 rounded-lg hover:bg-slate-700 hover:text-white transition-colors"
                   onClick={(e) => {
                     e.preventDefault();
                     window.location.href = '/profile';
@@ -122,7 +122,7 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
                 </a>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2.5 w-full text-left px-3.5 py-2 text-sm text-danger rounded-lg hover:bg-danger/10 hover:text-white transition-colors"
+                  className="flex items-center gap-2.5 w-full text-left px-3.5 py-2 text-sm text-danger rounded-lg hover:bg-danger/10 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   Log Out

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ListState } from '@/components/ui/ListState';
 import { Users, UserPlus } from 'lucide-react';
 import { userService } from '@/services/userService';
 import type { UserResponse, UserCreate } from '@/types/user';
@@ -14,6 +14,7 @@ import { UserForm } from '@/features/users/components/UserForm';
 import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
 import { useResourceList, useResourceMutation } from '@/hooks/useResourceList';
+import toast from 'react-hot-toast';
 
 export default function UsersPage() {
   const navigate = useNavigate();
@@ -56,6 +57,7 @@ export default function UsersPage() {
     const success = await createMutation.mutate(formData);
     if (success) {
       setShowForm(false);
+      toast.success('User created successfully');
     }
   };
 
@@ -65,12 +67,16 @@ export default function UsersPage() {
     if (success) {
       setEditingUser(null);
       setShowForm(false);
+      toast.success('User updated successfully');
     }
   };
 
   const handleDelete = async (user: UserResponse) => {
     if (!confirm(`Delete user "${user.username}"? This action cannot be undone.`)) return;
-    await deleteMutation.mutate(user.id);
+    const success = await deleteMutation.mutate(user.id);
+    if (success) {
+      toast.success('User deleted successfully');
+    }
   };
 
   const handleCloseForm = () => {
@@ -133,44 +139,32 @@ export default function UsersPage() {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <LoadingSpinner size="md" className="border-t-primary-500" />
-            <span className="text-slate-400 text-xs">Loading users...</span>
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-400 mb-4">{error}</p>
-            <button 
-              onClick={handleRetry}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : (
-          <>
-            <UserTable 
-              users={users}
-              onView={(user) => navigate(`/users/${user.id}`)}
-              onEdit={(user) => {
-                setEditingUser(user);
-                setShowForm(true);
-              }}
-              onDelete={handleDelete}
+        <ListState 
+          isLoading={isLoading} 
+          error={error} 
+          onRetry={handleRetry} 
+          label="users"
+        >
+          <UserTable 
+            users={users}
+            onView={(user) => navigate(`/users/${user.id}`)}
+            onEdit={(user) => {
+              setEditingUser(user);
+              setShowForm(true);
+            }}
+            onDelete={handleDelete}
+          />
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={filters.page}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              pageSize={filters.size}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
             />
-            {totalPages > 1 && (
-              <Pagination
-                currentPage={filters.page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                pageSize={filters.size}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-              />
-            )}
-          </>
-        )}
+          )}
+        </ListState>
 
         {/* Modal Form */}
         <Modal

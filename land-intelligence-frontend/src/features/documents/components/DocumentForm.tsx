@@ -3,14 +3,14 @@
 
 import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import type { Document, DocumentCreate } from '@/types/document';
+import type { Document, DocumentCreate, DocumentType } from '@/types/document';
 
 interface DocumentFormProps {
   document?: Document | null;
   onSubmit: (data: DocumentCreate, file?: File) => Promise<void>;
   isLoading?: boolean;
   parcels?: Array<{ id: string; upi: string }>;
-  documentTypes?: Array<{ id: string; name: string }>;
+  documentTypes?: DocumentType[];
 }
 
 export const DocumentForm: React.FC<DocumentFormProps> = ({ 

@@ -5,10 +5,10 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function Card({ children, className = '', variant = 'default', ...props }: CardProps) {
-  const baseStyle = 'rounded-xl border border-slate-800/80 overflow-hidden';
+  const baseStyle = 'rounded-xl border border-slate-700 overflow-hidden';
   
   const variants = {
-    default: 'bg-slate-900/60 shadow-md',
+    default: 'bg-bg-surface shadow-md',
     glass: 'glass-panel shadow-lg',
     interactive: 'glass-panel glass-panel-hover shadow-lg',
   };
@@ -64,7 +64,7 @@ interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export function CardFooter({ children, className = '', ...props }: CardFooterProps) {
   return (
-    <div className={`p-6 pt-0 flex items-center border-t border-slate-800/50 mt-auto ${className}`} {...props}>
+    <div className={`p-6 pt-0 flex items-center border-t border-slate-700 mt-auto ${className}`} {...props}>
       {children}
     </div>
   );

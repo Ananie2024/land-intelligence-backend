@@ -20,6 +20,7 @@ from app.api.v1.routes import (
     parishes,
     parcels,
     documents,
+    document_types,
     gis_analysis,
     tax_calculations,
     qr_codes,
@@ -125,6 +126,13 @@ router.include_router(
     documents.router,
     prefix="/documents",
     tags=["Documents"],
+    dependencies=[Depends(get_current_user_data)]
+)
+
+router.include_router(
+    document_types.router,
+    prefix="/document-types",
+    tags=["Document Types"],
     dependencies=[Depends(get_current_user_data)]
 )
 

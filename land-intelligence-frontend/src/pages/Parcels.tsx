@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ListState } from '@/components/ui/ListState';
 import { MapPin, Plus } from 'lucide-react';
 import { landService } from '@/services/landService';
 import type { Parcel, ParcelCreate, Parish } from '@/types/land';
@@ -124,13 +124,13 @@ export default function Parcels() {
       }
     >
       <div className="space-y-6">
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-slate-800/80 bg-slate-900/30">
-          <div className="p-2 rounded-lg bg-primary-500/10 text-primary-400">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-slate-700 bg-slate-900/60">
+          <div className="p-2 rounded-lg bg-primary-500/20 text-primary-400">
             <MapPin className="w-5 h-5" />
           </div>
           <div className="text-xs flex-1">
             <p className="text-white font-bold">GIS Coordinates Active</p>
-            <p className="text-slate-500 mt-0.5">Click any parcel record to open structural documents or display boundary pins.</p>
+            <p className="text-slate-400 mt-0.5">Click any parcel record to open structural documents or display boundary pins.</p>
           </div>
           <div className="relative">
             <input
@@ -146,44 +146,32 @@ export default function Parcels() {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <LoadingSpinner size="md" className="border-t-primary-500" />
-            <span className="text-slate-400 text-xs">Loading parcels...</span>
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-400 mb-4">{error}</p>
-            <button 
-              onClick={handleRetry}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : (
-          <>
-            <ParcelTable 
-              parcels={parcels}
-              onView={(parcel) => navigate(`/parcels/${parcel.id}`)}
-              onEdit={(parcel) => {
-                setEditingParcel(parcel);
-                setShowForm(true);
-              }}
-              onDelete={handleDelete}
+        <ListState 
+          isLoading={isLoading} 
+          error={error} 
+          onRetry={handleRetry} 
+          label="parcels"
+        >
+          <ParcelTable 
+            parcels={parcels}
+            onView={(parcel) => navigate(`/parcels/${parcel.id}`)}
+            onEdit={(parcel) => {
+              setEditingParcel(parcel);
+              setShowForm(true);
+            }}
+            onDelete={handleDelete}
+          />
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={filters.page || 1}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              pageSize={filters.size || 20}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
             />
-            {totalPages > 1 && (
-              <Pagination
-                currentPage={filters.page || 1}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                pageSize={filters.size || 20}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-              />
-            )}
-          </>
-        )}
+          )}
+        </ListState>
 
         {/* Modal Form */}
         <Modal

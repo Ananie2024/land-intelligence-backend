@@ -60,7 +60,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-slate-900/40 border-t border-slate-800">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-bg-surface border-t border-slate-700">
       <div className="text-sm text-slate-400">
         Showing {startItem} to {endItem} of {totalItems} entries
       </div>
@@ -69,7 +69,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
-          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Previous page"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -88,7 +88,7 @@ export const Pagination: React.FC<PaginationProps> = ({
                 className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
                   currentPage === page
                     ? 'bg-primary-500 text-white'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-700'
                 }`}
               >
                 {page}
@@ -100,7 +100,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Next page"
         >
           <ChevronRight className="w-4 h-4" />
@@ -113,7 +113,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           <select
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="px-2 py-1 text-sm bg-slate-800 border border-slate-700 rounded text-white"
+            className="px-2 py-1 text-sm bg-slate-900/60 border border-slate-700 rounded text-slate-200"
           >
             <option value={10}>10</option>
             <option value={20}>20</option>

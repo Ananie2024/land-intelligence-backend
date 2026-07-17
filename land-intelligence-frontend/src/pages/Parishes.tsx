@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ListState } from '@/components/ui/ListState';
 import { Building2, Plus } from 'lucide-react';
 import { landService } from '@/services/landService';
 import type { Parish, ParishCreate } from '@/types/land';
@@ -117,7 +117,7 @@ export default function Parishes() {
       }
     >
       <div className="space-y-6">
-        <div className="flex items-center gap-3 p-6 rounded-xl border border-slate-800/80 bg-slate-900/30">
+        <div className="flex items-center gap-3 p-6 rounded-xl border border-slate-700 bg-slate-900/60">
           <Building2 className="w-6 h-6 text-primary-400" />
           <div className="text-sm flex-1">
             <p className="text-white font-bold">Parish Scopes</p>
@@ -137,44 +137,32 @@ export default function Parishes() {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <LoadingSpinner size="md" className="border-t-primary-500" />
-            <span className="text-slate-400 text-xs">Loading parishes...</span>
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-400 mb-4">{error}</p>
-            <button 
-              onClick={handleRetry}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : (
-          <>
-            <ParishTable 
-              parishes={parishes}
-              onView={(parish) => navigate(`/parishes/${parish.id}`)}
-              onEdit={(parish) => {
-                setEditingParish(parish);
-                setShowForm(true);
-              }}
-              onDelete={handleDelete}
+        <ListState 
+          isLoading={isLoading} 
+          error={error} 
+          onRetry={handleRetry} 
+          label="parishes"
+        >
+          <ParishTable 
+            parishes={parishes}
+            onView={(parish) => navigate(`/parishes/${parish.id}`)}
+            onEdit={(parish) => {
+              setEditingParish(parish);
+              setShowForm(true);
+            }}
+            onDelete={handleDelete}
+          />
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={filters.page}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              pageSize={filters.size}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
             />
-            {totalPages > 1 && (
-              <Pagination
-                currentPage={filters.page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                pageSize={filters.size}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-              />
-            )}
-          </>
-        )}
+          )}
+        </ListState>
 
         {/* Modal Form */}
         <Modal

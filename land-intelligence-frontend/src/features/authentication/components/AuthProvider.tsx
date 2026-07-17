@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Show loading spinner while initializing
   if (isInitializing) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-slate-950">
+      <div className="flex h-screen w-screen items-center justify-center bg-bg-base">
         <LoadingSpinner size="lg" />
       </div>
     );

@@ -27,9 +27,9 @@ export function Table<T>({
   className = '',
 }: TableProps<T>) {
   return (
-    <div className={`relative overflow-x-auto w-full rounded-xl border border-slate-800/80 bg-slate-900/40 ${className}`}>
-      <table className="w-full text-sm text-left text-slate-300">
-        <thead className="text-xs uppercase bg-slate-900/80 text-slate-400 border-b border-slate-800/80">
+    <div className={`relative overflow-x-auto w-full rounded-xl border border-primary-200/60 bg-white ${className}`}>
+      <table className="w-full text-sm text-left text-slate-600">
+        <thead className="text-xs uppercase bg-primary-50/80 text-slate-500 border-b border-primary-200/60">
           <tr>
             {columns.map((column) => (
               <th
@@ -42,19 +42,19 @@ export function Table<T>({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-800/50">
+        <tbody className="divide-y divide-primary-100">
           {isLoading && data.length === 0 ? (
             <tr>
               <td colSpan={columns.length} className="px-6 py-12 text-center">
                 <div className="flex flex-col items-center justify-center gap-3">
                   <LoadingSpinner size="md" className="border-t-primary-500" />
-                  <span className="text-slate-400 text-xs">Fetching records...</span>
+                  <span className="text-slate-500 text-xs">Fetching records...</span>
                 </div>
               </td>
             </tr>
           ) : data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-6 py-12 text-center text-slate-500">
+              <td colSpan={columns.length} className="px-6 py-12 text-center text-slate-400">
                 {emptyStateMessage}
               </td>
             </tr>
@@ -64,7 +64,7 @@ export function Table<T>({
                 key={rowIndex}
                 onClick={() => onRowClick && onRowClick(row)}
                 className={`
-                  ${onRowClick ? 'cursor-pointer hover:bg-slate-800/30' : 'hover:bg-slate-900/20'}
+                  ${onRowClick ? 'cursor-pointer hover:bg-primary-50' : 'hover:bg-primary-50/50'}
                   transition-colors duration-150 group
                 `}
               >
@@ -76,7 +76,7 @@ export function Table<T>({
                   return (
                     <td
                       key={column.key}
-                      className={`px-6 py-4.5 text-slate-300 font-medium group-hover:text-white transition-colors ${column.className || ''}`}
+                      className={`px-6 py-4.5 text-slate-600 font-medium group-hover:text-slate-800 transition-colors ${column.className || ''}`}
                     >
                       {renderedValue}
                     </td>
@@ -90,7 +90,7 @@ export function Table<T>({
       
       {/* Loading Overlay for background updates */}
       {isLoading && data.length > 0 && (
-        <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[1px] flex items-center justify-center">
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
           <LoadingSpinner size="sm" className="border-t-primary-500" />
         </div>
       )}

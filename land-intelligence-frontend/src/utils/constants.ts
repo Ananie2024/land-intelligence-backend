@@ -49,3 +49,18 @@ export const THEMES = {
 } as const;
 
 export type Theme = (typeof THEMES)[keyof typeof THEMES];
+
+// Land Registry Document Types
+export const DOCUMENT_TYPES = {
+  LAND_TITLES: 'land_titles',
+  LAND_DEEDS: 'land_deeds',
+  LETTERS: 'letters',
+  LAND_LEASES: 'land_leases',
+  REPORTS: 'reports',
+  SURVEYS: 'surveys',
+  CESSION: 'contrat_de_cession_gratuite',
+  OTHERS: 'others',
+  UNSPECIFIED: 'unspecified',
+} as const;
+
+export type DocumentTypeCode = (typeof DOCUMENT_TYPES)[keyof typeof DOCUMENT_TYPES];

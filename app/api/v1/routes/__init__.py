@@ -4,6 +4,7 @@ from . import (
     parishes,
     parcels,
     documents,
+    document_types,
     gis_analysis,
     tax_calculations,
     qr_codes,

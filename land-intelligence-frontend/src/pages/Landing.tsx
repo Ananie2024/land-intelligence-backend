@@ -29,7 +29,7 @@ export default function Landing() {
         >
           Sign In to Continue
         </Button>
-        <span className="text-[10px] text-slate-600 font-medium">
+        <span className="text-[10px] text-slate-400 font-medium">
           Secure access for authorized personnel only
         </span>
       </div>

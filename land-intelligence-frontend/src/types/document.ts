@@ -2,14 +2,19 @@
 // Land Intelligence System
 
 import { BaseEntity, QueryFilters } from './common';
+import { DocumentTypeCode } from '@/utils/constants';
 
-export interface DocumentType extends BaseEntity {
+export interface DocumentType {
+  id: string;
   name: string;
-  code: string;
+  code: DocumentTypeCode;
   description?: string | null;
   requires_parcel?: boolean;
   requires_reference?: boolean;
   document_count: number;
+  created_at?: string;
+  updated_at?: string;
+  is_active?: boolean;
 }
 
 export interface Document extends BaseEntity {
@@ -42,7 +47,7 @@ export interface DocumentCreate {
 
 export interface DocumentUpdate {
   parcel_upi?: string | null;
-  document_type_id?: string;
+  document_type_id?: string | null;
   description?: string | null;
   document_date?: string | null;
   reference_number?: string | null;
@@ -55,3 +60,16 @@ export interface DocumentFilters extends QueryFilters {
   filename?: string;
   reference_number?: string;
 }
+
+// Helper to get display names for document types
+export const DOCUMENT_TYPE_LABELS: Record<DocumentTypeCode, string> = {
+  land_titles: 'Land Titles',
+  land_deeds: 'Land Deeds',
+  letters: 'Letters',
+  land_leases: 'Land Leases',
+  reports: 'Reports',
+  surveys: 'Surveys (Mapping)',
+  contrat_de_cession_gratuite: 'Contrat de Cession Gratuite',
+  others: 'Others',
+  unspecified: 'Unspecified',
+};

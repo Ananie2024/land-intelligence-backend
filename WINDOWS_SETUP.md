@@ -335,9 +335,35 @@ Now you can press **F5** to start debugging!
 
 ## Running as Windows Service (Production)
 
-### Using NSSM (Non-Sucking Service Manager)
+### Using Automated Service Scripts (Recommended)
 
-1. **Download NSSM:**
+The `scripts/` directory contains automated deployment scripts for easier management:
+
+```powershell
+# Run PowerShell as Administrator
+cd C:\Projects\land-intelligence-backend\scripts
+
+# First, validate prerequisites
+.\test-service.ps1
+
+# Install the service
+.\install-service.ps1 -Install
+
+# Check service status
+.\install-service.ps1 -Status
+```
+
+Or using Command Prompt:
+```cmd
+cd C:\Projects\land-intelligence-backend\scripts
+install-service.bat -install
+```
+
+See `scripts/README.md` for detailed usage and `docs/WINDOWS_SERVICE.md` for comprehensive documentation.
+
+### Using NSSM (Non-Sucking Service Manager) Manually
+
+1. **Download NSSM (or use install-nssm.ps1):**
    - https://nssm.cc/download
    - Extract `nssm.exe` to `C:\Program Files\NSSM\`
 

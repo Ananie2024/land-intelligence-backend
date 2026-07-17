@@ -21,11 +21,11 @@ export const ENDPOINTS = {
   },
   
    // Users endpoints (admin managed)
-    USERS: {
+   USERS: {
       BASE: '/users/',
       BY_ID: (id: string) => `/users/${id}`,
-    },
-    
+      },
+     
   // Parishes endpoints
   PARISHES: {
     BASE: '/parishes',
@@ -50,6 +50,13 @@ export const ENDPOINTS = {
     BY_ID: (id: string) => `/documents/${id}`,
     UPLOAD: '/documents/upload',
     DOWNLOAD: (id: string) => `/documents/${id}/file`,
+  },
+  
+  // Document Types endpoints
+  DOCUMENT_TYPES: {
+    BASE: '/document-types',
+    BY_ID: (id: string) => `/document-types/${id}`,
+    BY_CODE: (code: string) => `/document-types/code/${code}`,
   },
   
   // GIS Analysis endpoints
@@ -92,7 +99,7 @@ export const ENDPOINTS = {
     CABINETS_BY_ID: (id: string) => `/locations/cabinets/${id}`,
     GRID: (locationId: string) => `/locations/${locationId}/grid`,
   },
-  
+
 // Backups endpoints
     BACKUPS: {
        BASE: '/backups',

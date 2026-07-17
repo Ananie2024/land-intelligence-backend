@@ -58,7 +58,7 @@ export default function Dashboard() {
       value: formatCurrency(stats.parcels.total_valuation), 
       desc: `${stats.parcels.total_parcels.toLocaleString()} total parcels`, 
       icon: Map, 
-      color: 'text-primary-400 bg-primary-500/10',
+      color: 'text-primary-400 bg-primary-500/20',
       gradient: 'from-primary-500 to-primary-600'
     },
     { 
@@ -66,7 +66,7 @@ export default function Dashboard() {
       value: stats.users.client_count.toLocaleString(), 
       desc: `${stats.users.total_users} total users`, 
       icon: Users, 
-      color: 'text-gold-400 bg-gold-500/10',
+      color: 'text-gold-400 bg-gold-500/20',
       gradient: 'from-gold-500 to-gold-600'
     },
     { 
@@ -74,7 +74,7 @@ export default function Dashboard() {
       value: stats.documents.total_documents.toLocaleString(), 
       desc: formatFileSize(stats.documents.total_size_bytes), 
       icon: FileText, 
-      color: 'text-info bg-info/10',
+      color: 'text-info bg-info/20',
       gradient: 'from-info to-primary-500'
     },
     { 
@@ -82,7 +82,7 @@ export default function Dashboard() {
       value: stats.parishes.total_parcels.toLocaleString(), 
       desc: `${stats.parishes.total_parishes.toLocaleString()} total parishes`, 
       icon: Database, 
-      color: 'text-success bg-success/10',
+      color: 'text-success bg-success/20',
       gradient: 'from-success to-gold-600'
     },
   ] : [];
@@ -119,7 +119,7 @@ export default function Dashboard() {
     >
       <div className="space-y-10">
         {/* Hero Section with Large Logo */}
-        <section className="relative overflow-hidden rounded-2xl border border-slate-800/60 bg-gradient-to-br from-slate-900/80 via-slate-950/90 to-primary-950/50">
+        <section className="relative overflow-hidden rounded-2xl border border-slate-700 bg-gradient-to-br from-bg-surface via-bg-muted to-bg-surface">
           {/* Background decorative elements */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute top-10 right-10 w-32 h-32 bg-gold-500/10 rounded-full blur-2xl pointer-events-none" />
@@ -145,7 +145,7 @@ export default function Dashboard() {
                   Digital Land Registry
                 </span>
                 <br />
-                <span className="text-slate-100">Archdiocese of Kigali</span>
+                <span className="text-slate-400">Archdiocese of Kigali</span>
               </h1>
               <p className="text-lg md:text-xl text-slate-400 font-medium max-w-2xl leading-relaxed">
                 Secure and comprehensive land management system for parishes and administrative oversight. 
@@ -217,10 +217,10 @@ export default function Dashboard() {
                         <Icon className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-bold text-white text-sm mb-0.5 group-hover:text-gold-300 transition-colors">{action.name}</p>
+                        <p className="font-bold text-white text-sm mb-0.5 group-hover:text-primary-400 transition-colors">{action.name}</p>
                         <p className="text-xs text-slate-400">{action.desc}</p>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-gold-400 group-hover:translate-x-1 transition-all" />
+                      <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-primary-500 group-hover:translate-x-1 transition-all" />
                     </CardContent>
                   </Card>
                 </a>
@@ -236,11 +236,11 @@ export default function Dashboard() {
               <CardTitle>Archdiocese Administration</CardTitle>
               <CardDescription>System access permissions and roles</CardDescription>
             </CardHeader>
-            <CardContent className="text-xs text-slate-400 leading-relaxed space-y-3">
+            <CardContent className="text-xs text-slate-300 leading-relaxed space-y-3">
               <p>
                 Welcome to the digital registration panel. This interface provides integrated monitoring, location tracking, and tax calculation utilities.
               </p>
-              <p className="font-semibold text-slate-300">Available Actions:</p>
+              <p className="font-semibold text-slate-400">Available Actions:</p>
               <ul className="list-disc pl-4 space-y-1 text-slate-400">
                 <li>Register new parcels under Parish scopes.</li>
                 <li>Archive scanned deeds and land tenure forms.</li>

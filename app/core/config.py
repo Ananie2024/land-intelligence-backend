@@ -3,7 +3,6 @@
 Application Settings
 Land Intelligence System
 """
-from urllib.parse import quote_plus
 from pydantic import Field, computed_field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -92,6 +91,11 @@ class Settings(BaseSettings):
     # Redis (used for token blacklist and caching)
     # ------------------------------------------------------------------
     REDIS_URL: str = Field(default="redis://localhost:6379/0")
+
+    # Security: When True, fail-closed mode for token blacklist
+    # During Redis outages, revoked tokens will be treated as invalid
+    # When False (default), availability is prioritized (revoked tokens may still work)
+    SECURITY_CRITICAL_MODE: bool = Field(default=False)
 
     # ------------------------------------------------------------------
     # Backup

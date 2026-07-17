@@ -58,20 +58,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm lg:hidden"
         />
       )}
 
       {/* Sidebar Navigation */}
       <aside
         className={`
-          fixed top-0 bottom-0 left-0 z-40 w-64 border-r border-slate-900 bg-slate-950 flex flex-col transition-transform duration-300
+          fixed top-0 bottom-0 left-0 z-40 w-64 border-r border-slate-700 bg-bg-surface flex flex-col transition-transform duration-300
           lg:translate-x-0 lg:static lg:h-screen
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
         {/* Header Branding - with Logo */}
-        <div className="h-16 px-4 border-b border-slate-900 flex items-center justify-between">
+        <div className="h-16 px-4 border-b border-slate-700 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <img 
               src="/archidiocese-logo.png" 
@@ -91,7 +91,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Close button for mobile drawer */}
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors lg:hidden"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors lg:hidden"
             aria-label="Close menu drawer"
           >
             <X className="w-4 h-4" />
@@ -102,7 +102,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <PermissionAwareNav groups={menuItems} onItemClick={onClose} />
 
         {/* Footer info/System status */}
-        <div className="p-4 border-t border-slate-900 bg-slate-900/20 text-[10px] text-slate-500 flex items-center justify-between">
+        <div className="p-4 border-t border-slate-700 bg-bg-muted/50 text-[10px] text-slate-400 flex items-center justify-between">
           <span>v1.0.0</span>
           <span className="flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />

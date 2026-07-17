@@ -23,7 +23,7 @@ export function LoadingSpinner({ size = 'md', fullScreen = false, className = ''
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/40 backdrop-blur-sm">
         <div className="flex flex-col items-center gap-3">
           {spinner}
           <span className="text-slate-400 text-sm font-medium animate-pulse">Loading Land System...</span>

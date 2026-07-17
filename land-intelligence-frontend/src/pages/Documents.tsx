@@ -6,12 +6,15 @@ import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ListState } from '@/components/ui/ListState';
 import { FileText, Upload, Archive, MapPin } from 'lucide-react';
 import { landService } from '@/services/landService';
 import { documentService } from '@/services/documentService';
 import { locationService } from '@/services/locationService';
-import type { Document, DocumentCreate } from '@/types/document';
+import type { Document, DocumentCreate, DocumentType } from '@/types/document';
 import type { Parcel } from '@/types/land';
+import { DOCUMENT_TYPE_LABELS } from '@/types/document';
+import { DOCUMENT_TYPES } from '@/utils/constants';
 import { DocumentTable } from '@/features/documents/components/DocumentTable';
 import { DocumentForm } from '@/features/documents/components/DocumentForm';
 import { Modal } from '@/components/ui/Modal';
@@ -30,6 +33,19 @@ interface PhysicalLocationResult {
   room?: string;
   message?: string;
 }
+
+// Static document types for the dropdown (should match backend DocumentType enum)
+const STATIC_DOCUMENT_TYPES: DocumentType[] = [
+  { id: DOCUMENT_TYPES.LAND_TITLES, name: DOCUMENT_TYPE_LABELS.land_titles, code: DOCUMENT_TYPES.LAND_TITLES, document_count: 0 },
+  { id: DOCUMENT_TYPES.LAND_DEEDS, name: DOCUMENT_TYPE_LABELS.land_deeds, code: DOCUMENT_TYPES.LAND_DEEDS, document_count: 0 },
+  { id: DOCUMENT_TYPES.LETTERS, name: DOCUMENT_TYPE_LABELS.letters, code: DOCUMENT_TYPES.LETTERS, document_count: 0 },
+  { id: DOCUMENT_TYPES.LAND_LEASES, name: DOCUMENT_TYPE_LABELS.land_leases, code: DOCUMENT_TYPES.LAND_LEASES, document_count: 0 },
+  { id: DOCUMENT_TYPES.REPORTS, name: DOCUMENT_TYPE_LABELS.reports, code: DOCUMENT_TYPES.REPORTS, document_count: 0 },
+  { id: DOCUMENT_TYPES.SURVEYS, name: DOCUMENT_TYPE_LABELS.surveys, code: DOCUMENT_TYPES.SURVEYS, document_count: 0 },
+  { id: DOCUMENT_TYPES.CESSION, name: DOCUMENT_TYPE_LABELS.contrat_de_cession_gratuite, code: DOCUMENT_TYPES.CESSION, document_count: 0 },
+  { id: DOCUMENT_TYPES.OTHERS, name: DOCUMENT_TYPE_LABELS.others, code: DOCUMENT_TYPES.OTHERS, document_count: 0 },
+  { id: DOCUMENT_TYPES.UNSPECIFIED, name: DOCUMENT_TYPE_LABELS.unspecified, code: DOCUMENT_TYPES.UNSPECIFIED, document_count: 0 },
+];
 
 export default function Documents() {
   const navigate = useNavigate();
@@ -219,46 +235,34 @@ export default function Documents() {
           </div>
         </div>
 
-{isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <LoadingSpinner size="md" className="border-t-primary-500" />
-            <span className="text-slate-400 text-xs">Loading documents...</span>
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-400 mb-4">{error}</p>
-            <button 
-              onClick={handleRetry}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : (
-          <>
-            <DocumentTable 
-              documents={documents}
-              onView={(doc) => navigate(`/documents/${doc.id}`)}
-              onEdit={(doc) => {
-                setEditingDocument(doc);
-                setShowForm(true);
-              }}
-              onDelete={handleDelete}
-              onDownload={handleDownload}
-              onLocate={handleLocate}
+        <ListState 
+          isLoading={isLoading} 
+          error={error} 
+          onRetry={handleRetry} 
+          label="documents"
+        >
+          <DocumentTable 
+            documents={documents}
+            onView={(doc) => navigate(`/documents/${doc.id}`)}
+            onEdit={(doc) => {
+              setEditingDocument(doc);
+              setShowForm(true);
+            }}
+            onDelete={handleDelete}
+            onDownload={handleDownload}
+            onLocate={handleLocate}
+          />
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={filters.page || 1}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              pageSize={filters.size || 20}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
             />
-            {totalPages > 1 && (
-              <Pagination
-                currentPage={filters.page || 1}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                pageSize={filters.size || 20}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-              />
-            )}
-          </>
-        )}
+          )}
+        </ListState>
 
         {/* Modal Form */}
         <Modal
@@ -272,12 +276,7 @@ export default function Documents() {
             onSubmit={editingDocument ? handleUpdate : handleCreate}
             isLoading={isSubmitting}
             parcels={(parcels || []).map(p => ({ id: p.id, upi: p.upi }))}
-            documentTypes={[
-              { id: '1', name: 'Deed' },
-              { id: '2', name: 'Title' },
-              { id: '3', name: 'Lease' },
-              { id: '4', name: 'Survey' },
-            ]}
+            documentTypes={STATIC_DOCUMENT_TYPES}
           />
         </Modal>
 
@@ -288,7 +287,7 @@ export default function Documents() {
           title={locatingDoc ? `Archive Location: ${locatingDoc.filename}` : 'Physical Archive Location'}
           size="md"
         >
-{locationLoading ? (
+          {locationLoading ? (
             <div className="flex items-center justify-center gap-3 py-8 text-slate-400">
               <LoadingSpinner size="sm" className="border-t-primary-500" />
               <span>Looking up physical archive location...</span>

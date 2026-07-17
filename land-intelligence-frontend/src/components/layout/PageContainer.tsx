@@ -22,7 +22,7 @@ export function PageContainer({
     <div className={`flex flex-col gap-6 w-full p-6 md:p-8 animate-float ${className}`}>
       {/* Page Header */}
       {(title || subtitle || action) && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800/60 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-700 pb-6">
           <div>
             {title && (
               <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight leading-none m-0">
