@@ -2,6 +2,7 @@
 // Land Intelligence System
 
 import { useForm } from 'react-hook-form';
+import { FormField } from '@/components/ui/FormField';
 import type { Parcel, ParcelCreate } from '@/types/land';
 
 interface ParcelFormProps {
@@ -29,104 +30,77 @@ export const ParcelForm: React.FC<ParcelFormProps> = ({ parcel, onSubmit, isLoad
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div>
-        <label htmlFor="upi" className="block text-sm font-medium text-gray-700">
-          UPI (Unique Parcel Identifier)
-        </label>
-        <input
-          {...register('upi', { required: 'UPI is required' })}
-          type="text"
-          id="upi"
-          placeholder="e.g., 1/02/02/03/1390"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
-        {errors.upi && (
-          <p className="mt-1 text-sm text-red-600">{errors.upi.message}</p>
-        )}
-      </div>
+      <FormField
+        label="UPI (Unique Parcel Identifier)"
+        name="upi"
+        type="text"
+        register={register}
+        validation={{ required: 'UPI is required' }}
+        error={errors.upi}
+        disabled={isLoading}
+        placeholder="e.g., 1/02/02/03/1390"
+      />
 
-      <div>
-        <label htmlFor="parish_id" className="block text-sm font-medium text-gray-700">
-          Parish
-        </label>
-        <select
-          {...register('parish_id', { required: 'Parish is required' })}
-          id="parish_id"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        >
-          <option value="">Select a parish</option>
-          {parishes.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
-      </div>
+      <FormField
+        label="Parish"
+        name="parish_id"
+        register={register}
+        validation={{ required: 'Parish is required' }}
+        error={errors.parish_id}
+        disabled={isLoading}
+      >
+        <option value="">Select a parish</option>
+        {parishes.map((p) => (
+          <option key={p.id} value={p.id}>{p.name}</option>
+        ))}
+      </FormField>
 
-      <div>
-        <label htmlFor="area_sqm" className="block text-sm font-medium text-gray-700">
-          Area (m²)
-        </label>
-        <input
-          {...register('area_sqm', { required: 'Area is required', valueAsNumber: true })}
-          type="number"
-          id="area_sqm"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
-        {errors.area_sqm && (
-          <p className="mt-1 text-sm text-red-600">{errors.area_sqm.message}</p>
-        )}
-      </div>
+      <FormField
+        label="Area (m²)"
+        name="area_sqm"
+        type="number"
+        register={register}
+        validation={{ required: 'Area is required', valueAsNumber: true }}
+        error={errors.area_sqm}
+        disabled={isLoading}
+      />
 
-      <div>
-        <label htmlFor="owner_name" className="block text-sm font-medium text-gray-700">
-          Owner Name
-        </label>
-        <input
-          {...register('owner_name', { required: 'Owner name is required' })}
-          type="text"
-          id="owner_name"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
-        {errors.owner_name && (
-          <p className="mt-1 text-sm text-red-600">{errors.owner_name.message}</p>
-        )}
-      </div>
+      <FormField
+        label="Owner Name"
+        name="owner_name"
+        type="text"
+        register={register}
+        validation={{ required: 'Owner name is required' }}
+        error={errors.owner_name}
+        disabled={isLoading}
+      />
 
-      <div>
-        <label htmlFor="location_description" className="block text-sm font-medium text-gray-700">
-          Location Description
-        </label>
-        <textarea
-          {...register('location_description')}
-          id="location_description"
-          rows={2}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
-      </div>
+      <FormField
+        label="Location Description"
+        name="location_description"
+        type="text"
+        register={register}
+        disabled={isLoading}
+        optional
+        rows={2}
+      />
 
-      <div>
-        <label htmlFor="geometry_wkb" className="block text-sm font-medium text-gray-700">
-          Geometry (WKB)
-        </label>
-        <textarea
-          {...register('geometry_wkb')}
-          id="geometry_wkb"
-          rows={2}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-xs"
-          disabled={isLoading}
-          placeholder="Hex-encoded Well-Known Binary geometry (optional)"
-        />
-      </div>
+      <FormField
+        label="Geometry (WKB)"
+        name="geometry_wkb"
+        type="text"
+        register={register}
+        disabled={isLoading}
+        optional
+        rows={2}
+        helperText="Hex-encoded Well-Known Binary geometry (optional)"
+      />
 
       <div className="flex justify-end">
         <button
           type="submit"
           disabled={isLoading}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-500 disabled:opacity-50 transition-colors"
         >
           {isLoading ? 'Saving...' : parcel ? 'Update Parcel' : 'Create Parcel'}
         </button>

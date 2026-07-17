@@ -3,6 +3,7 @@
 
 import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import { FormField } from '@/components/ui/FormField';
 import type { Document, DocumentCreate, DocumentType } from '@/types/document';
 
 interface DocumentFormProps {
@@ -47,91 +48,71 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-      <div>
-        <label htmlFor="document_type_id" className="block text-sm font-medium text-gray-700">
-          Document Type
-        </label>
-        <select
-          {...register('document_type_id', { required: 'Document type is required' })}
-          id="document_type_id"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        >
-          <option value="">Select document type</option>
-          {documentTypes.map((type) => (
-            <option key={type.id} value={type.id}>{type.name}</option>
-          ))}
-        </select>
-      </div>
+      <FormField
+        label="Document Type"
+        name="document_type_id"
+        register={register}
+        disabled={isLoading}
+      >
+        <option value="">Select document type</option>
+        {documentTypes.map((type) => (
+          <option key={type.id} value={type.id}>{type.name}</option>
+        ))}
+      </FormField>
+
+      <FormField
+        label="UPI (Unique Parcel Identifier)"
+        name="parcel_upi"
+        type="text"
+        register={register}
+        disabled={isLoading}
+        placeholder="e.g., 1/02/02/03/1390"
+        optional
+        helperText="Enter the parcel UPI to link this document"
+      />
+
+      <FormField
+        label="Reference Number"
+        name="reference_number"
+        type="text"
+        register={register}
+        disabled={isLoading}
+        optional
+      />
+
+      <FormField
+        label="Document Date"
+        name="document_date"
+        type="date"
+        register={register}
+        disabled={isLoading}
+        optional
+      />
+
+      <FormField
+        label="Description"
+        name="description"
+        type="text"
+        register={register}
+        disabled={isLoading}
+        optional
+        rows={2}
+      />
 
       <div>
-        <label htmlFor="parcel_upi" className="block text-sm font-medium text-gray-700">
-          UPI (Unique Parcel Identifier)
-        </label>
-        <input
-          {...register('parcel_upi')}
-          type="text"
-          id="parcel_upi"
-          placeholder="e.g., 1/02/02/03/1390"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
-        <p className="mt-1 text-xs text-gray-500">Enter the parcel UPI to link this document</p>
-      </div>
-
-      <div>
-        <label htmlFor="reference_number" className="block text-sm font-medium text-gray-700">
-          Reference Number
-        </label>
-        <input
-          {...register('reference_number')}
-          type="text"
-          id="reference_number"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="document_date" className="block text-sm font-medium text-gray-700">
-          Document Date
-        </label>
-        <input
-          {...register('document_date')}
-          type="date"
-          id="document_date"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-          Description
-        </label>
-        <textarea
-          {...register('description')}
-          id="description"
-          rows={2}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="file" className="block text-sm font-medium text-gray-700">
-          File Upload {!document && <span className="text-red-500">*</span>}
+        <label htmlFor="file" className="block text-sm font-medium text-slate-300">
+          File Upload {!document && <span className="text-red-400">*</span>}
         </label>
         <input
           type="file"
           id="file"
           onChange={handleFileChange}
-          className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700"
+          className="mt-1 block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-600 file:text-white hover:file:bg-primary-500 disabled:opacity-50"
           disabled={isLoading}
           required={!document}
         />
         {document && (
-          <p className="mt-1 text-xs text-gray-500">Current file: {document.filename}</p>
+          <p className="mt-1 text-xs text-slate-500">Current file: {document.filename}</p>
         )}
       </div>
 
@@ -139,7 +120,7 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
         <button
           type="submit"
           disabled={isLoading}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-500 disabled:opacity-50 transition-colors"
         >
           {isLoading ? 'Saving...' : document ? 'Update Document' : 'Upload Document'}
         </button>

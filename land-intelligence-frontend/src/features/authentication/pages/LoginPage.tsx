@@ -1,7 +1,6 @@
 // Login Page
 // Land Intelligence System
 
-import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../store/authStore';
@@ -27,70 +26,59 @@ export const LoginPage: React.FC = () => {
     }
   };
 
+  const inputClasses = 'appearance-none rounded-none relative block w-full px-3 py-2 border border-slate-700 placeholder-slate-500 text-white rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-slate-800/50';
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+      <div className="rounded-md shadow-sm -space-y-px">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Land Intelligence System
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Sign in to your account
-          </p>
-        </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="username" className="sr-only">
-                Username
-              </label>
-              <input
-                {...register('username', { required: 'Username is required' })}
-                type="text"
-                id="username"
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Username"
-              />
-              {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
-              )}
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                {...register('password', { required: 'Password is required' })}
-                type="password"
-                id="password"
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-              />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-              )}
-            </div>
-          </div>
-
-          {state.error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-800">{state.error}</p>
-            </div>
+          <label htmlFor="username" className="sr-only">
+            Username
+          </label>
+          <input
+            {...register('username', { required: 'Username is required' })}
+            type="text"
+            id="username"
+            className={inputClasses}
+            placeholder="Username"
+          />
+          {errors.username && (
+            <p className="mt-1 text-sm text-red-400">{errors.username.message}</p>
           )}
-
-          <div>
-            <button
-              type="submit"
-              disabled={state.isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {state.isLoading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </div>
-        </form>
+        </div>
+        <div>
+          <label htmlFor="password" className="sr-only">
+            Password
+          </label>
+          <input
+            {...register('password', { required: 'Password is required' })}
+            type="password"
+            id="password"
+            className={inputClasses}
+            placeholder="Password"
+          />
+          {errors.password && (
+            <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>
+          )}
+        </div>
       </div>
-    </div>
+
+      {state.error && (
+        <div className="rounded-md bg-danger/10 p-4">
+          <p className="text-sm text-danger">{state.error}</p>
+        </div>
+      )}
+
+      <div>
+        <button
+          type="submit"
+          disabled={state.isLoading}
+          className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {state.isLoading ? 'Signing in...' : 'Sign in'}
+        </button>
+      </div>
+    </form>
   );
 };
 

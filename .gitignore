@@ -32,10 +32,12 @@ venv.bak/
 
 # PyCharm
 .idea/
+
 # VS Code
 .vscode/
 *.code-workspace
 project_analysis_and_roadmap.md
+
 # Environment Variables
 .env
 .env.local
@@ -46,19 +48,18 @@ project_analysis_and_roadmap.md
 *.sqlite3
 *.sql
 
-# Logs
-logs/*.log*
+# Logs (runtime-generated, don't commit)
+logs/
+!logs/.gitkeep
 *.log
 
-# MyPy HTML Report
+# MyPy Report
+mypy_report/
+!mypy_report/.gitkeep
 mypy_html/
 
 # Backups (local backup storage - don't commit)
-backups/daily/*
-backups/weekly/*
-backups/monthly/*
-backups/manifests/*
-backups/temp/*
+backups/
 !backups/.gitkeep
 
 # Cloud Storage Credentials
@@ -127,8 +128,6 @@ yarn.lock
 
 # Frontend lockfile (keep for reproducible builds)
 !land-intelligence-frontend/package-lock.json
-
-hash_gen.py
 
 # Scaffold/setup scripts (don't commit utility scripts)
 create_files.sh

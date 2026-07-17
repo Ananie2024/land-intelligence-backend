@@ -1,6 +1,7 @@
 pip==26.0.1
 setuptools==82.0.0
 wheel==0.46.3
+
 # Core Framework
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
@@ -20,7 +21,7 @@ psycopg2-binary==2.9.9
 cryptography==42.0.0
 
 # GIS & Spatial Processing
-numpy<2
+numpy==1.26.4
 shapely==2.0.2
 pyproj==3.6.1
 
@@ -43,7 +44,7 @@ pyyaml==6.0.1
 
 # Cloud Storage Providers
 google-cloud-storage==2.14.0
-b2sdk>=2.10,<2.11
+b2sdk==2.10.0
 
 # Background Tasks & Scheduling
 celery[redis]==5.3.6
@@ -51,7 +52,7 @@ redis==5.0.1
 schedule==1.2.1
 
 # Reporting & Export Libraries
-reportlab>=3.6.0
+reportlab==3.6.0
 openpyxl==3.1.2
 
 # Development Dependencies (optional, comment out for production)

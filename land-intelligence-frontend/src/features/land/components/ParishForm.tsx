@@ -2,6 +2,7 @@
 // Land Intelligence System
 
 import { useForm } from 'react-hook-form';
+import { FormField } from '@/components/ui/FormField';
 import type { Parish, ParishCreate } from '@/types/land';
 
 interface ParishFormProps {
@@ -23,27 +24,21 @@ export const ParishForm: React.FC<ParishFormProps> = ({ parish, onSubmit, isLoad
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-          Parish Name
-        </label>
-        <input
-          {...register('name', { required: 'Name is required' })}
-          type="text"
-          id="name"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          disabled={isLoading}
-        />
-        {errors.name && (
-          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-        )}
-      </div>
+      <FormField
+        label="Parish Name"
+        name="name"
+        type="text"
+        register={register}
+        validation={{ required: 'Name is required' }}
+        error={errors.name}
+        disabled={isLoading}
+      />
 
       <div className="flex justify-end">
         <button
           type="submit"
           disabled={isLoading}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-500 disabled:opacity-50 transition-colors"
         >
           {isLoading ? 'Saving...' : parish ? 'Update Parish' : 'Create Parish'}
         </button>

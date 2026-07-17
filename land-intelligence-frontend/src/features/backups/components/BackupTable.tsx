@@ -122,6 +122,7 @@ export const BackupTable: React.FC<BackupTableProps> = ({ backups, onDownload })
                   disabled={!isCompleted(backup.status)}
                   className="text-slate-400 hover:text-slate-200 disabled:opacity-50"
                   title="Download"
+                  aria-label={`Download ${backup.filename || backup.destination_path?.split('/').pop() || 'backup.zip'}`}
                 >
                   <Download className="h-4 w-4" />
                 </button>
