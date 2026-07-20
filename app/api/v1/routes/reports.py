@@ -45,8 +45,9 @@ async def export_tax_report(
             detail=str(e)
         )
     
+    file_extension = "pdf" if format == "pdf" else "xlsx"
     media_type = "application/pdf" if format == "pdf" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    filename = f"tax-report-{parcel_upi}.{format}"
+    filename = f"tax-report-{parcel_upi}.{file_extension}"
     
     return Response(
         content=content,
@@ -84,8 +85,9 @@ async def export_parcels_report(
             detail=str(e)
         )
     
+    file_extension = "pdf" if format == "pdf" else "xlsx"
     media_type = "application/pdf" if format == "pdf" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    filename = "parcels-report" + (f"-parish-{parish_id}" if parish_id else "") + f".{format}"
+    filename = "parcels-report" + (f"-parish-{parish_id}" if parish_id else "") + f".{file_extension}"
     
     return Response(
         content=content,
@@ -122,8 +124,9 @@ async def export_dashboard_report(
             detail=str(e)
         )
     
+    file_extension = "pdf" if format == "pdf" else "xlsx"
     media_type = "application/pdf" if format == "pdf" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    filename = f"dashboard-report.{format}"
+    filename = f"dashboard-report.{file_extension}"
     
     return Response(
         content=content,

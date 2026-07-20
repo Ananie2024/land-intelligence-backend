@@ -13,7 +13,7 @@ export default function ReportsPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [exportType, setExportType] = useState<'dashboard' | 'parcels' | null>(null);
 
-  const downloadBlob = (blob: Blob, filename: string) => {
+const downloadBlob = (blob: Blob, filename: string) => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -22,6 +22,10 @@ export default function ReportsPage() {
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+  };
+
+  const getFileExtension = (format: ExportFormat): string => {
+    return format === 'excel' ? 'xlsx' : format;
   };
 
   const handleExport = async (type: 'dashboard' | 'parcels', format: ExportFormat) => {
@@ -35,11 +39,11 @@ export default function ReportsPage() {
       switch (type) {
         case 'dashboard':
           blob = await reportService.exportDashboardReport(format);
-          filename = `dashboard-report.${format}`;
+          filename = `dashboard-report.${getFileExtension(format)}`;
           break;
         case 'parcels':
           blob = await reportService.exportParcelsReport(format);
-          filename = `parcels-report.${format}`;
+          filename = `parcels-report.${getFileExtension(format)}`;
           break;
         default:
           return;

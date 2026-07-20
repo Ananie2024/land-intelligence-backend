@@ -69,6 +69,10 @@ export default function Tax() {
     setShowSuggestions(false);
   };
 
+  const getFileExtension = (format: ExportFormat): string => {
+    return format === 'excel' ? 'xlsx' : format;
+  };
+
   const handleExport = useCallback(async (format: ExportFormat) => {
     if (!parcelId) {
       toast.error('Enter a UPI first');
@@ -80,7 +84,7 @@ export default function Tax() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `tax-report-${parcelId}.${format}`;
+      a.download = `tax-report-${parcelId}.${getFileExtension(format)}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
