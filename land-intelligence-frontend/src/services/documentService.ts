@@ -9,6 +9,19 @@ export const documentService = {
     return apiClient.get<PaginatedEnvelope<Document>>(ENDPOINTS.DOCUMENTS.BASE, filters);
   },
 
+  getDocumentsByType: async (document_type_id: string): Promise<APIResponse<Document[]>> => {
+    // Get all documents for a type (for QR code generation dropdown)
+    const response = await apiClient.get<PaginatedEnvelope<Document>>(ENDPOINTS.DOCUMENTS.BASE, {
+      document_type_id,
+      size: 100,
+    });
+    return {
+      success: response.success,
+      data: response.data?.items || [],
+      message: response.message,
+    };
+  },
+
   getDocumentById: async (id: string): Promise<APIResponse<Document>> => {
     return apiClient.get<Document>(ENDPOINTS.DOCUMENTS.BY_ID(id));
   },

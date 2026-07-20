@@ -4,9 +4,10 @@ Phase 2 — Section 3.2
 Land Intelligence System
 """
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional, List
 from datetime import datetime
+import uuid
 
 
 class ParishBase(BaseModel):
@@ -44,6 +45,14 @@ class ParishResponse(ParishBase):
     updated_at: datetime = Field(..., description="Timestamp when record was last updated")
     
     model_config = ConfigDict(from_attributes=True)
+    
+    @field_validator('id', mode='before')
+    @classmethod
+    def convert_uuid_to_str(cls, v: uuid.UUID | str) -> str:
+        """Convert UUID to string when validating from ORM model."""
+        if isinstance(v, uuid.UUID):
+            return str(v)
+        return v
 
 
 class ParishListResponse(BaseModel):

@@ -6,7 +6,7 @@ Land Intelligence System
 """
 
 import logging
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,6 +26,44 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
+# ---------------------------------------------------------------------------
+# POST /physical-locations  - create a new physical location (no trailing slash)
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "",
+    response_model=Dict[str, Any],
+    status_code=status.HTTP_201_CREATED,
+    summary="Create physical location",
+    description="Register a new physical archive room, warehouse, or shelf location.",
+    include_in_schema=False,
+)
+async def create_location_no_slash(
+    payload: PhysicalLocationCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(get_current_user_id),
+):
+    try:
+        service = LocationService(db)
+        location = await service.create_location(payload, user_id)
+        return location
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Error creating location: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to register physical location."
+        )
+
+
+# ---------------------------------------------------------------------------
+# POST /physical-locations/  - create a new physical location (with trailing slash)
+# ---------------------------------------------------------------------------
 
 @router.post(
     "/",
@@ -56,6 +94,10 @@ async def create_location(
         )
 
 
+# ---------------------------------------------------------------------------
+# GET /physical-locations  - list physical locations (no trailing slash)
+# ---------------------------------------------------------------------------
+
 @router.get(
     "",
     response_model=List[Dict[str, Any]],
@@ -67,7 +109,7 @@ async def list_locations_no_slash(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user_id),
+    _: Optional[str] = Depends(get_current_user_id),
 ):
     try:
         service = LocationService(db)
@@ -80,6 +122,10 @@ async def list_locations_no_slash(
         )
 
 
+# ---------------------------------------------------------------------------
+# GET /physical-locations/  - list physical locations (with trailing slash)
+# ---------------------------------------------------------------------------
+
 @router.get(
     "/",
     response_model=List[Dict[str, Any]],
@@ -90,10 +136,14 @@ async def list_locations(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(get_current_user_id),
+    _user_id: str = Depends(get_current_user_id),
 ):
     return await list_locations_no_slash(skip=skip, limit=limit, db=db, _=None)
 
+
+# ---------------------------------------------------------------------------
+# GET /physical-locations/{location_id}  - fetch single physical location
+# ---------------------------------------------------------------------------
 
 @router.get(
     "/{location_id}",
@@ -124,6 +174,10 @@ async def get_location(
             detail="Failed to retrieve physical location."
         )
 
+
+# ---------------------------------------------------------------------------
+# PATCH /physical-locations/{location_id}  - partial update
+# ---------------------------------------------------------------------------
 
 @router.patch(
     "/{location_id}",
@@ -161,6 +215,10 @@ async def update_location(
         )
 
 
+# ---------------------------------------------------------------------------
+# DELETE /physical-locations/{location_id}  - soft delete
+# ---------------------------------------------------------------------------
+
 @router.delete(
     "/{location_id}",
     status_code=status.HTTP_200_OK,
@@ -192,6 +250,10 @@ async def delete_location(
         )
 
 
+# ---------------------------------------------------------------------------
+# POST /physical-locations/find  - locate archive document
+# ---------------------------------------------------------------------------
+
 @router.post(
     "/find",
     response_model=PhysicalLocationFinderResponse,
@@ -214,6 +276,10 @@ async def locate_document(
             detail="Internal search resolution failed."
         )
 
+
+# ---------------------------------------------------------------------------
+# POST /physical-locations/cabinets  - create a storage cabinet
+# ---------------------------------------------------------------------------
 
 @router.post(
     "/cabinets",
@@ -244,6 +310,10 @@ async def create_cabinet(
         )
 
 
+# ---------------------------------------------------------------------------
+# GET /physical-locations/cabinets/{cabinet_id}  - get cabinet detail
+# ---------------------------------------------------------------------------
+
 @router.get(
     "/cabinets/{cabinet_id}",
     response_model=Dict[str, Any],
@@ -273,6 +343,10 @@ async def get_cabinet(
             detail="Failed to retrieve storage cabinet."
         )
 
+
+# ---------------------------------------------------------------------------
+# PATCH /physical-locations/cabinets/{cabinet_id}  - update cabinet details
+# ---------------------------------------------------------------------------
 
 @router.patch(
     "/cabinets/{cabinet_id}",
@@ -309,6 +383,10 @@ async def update_cabinet(
             detail="Failed to update cabinet."
         )
 
+
+# ---------------------------------------------------------------------------
+# GET /physical-locations/{location_id}/grid  - get grid room map layout
+# ---------------------------------------------------------------------------
 
 @router.get(
     "/{location_id}/grid",

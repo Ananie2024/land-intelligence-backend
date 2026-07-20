@@ -4,11 +4,13 @@ Phase 3 — Section 4.1
 Land Intelligence System
 """
 
-from typing import Optional, List, BinaryIO
+import uuid
+from typing import Optional, List, BinaryIO, Any
 
 from app.repositories.document_repository import DocumentRepository
 from app.repositories.document_type_repository import DocumentTypeRepository
 from app.repositories.parcel_repository import ParcelRepository
+from app.repositories.qr_registry_repository import QRRegistryRepository
 from app.schemas.document_schema import DocumentCreate, DocumentUpdate, DocumentResponse
 from app.services.document.file_system_handler import FileSystemHandler
 from app.services.document.metadata_extractor import MetadataExtractor
@@ -30,7 +32,8 @@ class DocumentManager:
         parcel_repo: ParcelRepository,
         file_handler: FileSystemHandler,
         metadata_extractor: MetadataExtractor,
-        pointer_resolver: PointerResolver
+        pointer_resolver: PointerResolver,
+        qr_repo: Optional[QRRegistryRepository] = None
     ):
         """
         Initialize document manager with dependencies.
@@ -42,6 +45,7 @@ class DocumentManager:
             file_handler: File system handler
             metadata_extractor: Metadata extractor
             pointer_resolver: Pointer resolver
+            qr_repo: QR registry repository (optional, for QR code integration)
         """
         self.document_repo = document_repo
         self.document_type_repo = document_type_repo
@@ -49,7 +53,27 @@ class DocumentManager:
         self.file_handler = file_handler
         self.metadata_extractor = metadata_extractor
         self.pointer_resolver = pointer_resolver
+        self.qr_repo = qr_repo
     
+    async def _resolve_document_type(self, document_type_id_or_code: str) -> Optional[Any]:
+        """
+        Resolve document type by UUID or code.
+        
+        Args:
+            document_type_id_or_code: Either a UUID or a document type code
+            
+        Returns:
+            Document type instance if found, None otherwise
+        """
+        # Try to parse as UUID first
+        try:
+            uuid.UUID(document_type_id_or_code)
+            # It's a valid UUID, look up by ID
+            return await self.document_type_repo.get(document_type_id_or_code)
+        except (ValueError, TypeError):
+            # Not a valid UUID, try to look up by code
+            return await self.document_type_repo.get_by_code(document_type_id_or_code)
+
     async def create_document(
         self,
         file: BinaryIO,
@@ -72,8 +96,8 @@ class DocumentManager:
         Raises:
             ValueError: If document type not found, parcel not found, or duplicate file
         """
-        # Validate document type exists
-        doc_type = await self.document_type_repo.get(metadata.document_type_id)
+        # Validate document type exists (accepts UUID or code)
+        doc_type = await self._resolve_document_type(metadata.document_type_id)
         if not doc_type:
             raise ValueError(f"Document type {metadata.document_type_id} not found")
         
@@ -111,9 +135,9 @@ class DocumentManager:
         # Save file to filesystem
         file_path = await self.file_handler.save_file(file, filename, parcel_id)
         
-        # Create document record - store parcel_upi for API response, but need to handle parcel_id separately
+        # Create document record - use the resolved document type's UUID
         document_kwargs = {
-            "document_type_id": metadata.document_type_id,
+            "document_type_id": str(doc_type.id),
             "filename": filename,
             "file_path": str(file_path),
             "file_size_bytes": file_metadata.get("file_size_bytes", 0),
@@ -153,7 +177,44 @@ class DocumentManager:
         if not document:
             return None
         
-        return DocumentResponse.model_validate(document)
+        # Build response data
+        response_data = {
+            "id": str(document.id),
+            "document_type_id": str(document.document_type_id),
+            "parcel_upi": document.parcel.upi if document.parcel else None,
+            "filename": document.filename,
+            "file_path": document.file_path,
+            "file_size_bytes": document.file_size_bytes,
+            "mime_type": document.mime_type,
+            "description": document.description,
+            "document_date": document.document_date,
+            "reference_number": document.reference_number,
+            "page_count": document.page_count,
+            "checksum": document.checksum,
+            "is_active": document.is_active,
+            "created_at": document.created_at,
+            "updated_at": document.updated_at,
+            "extra_data": document.extra_data,
+            # Document type and QR code count
+            "document_type_name": document.document_type.name if document.document_type else None,
+            "qr_code_count": await self._get_qr_code_count(document_id) if self.qr_repo else 0,
+        }
+        
+        return DocumentResponse(**response_data)
+    
+    async def _get_qr_code_count(self, document_id: str) -> int:
+        """
+        Get the count of active QR codes for a document.
+        
+        Args:
+            document_id: Document UUID
+            
+        Returns:
+            Count of active QR codes for this document
+        """
+        if not self.qr_repo:
+            return 0
+        return await self.qr_repo.count_by_document(document_id)
     
     async def get_document_with_file(self, document_id: str) -> Optional[tuple]:
         """
@@ -192,6 +253,16 @@ class DocumentManager:
         Returns:
             Updated document response if found, None otherwise
         """
+        # Resolve document_type_id to UUID if it's a code
+        update_dict = update_data.model_dump(exclude_none=True)
+        if "document_type_id" in update_dict:
+            doc_type = await self._resolve_document_type(update_dict["document_type_id"])
+            if doc_type:
+                update_dict["document_type_id"] = str(doc_type.id)
+        
+        # Reconstruct update_data with resolved document_type_id
+        update_data = DocumentUpdate(**update_dict)
+        
         document = await self.document_repo.update(document_id, update_data)
         if not document:
             return None
@@ -267,14 +338,18 @@ class DocumentManager:
         List documents by type.
         
         Args:
-            type_id: Document type UUID
+            type_id: Document type UUID or code
             skip: Number of records to skip
             limit: Maximum number of records
             
         Returns:
             List of document responses
         """
-        documents = await self.document_repo.get_by_type(type_id, skip, limit)
+        # Resolve type_id to UUID if it's a code
+        resolved_type = await self._resolve_document_type(type_id)
+        actual_type_id = str(resolved_type.id) if resolved_type else type_id
+        
+        documents = await self.document_repo.get_by_type(actual_type_id, skip, limit)
         return [DocumentResponse.model_validate(doc) for doc in documents]
     
     async def list_recent_documents(self, limit: int = 10) -> List[DocumentResponse]:
@@ -308,7 +383,7 @@ class DocumentManager:
             filename: Filter by filename (partial match)
             reference_number: Filter by reference number
             parcel_upi: Filter by Unique Parcel Identifier (UPI)
-            document_type_id: Filter by document type
+            document_type_id: Filter by document type (UUID or code)
             from_date: Filter from date
             to_date: Filter to date
             skip: Number of records to skip
@@ -324,11 +399,18 @@ class DocumentManager:
             if parcel:
                 parcel_id = str(parcel.id)
         
+        # Resolve document_type_id to UUID if it's a code
+        actual_type_id = None
+        if document_type_id:
+            resolved_type = await self._resolve_document_type(document_type_id)
+            if resolved_type:
+                actual_type_id = str(resolved_type.id)
+        
         documents = await self.document_repo.search(
             filename=filename,
             reference_number=reference_number,
             parcel_id=parcel_id,
-            document_type_id=document_type_id,
+            document_type_id=actual_type_id,
             from_date=from_date,
             to_date=to_date,
             skip=skip,

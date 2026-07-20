@@ -62,7 +62,7 @@ export default function Dashboard() {
       gradient: 'from-primary-500 to-primary-600'
     },
     { 
-      title: 'Registrars', 
+      title: 'Registered Users', 
       value: stats.users.client_count.toLocaleString(), 
       desc: `${stats.users.total_users} total users`, 
       icon: Users, 
@@ -78,7 +78,7 @@ export default function Dashboard() {
       gradient: 'from-info to-primary-500'
     },
     { 
-      title: 'Parish Parcels', 
+      title: 'Parcels', 
       value: stats.parishes.total_parcels.toLocaleString(), 
       desc: `${stats.parishes.total_parishes.toLocaleString()} total parishes`, 
       icon: Database, 
@@ -96,7 +96,7 @@ export default function Dashboard() {
       desc: 'Add new land parcel registration'
     },
     { 
-      name: 'Scan Documents', 
+      name: 'Upload Documents', 
       path: '/documents', 
       icon: Scan, 
       color: 'from-gold-500 to-gold-600',
@@ -243,8 +243,8 @@ export default function Dashboard() {
               <p className="font-semibold text-slate-400">Available Actions:</p>
               <ul className="list-disc pl-4 space-y-1 text-slate-400">
                 <li>Register new parcels under Parish scopes.</li>
-                <li>Archive scanned deeds and land tenure forms.</li>
-                <li>Calculate municipal and diocese land tax rates.</li>
+                <li>Archive digitally stored documents you might need later.</li>
+                <li>Calculate property taxes, penalties, interest and payment dates.</li>
               </ul>
             </CardContent>
           </Card>

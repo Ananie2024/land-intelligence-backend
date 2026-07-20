@@ -18,7 +18,9 @@ from app.schemas.document_schema import (
     DocumentResponse, 
     DocumentUpdate,
     DocumentListResponse,
+    DocumentCreate,
 )
+from app.schemas.qr_code_schema import QRCodeResponse
 from app.services.document.document_manager import DocumentManager
 from app.services.document.file_system_handler import FileSystemHandler
 from app.services.document.metadata_extractor import MetadataExtractor
@@ -27,7 +29,7 @@ from app.repositories.document_repository import DocumentRepository
 from app.repositories.document_type_repository import DocumentTypeRepository
 from app.repositories.parcel_repository import ParcelRepository
 from app.repositories.location_repository import LocationRepository
-from app.schemas.document_schema import DocumentCreate
+from app.repositories.qr_registry_repository import QRRegistryRepository
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +43,8 @@ async def get_document_manager(db: AsyncSession = Depends(get_db)) -> DocumentMa
         parcel_repo=ParcelRepository(db),
         file_handler=FileSystemHandler(),
         metadata_extractor=MetadataExtractor(),
-        pointer_resolver=PointerResolver(LocationRepository(db))
+        pointer_resolver=PointerResolver(LocationRepository(db)),
+        qr_repo=QRRegistryRepository(db)
     )
 
 
@@ -67,13 +70,7 @@ async def _search_documents_impl(
         limit=size
     )
     
-    total = 0
-    if parcel_upi:
-        repo = DocumentRepository(db)
-        total = await repo.count_by_parcel(parcel_upi)
-    else:
-        total = len(documents)
-    
+    total = len(documents)
     pages = (total + size - 1) // size if size else 1
     return DocumentListResponse(
         items=documents,
@@ -288,3 +285,57 @@ async def get_physical_location(
             detail=f"Physical location for document {document_id} not found"
         )
     return location
+
+
+@router.post("/{document_id}/qr-code", response_model=QRCodeResponse, status_code=status.HTTP_201_CREATED)
+async def generate_document_qr(
+    document_id: str,
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(get_current_user_id),
+    _client_or_admin: str = Depends(require_client_or_admin),
+):
+    """Generate a QR code for a specific document (all document types supported)."""
+    from app.repositories.qr_registry_repository import QRRegistryRepository
+    from app.services.qr.qr_service import QRCodeService
+    
+    service = QRCodeService(
+        db=db,
+        qr_repo=QRRegistryRepository(db),
+        parcel_repo=ParcelRepository(db),
+        document_repo=DocumentRepository(db),
+    )
+    
+    try:
+        qr_entry = await service.generate_document_qr(document_id, user_id)
+        return qr_entry
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+@router.get("/{document_id}/qr-code", response_model=QRCodeResponse)
+async def get_document_qr(
+    document_id: str,
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(get_current_user_id),
+):
+    """Get the QR code for a specific document if one exists."""
+    from app.repositories.qr_registry_repository import QRRegistryRepository
+    from app.services.qr.qr_service import QRCodeService
+    
+    service = QRCodeService(
+        db=db,
+        qr_repo=QRRegistryRepository(db),
+        parcel_repo=ParcelRepository(db),
+        document_repo=DocumentRepository(db),
+    )
+    
+    qr_entry = await service.get_qr_details_by_document(document_id)
+    if not qr_entry:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"QR code for document {document_id} not found"
+        )
+    return qr_entry

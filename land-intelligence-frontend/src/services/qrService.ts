@@ -15,7 +15,7 @@ export const qrService = {
     return apiClient.post<QrCodeGenerateResponse>(ENDPOINTS.QR.GENERATE_DOCUMENT(documentId));
   },
 
-verifyQrCode: async (code: string): Promise<APIResponse<QrCodeVerifyResponse>> => {
+  verifyQrCode: async (code: string): Promise<APIResponse<QrCodeVerifyResponse>> => {
     return apiClient.post(ENDPOINTS.QR.VERIFY, { code });
   },
 
@@ -25,6 +25,22 @@ verifyQrCode: async (code: string): Promise<APIResponse<QrCodeVerifyResponse>> =
 
   revokeQrCode: async (id: string): Promise<APIResponse<{ message: string }>> => {
     return apiClient.delete<{ message: string }>(ENDPOINTS.QR.REVOKE(id));
+  },
+};
+
+export const documentQrService = {
+  /**
+   * Generate a QR code for a document (supports all document types)
+   */
+  generateQrCode: async (documentId: string): Promise<APIResponse<QrCodeGenerateResponse>> => {
+    return apiClient.post<QrCodeGenerateResponse>(ENDPOINTS.DOCUMENT_QR.GENERATE(documentId));
+  },
+
+  /**
+   * Get the QR code for a document if one exists
+   */
+  getQrCode: async (documentId: string): Promise<APIResponse<QrCode>> => {
+    return apiClient.get<QrCode>(ENDPOINTS.DOCUMENT_QR.GET(documentId));
   },
 };
 

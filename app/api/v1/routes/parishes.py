@@ -28,7 +28,7 @@ router = APIRouter()
 
 
 # ---------------------------------------------------------------------------
-# GET /parishes/  — paginated list with optional name search
+# GET /parishes/  - paginated list with optional name search
 # ---------------------------------------------------------------------------
 
 @router.get(
@@ -67,7 +67,7 @@ async def list_parishes(
 
 
 # ---------------------------------------------------------------------------
-# GET /parishes/all  — list all parishes without pagination (for dropdowns)
+# GET /parishes/all  - list all parishes without pagination (for dropdowns)
 # ---------------------------------------------------------------------------
 
 @router.get(
@@ -85,7 +85,29 @@ async def list_all_parishes(
 
 
 # ---------------------------------------------------------------------------
-# POST /parishes/  — create a new parish
+# POST /parishes  - create a new parish (no trailing slash)
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "",
+    response_model=ParishResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create parish",
+    description="Create a new parish.",
+    include_in_schema=False,
+)
+async def create_parish_no_slash(
+    payload: ParishCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(get_current_user_id),
+    _admin: str = Depends(require_admin),
+):
+    service = ParishService(db)
+    return await service.create_parish(payload, user_id)
+
+
+# ---------------------------------------------------------------------------
+# POST /parishes/  - create a new parish (with trailing slash)
 # ---------------------------------------------------------------------------
 
 @router.post(
@@ -102,13 +124,11 @@ async def create_parish(
     _admin: str = Depends(require_admin),
 ):
     service = ParishService(db)
-    
-    parish = await service.create_parish(payload, user_id)
-    return parish
+    return await service.create_parish(payload, user_id)
 
 
 # ---------------------------------------------------------------------------
-# GET /parishes/{parish_id}  — fetch single parish
+# GET /parishes/{parish_id}  - fetch single parish
 # ---------------------------------------------------------------------------
 
 @router.get(
@@ -135,7 +155,7 @@ async def get_parish(
 
 
 # ---------------------------------------------------------------------------
-# PATCH /parishes/{parish_id}  — partial update
+# PATCH /parishes/{parish_id}  - partial update
 # ---------------------------------------------------------------------------
 
 @router.patch(
@@ -167,7 +187,7 @@ async def update_parish(
 
 
 # ---------------------------------------------------------------------------
-# DELETE /parishes/{parish_id}  — soft delete
+# DELETE /parishes/{parish_id}  - soft delete
 # ---------------------------------------------------------------------------
 
 @router.delete(

@@ -67,7 +67,7 @@ class QRRegistryRepository(BaseRepository[QRCodeRegistry, QRCodeCreate, QRCodeUp
     
     async def get_by_document(self, document_id: str) -> Optional[QRCodeRegistry]:
         """
-        Get QR code for a document.
+        Get the most recent QR code for a document.
         
         Args:
             document_id: UUID of the document
@@ -83,6 +83,43 @@ class QRRegistryRepository(BaseRepository[QRCodeRegistry, QRCodeCreate, QRCodeUp
             .limit(1)
         )
         return result.scalar_one_or_none()
+    
+    async def get_all_by_document(self, document_id: str) -> List[QRCodeRegistry]:
+        """
+        Get all QR codes for a document.
+        
+        Args:
+            document_id: UUID of the document
+            
+        Returns:
+            List of QR code registry entries
+        """
+        result = await self.db.execute(
+            select(QRCodeRegistry).where(
+                QRCodeRegistry.document_id == document_id,
+                QRCodeRegistry.is_active == True
+            ).order_by(desc(QRCodeRegistry.created_at))
+        )
+        return list(result.scalars().all())
+    
+    async def count_by_document(self, document_id: str) -> int:
+        """
+        Count active QR codes for a document.
+        
+        Args:
+            document_id: UUID of the document
+            
+        Returns:
+            Count of active QR codes
+        """
+        from sqlalchemy import func
+        result = await self.db.execute(
+            select(func.count(QRCodeRegistry.id)).where(
+                QRCodeRegistry.document_id == document_id,
+                QRCodeRegistry.is_active == True
+            )
+        )
+        return int(result.scalar_one() or 0)
     
     async def get_valid_code(self, qr_string: str) -> Optional[QRCodeRegistry]:
         """

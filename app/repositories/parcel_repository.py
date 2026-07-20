@@ -6,6 +6,7 @@ Land Intelligence System
 """
 
 from typing import Optional, List
+import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,6 +28,23 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
             db: Async database session
         """
         super().__init__(Parcel, db)
+    
+    async def create(self, schema: ParcelCreate) -> Parcel:
+        """Create a parcel, handling geometry field conversion."""
+        data = schema.model_dump()
+        
+        # Generate UUID if not present
+        if "id" not in data:
+            data["id"] = str(uuid.uuid4())
+        
+        # Remove geometry_wkb if it's None or empty to avoid PostGIS parsing error
+        if "geometry_wkb" in data and not data["geometry_wkb"]:
+            del data["geometry_wkb"]
+        
+        parcel = Parcel(**data)
+        self.db.add(parcel)
+        await self.db.flush()
+        return parcel
     
     async def get_by_parish(self, parish_id: str, skip: int = 0, limit: int = 100) -> List[Parcel]:
         """
@@ -174,7 +192,6 @@ class ParcelRepository(BaseRepository[Parcel, ParcelCreate, ParcelUpdate]):
     async def get_total_area_by_parish(self, parish_id: str) -> float:
         """
         Calculate total area of all parcels in a parish using native spatial functions.
-        
         
         Args:
             parish_id: UUID of the parish

@@ -29,7 +29,7 @@ router = APIRouter()
 
 
 # ---------------------------------------------------------------------------
-# GET /parcels/  — paginated list with rich filtering
+# GET /parcels/  - paginated list with rich filtering
 # ---------------------------------------------------------------------------
 
 @router.get(
@@ -96,7 +96,7 @@ async def list_parcels(
 
 
 # ---------------------------------------------------------------------------
-# GET /parcels/all  — list all parcels without pagination (for dropdowns)
+# GET /parcels/all  - list all parcels without pagination (for dropdowns)
 # ---------------------------------------------------------------------------
 
 @router.get(
@@ -115,7 +115,38 @@ async def list_all_parcels(
 
 
 # ---------------------------------------------------------------------------
-# POST /parcels/  — create a new parcel
+# POST /parcels  - create a new parcel (no trailing slash)
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "",
+    response_model=ParcelResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create parcel",
+    description="Register a new land parcel. UPI must be unique. Parish must exist.",
+    include_in_schema=False,
+)
+async def create_parcel_no_slash(
+    payload: ParcelCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(get_current_user_id),
+    _client_or_admin: str = Depends(require_client_or_admin),
+):
+    service = ParcelService(db)
+
+    try:
+        parcel = await service.create_parcel(payload, user_id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+        )
+
+    return parcel
+
+
+# ---------------------------------------------------------------------------
+# POST /parcels/  - create a new parcel (with trailing slash)
 # ---------------------------------------------------------------------------
 
 @router.post(
@@ -145,14 +176,14 @@ async def create_parcel(
 
 
 # ---------------------------------------------------------------------------
-# GET /parcels/by-upi/{upi}  — lookup by UPI
+# GET /parcels/by-upi/{upi}  - lookup by UPI
 # ---------------------------------------------------------------------------
 
 @router.get(
     "/by-upi/{upi}",
     response_model=ParcelResponse,
     summary="Get parcel by UPI",
-    description="Look up a parcel using its Unique Parcel Identifier (UPI) — e.g. '1/02/02/03/1390'.",
+    description="Look up a parcel using its Unique Parcel Identifier (UPI) - e.g. '1/02/02/03/1390'.",
 )
 async def get_parcel_by_upi(
     upi: str,
@@ -172,7 +203,7 @@ async def get_parcel_by_upi(
 
 
 # ---------------------------------------------------------------------------
-# GET /parcels/parish/{parish_id}  — all parcels in a parish
+# GET /parcels/parish/{parish_id}  - all parcels in a parish
 # ---------------------------------------------------------------------------
 
 @router.get(
@@ -200,7 +231,7 @@ async def list_parcels_by_parish(
 
 
 # ---------------------------------------------------------------------------
-# GET /parcels/{parcel_id}  — fetch single parcel
+# GET /parcels/{parcel_id}  - fetch single parcel
 # ---------------------------------------------------------------------------
 
 @router.get(
@@ -227,7 +258,7 @@ async def get_parcel(
 
 
 # ---------------------------------------------------------------------------
-# PATCH /parcels/{parcel_id}  — partial update
+# PATCH /parcels/{parcel_id}  - partial update
 # ---------------------------------------------------------------------------
 
 @router.patch(
@@ -263,7 +294,7 @@ async def update_parcel(
 
 
 # ---------------------------------------------------------------------------
-# DELETE /parcels/{parcel_id}  — soft delete
+# DELETE /parcels/{parcel_id}  - soft delete
 # ---------------------------------------------------------------------------
 
 @router.delete(
@@ -312,7 +343,7 @@ async def get_parcel_ownership_history(
 
 
 # ---------------------------------------------------------------------------
-# GET /parcels/map  — parcels with geometry for map display
+# GET /parcels/map  - parcels with geometry for map display
 # ---------------------------------------------------------------------------
 
 @router.get(

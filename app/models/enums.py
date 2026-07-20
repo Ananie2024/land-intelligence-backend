@@ -24,6 +24,6 @@ class DocumentType(str, Enum):
     LAND_LEASES = "land_leases"
     REPORTS = "reports"
     SURVEYS = "surveys"
-    CESSION = "contrat_de_cession_gratuite"
+    CESSION = "cession"
     OTHERS = "others"
     UNSPECIFIED = "unspecified"

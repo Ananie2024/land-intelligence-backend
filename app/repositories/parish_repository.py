@@ -46,3 +46,17 @@ class ParishRepository(BaseRepository[Parish, ParishCreate, ParishUpdate]):
             ).limit(limit)
         )
         return list(result.scalars().all())
+    
+    async def update_parcel_count(self, parish_id: str) -> None:
+        """
+        Update parcel count for a parish.
+        
+        Note: This method is kept for backward compatibility with ParcelService.
+        The parcel_count column was removed in the parish simplification migration,
+        so this is now a no-op method. Parcel counts should be computed dynamically.
+        
+        Args:
+            parish_id: UUID of the parish (unused)
+        """
+        # No-op - parcel_count was removed in simplify_parish_entity migration
+        pass

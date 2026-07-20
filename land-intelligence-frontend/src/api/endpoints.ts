@@ -80,15 +80,21 @@ export const ENDPOINTS = {
     RECORD: (recordId: string) => `/tax/record/${recordId}`,
   },
   
-  // QR Code endpoints
-  QR: {
-    BASE: '/qr',
-    GENERATE_PARCEL: (id: string) => `/qr/generate/parcel/${id}`,
-    GENERATE_DOCUMENT: (id: string) => `/qr/generate/document/${id}`,
-    VERIFY: '/qr/verify',
-    BY_ID: (id: string) => `/qr/${id}`,
-    REVOKE: (id: string) => `/qr/${id}`,
-  },
+// QR Code endpoints
+   QR: {
+     BASE: '/qr',
+     GENERATE_PARCEL: (id: string) => `/qr/generate/parcel/${id}`,
+     GENERATE_DOCUMENT: (id: string) => `/qr/generate/document/${id}`,
+     VERIFY: '/qr/verify',
+     BY_ID: (id: string) => `/qr/${id}`,
+     REVOKE: (id: string) => `/qr/${id}`,
+   },
+
+   // Document QR Code endpoints (extended from QR module)
+   DOCUMENT_QR: {
+     GENERATE: (id: string) => `/documents/${id}/qr-code`,
+     GET: (id: string) => `/documents/${id}/qr-code`,
+   },
   
   // Locations endpoints
   LOCATIONS: {

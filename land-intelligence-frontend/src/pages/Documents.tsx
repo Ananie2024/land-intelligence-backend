@@ -42,7 +42,7 @@ const STATIC_DOCUMENT_TYPES: DocumentType[] = [
   { id: DOCUMENT_TYPES.LAND_LEASES, name: DOCUMENT_TYPE_LABELS.land_leases, code: DOCUMENT_TYPES.LAND_LEASES, document_count: 0 },
   { id: DOCUMENT_TYPES.REPORTS, name: DOCUMENT_TYPE_LABELS.reports, code: DOCUMENT_TYPES.REPORTS, document_count: 0 },
   { id: DOCUMENT_TYPES.SURVEYS, name: DOCUMENT_TYPE_LABELS.surveys, code: DOCUMENT_TYPES.SURVEYS, document_count: 0 },
-  { id: DOCUMENT_TYPES.CESSION, name: DOCUMENT_TYPE_LABELS.contrat_de_cession_gratuite, code: DOCUMENT_TYPES.CESSION, document_count: 0 },
+  { id: DOCUMENT_TYPES.CESSION, name: DOCUMENT_TYPE_LABELS.cession, code: DOCUMENT_TYPES.CESSION, document_count: 0 },
   { id: DOCUMENT_TYPES.OTHERS, name: DOCUMENT_TYPE_LABELS.others, code: DOCUMENT_TYPES.OTHERS, document_count: 0 },
   { id: DOCUMENT_TYPES.UNSPECIFIED, name: DOCUMENT_TYPE_LABELS.unspecified, code: DOCUMENT_TYPES.UNSPECIFIED, document_count: 0 },
 ];

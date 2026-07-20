@@ -6,12 +6,12 @@ Land Intelligence System
 """
 
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.qr_code_schema import QRCodeCreate, QRCodeResponse
+from app.schemas.qr_code_schema import QRCodeCreate
 from app.repositories.qr_registry_repository import QRRegistryRepository
 from app.repositories.parcel_repository import ParcelRepository
 from app.repositories.document_repository import DocumentRepository
@@ -70,7 +70,7 @@ class QRCodeService:
             code_type="PARCEL",
             data_payload=payload,
             expires_at=expires_at,
-            metadata={"generated_by": user_id}
+            extra_data={"generated_by": user_id}
         )
 
         instance_data = qr_entry_data.model_dump(exclude_none=True)
@@ -92,6 +92,9 @@ class QRCodeService:
     ) -> QRCodeRegistry:
         """
         Generate an integrity QR code for a specific document.
+        
+        Supports all document types (not just title deeds), providing a QR code
+        that verifies the document's integrity through its checksum.
         """
         document = await self.document_repo.get(document_id)
         if not document:
@@ -105,20 +108,18 @@ class QRCodeService:
             parcel_upi=None,  # Will be populated from document if available
             code_type="DOCUMENT",
             data_payload=payload,
-            metadata={"generated_by": user_id}
+            extra_data={"generated_by": user_id}
         )
 
-        # If document has parcel, get the UPI
-        if document.parcel_id:
-            parcel = await self.parcel_repo.get(document.parcel_id)
-            if parcel:
-                qr_entry_data = QRCodeCreate(
-                    document_id=document_id,
-                    parcel_upi=parcel.upi,
-                    code_type="DOCUMENT",
-                    data_payload=payload,
-                    metadata={"generated_by": user_id}
-                )
+        # If document has parcel relationship loaded, get the UPI
+        if document.parcel is not None:
+            qr_entry_data = QRCodeCreate(
+                document_id=document_id,
+                parcel_upi=document.parcel.upi,
+                code_type="DOCUMENT",
+                data_payload=payload,
+                extra_data={"generated_by": user_id}
+            )
 
         instance_data = qr_entry_data.model_dump(exclude_none=True)
         instance_data["code"] = qr_string
@@ -131,7 +132,7 @@ class QRCodeService:
 
         return qr_entry
 
-    async def verify_qr_code(self, code: str) -> Dict[str, Any]:
+    async def verify_qr_code(self, code: str) -> Any:
         """
         Verify a QR code and check its integrity.
         """
@@ -144,9 +145,27 @@ class QRCodeService:
 
     async def get_qr_details(self, qr_id: str) -> Optional[QRCodeRegistry]:
         """
-        Get QR code registry details.
+        Get QR code registry details by QR ID.
+        
+        Args:
+            qr_id: UUID of the QR code entry
+            
+        Returns:
+            QR code registry entry if found, None otherwise
         """
         return await self.qr_repo.get(qr_id)
+
+    async def get_qr_details_by_document(self, document_id: str) -> Optional[QRCodeRegistry]:
+        """
+        Get QR code registry details by document ID.
+        
+        Args:
+            document_id: UUID of the document
+            
+        Returns:
+            QR code registry entry if found, None otherwise
+        """
+        return await self.qr_repo.get_by_document(document_id)
 
     async def revoke_qr_code(self, qr_id: str) -> bool:
         """

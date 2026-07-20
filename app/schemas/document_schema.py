@@ -5,9 +5,10 @@ Phase 2 — Section 3.2
 Land Intelligence System
 """
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional, Any, Dict
 from datetime import datetime, date
+import uuid
 
 
 class DocumentBase(BaseModel):
@@ -22,7 +23,20 @@ class DocumentBase(BaseModel):
     document_date: Optional[date] = Field(None, description="Document date (issue/recording date)")
     reference_number: Optional[str] = Field(None, max_length=200, description="Official reference number")
     page_count: Optional[int] = Field(None, ge=0, description="Number of pages (for PDF)")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="JSON field for additional attributes")
+    extra_data: Optional[Dict[str, Any]] = Field(
+        None,
+        description="JSON field for additional attributes",
+    )
+
+    @field_validator("document_type_id", mode="before")
+    @classmethod
+    def convert_document_type_id_to_str(cls, v: Any) -> str:
+        """Convert UUID to string for document_type_id."""
+        if isinstance(v, uuid.UUID):
+            return str(v)
+        return v
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class DocumentCreate(DocumentBase):
@@ -60,8 +74,21 @@ class DocumentUpdate(BaseModel):
     document_date: Optional[date] = Field(None, description="Document date")
     reference_number: Optional[str] = Field(None, max_length=200, description="Official reference number")
     page_count: Optional[int] = Field(None, ge=0, description="Number of pages")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="JSON field for additional attributes")
+    extra_data: Optional[Dict[str, Any]] = Field(
+        None,
+        description="JSON field for additional attributes",
+    )
     is_active: Optional[bool] = Field(None, description="Soft delete flag")
+
+    @field_validator("document_type_id", mode="before")
+    @classmethod
+    def convert_document_type_id_to_str(cls, v: Any) -> Optional[str]:
+        """Convert UUID to string for document_type_id."""
+        if isinstance(v, uuid.UUID):
+            return str(v)
+        return v
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class DocumentResponse(DocumentBase):
@@ -83,7 +110,15 @@ class DocumentResponse(DocumentBase):
     upi: Optional[str] = Field(None, description="Unique Parcel Identifier (UPI) - e.g. 1/02/02/03/1390")
     qr_code_count: int = Field(0, description="Number of associated QR codes")
     
-    model_config = ConfigDict(from_attributes=True)
+    @field_validator("id", mode="before")
+    @classmethod
+    def convert_id_to_str(cls, v: Any) -> str:
+        """Convert UUID to string for id."""
+        if isinstance(v, uuid.UUID):
+            return str(v)
+        return v
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class DocumentListResponse(BaseModel):

@@ -69,7 +69,7 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentTypeCode, string> = {
   land_leases: 'Land Leases',
   reports: 'Reports',
   surveys: 'Surveys (Mapping)',
-  contrat_de_cession_gratuite: 'Contrat de Cession Gratuite',
+  cession: 'Contrat de Cession Gratuite',
   others: 'Others',
   unspecified: 'Unspecified',
 };

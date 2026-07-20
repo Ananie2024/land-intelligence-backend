@@ -8,7 +8,7 @@ Land Intelligence System
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional, Any, Dict
 from datetime import datetime, date
-import binascii
+import uuid
 
 
 class ParcelBase(BaseModel):
@@ -22,29 +22,14 @@ class ParcelBase(BaseModel):
     area_sqm: float = Field(..., gt=0, description="Area in square meters")
     geometry_wkb: Optional[str] = Field(None, description="Spatial geometry in WKB format (hex)")
     owner_name: str = Field(..., max_length=500, description="Name of land owner")
-    owner_contact: Optional[str] = Field(None, max_length=500, description="Contact information for owner")
+    owner_contact: Optional[str] = Field(None, description="Contact information for owner")
     location_description: Optional[str] = Field(None, description="Text description of location")
     valuation: Optional[float] = Field(None, ge=0, description="Current valuation amount")
     valuation_date: Optional[str] = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$", description="Date of last valuation (YYYY-MM-DD)")
     extra_data: Optional[Dict[str, Any]] = Field(
         None,
-        alias="metadata",
         description="JSON field for additional attributes",
     )
-
-    @field_validator("geometry_wkb", mode="before")
-    @classmethod
-    def validate_geometry(cls, v: Any) -> Optional[str]:
-        """Convert GeoAlchemy2 WKBElement to hex string."""
-        if v is None:
-            return None
-        if hasattr(v, "data"):
-            if isinstance(v.data, bytes):
-                return binascii.hexlify(v.data).decode("ascii").upper()
-            return str(v.data)
-        return v
-
-    model_config = ConfigDict(populate_by_name=True)
 
 
 class ParcelCreate(ParcelBase):
@@ -66,7 +51,6 @@ class ParcelUpdate(BaseModel):
     valuation_date: Optional[str] = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$", description="Date of last valuation")
     extra_data: Optional[Dict[str, Any]] = Field(
         None,
-        alias="metadata",
         description="JSON field for additional attributes",
     )
     is_active: Optional[bool] = Field(None, description="Soft delete flag")
@@ -84,6 +68,30 @@ class ParcelResponse(ParcelBase):
     land_use_category_name: Optional[str] = Field(None, description="Land use category name (when included)")
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    
+    @field_validator('id', mode='before')
+    @classmethod
+    def convert_uuid_to_str(cls, v: uuid.UUID | str) -> str:
+        """Convert UUID to string when validating from ORM model."""
+        if isinstance(v, uuid.UUID):
+            return str(v)
+        return v
+    
+    @field_validator('parish_id', mode='before')
+    @classmethod
+    def convert_parish_uuid_to_str(cls, v: uuid.UUID | str) -> str:
+        """Convert parish_id UUID to string when validating from ORM model."""
+        if isinstance(v, uuid.UUID):
+            return str(v)
+        return v
+    
+    @field_validator('land_use_category_id', mode='before')
+    @classmethod
+    def convert_land_use_uuid_to_str(cls, v: uuid.UUID | str | None) -> Optional[str]:
+        """Convert land_use_category_id UUID to string when validating from ORM model."""
+        if isinstance(v, uuid.UUID):
+            return str(v)
+        return v
 
 
 class ParcelListResponse(BaseModel):
@@ -122,3 +130,11 @@ class ParcelOwnershipHistoryResponse(BaseModel):
     updated_at: datetime = Field(..., description="Timestamp when record was last updated")
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    
+    @field_validator('id', mode='before')
+    @classmethod
+    def convert_uuid_to_str(cls, v: uuid.UUID | str) -> str:
+        """Convert UUID to string when validating from ORM model."""
+        if isinstance(v, uuid.UUID):
+            return str(v)
+        return v

@@ -2,8 +2,9 @@
 // Land Intelligence System
 
 import { useState, useEffect } from 'react';
-import { FileText, MapPin, Archive, Loader2 } from 'lucide-react';
+import { FileText, MapPin, Archive, Loader2, QrCode } from 'lucide-react';
 import { locationService } from '@/services/locationService';
+import { documentQrService } from '@/services/qrService';
 import type { Document } from '@/types/document';
 
 interface DocumentDetailProps {
@@ -25,6 +26,9 @@ export const DocumentDetail: React.FC<DocumentDetailProps> = ({ document }) => {
   const [physicalLocation, setPhysicalLocation] = useState<PhysicalLocationInfo | null>(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [loadingQr, setLoadingQr] = useState(false);
+  const [qrError, setQrError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!document.parcel_upi && !document.id) return;
@@ -52,7 +56,44 @@ export const DocumentDetail: React.FC<DocumentDetailProps> = ({ document }) => {
     };
 
     lookupPhysicalLocation();
+
+    // Load existing QR code for this document
+    const loadQrCode = async () => {
+      setLoadingQr(true);
+      setQrError(null);
+      try {
+        const res = await documentQrService.getQrCode(document.id);
+        if (res.success && res.data) {
+          setQrCode(res.data.code);
+        }
+      } catch (error) {
+        // QR code might not exist, which is normal
+        setQrCode(null);
+      } finally {
+        setLoadingQr(false);
+      }
+    };
+
+    loadQrCode();
   }, [document.id, document.parcel_upi]);
+
+  const generateQrCode = async () => {
+    setLoadingQr(true);
+    setQrError(null);
+    try {
+      const res = await documentQrService.generateQrCode(document.id);
+      if (res.success && res.data) {
+        setQrCode(res.data.code);
+      } else {
+        setQrError(res.message || 'Failed to generate QR code');
+      }
+    } catch (error) {
+      console.error('Failed to generate QR code:', error);
+      setQrError('Failed to generate QR code');
+    } finally {
+      setLoadingQr(false);
+    }
+  };
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -150,6 +191,45 @@ export const DocumentDetail: React.FC<DocumentDetailProps> = ({ document }) => {
           </div>
         ) : (
           <p className="text-sm text-gray-400 italic">No physical location assigned</p>
+        )}
+      </div>
+
+      {/* QR Code Section */}
+      <div className="border-t border-gray-200 pt-4">
+        <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-3">
+          <QrCode className="h-4 w-4 text-gray-400" />
+          Document QR Code
+        </h3>
+        {loadingQr ? (
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading QR code...
+          </div>
+        ) : qrCode ? (
+          <div className="flex items-center gap-4">
+            <div className="bg-white p-2 rounded border">
+              {/* QR code would be displayed here - using text representation for now */}
+              <QrCode className="h-12 w-12 text-gray-400" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 font-mono">{qrCode.substring(0, 30)}...</p>
+              <p className="text-xs text-green-600 mt-1">QR code generated</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={generateQrCode}
+              disabled={loadingQr}
+              className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1"
+            >
+              <QrCode className="h-4 w-4" />
+              Generate QR Code
+            </button>
+            {qrError && (
+              <p className="text-sm text-red-500">{qrError}</p>
+            )}
+          </div>
         )}
       </div>
 

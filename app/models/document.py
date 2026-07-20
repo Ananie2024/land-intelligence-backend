@@ -5,7 +5,7 @@ Phase 2 — Section 3.1
 Land Intelligence System
 """
 
-from sqlalchemy import Column, String, Text, Integer, ForeignKey, Date
+from sqlalchemy import Column, String, Text, Integer, ForeignKey, Date, JSON
 from sqlalchemy import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import Index
@@ -107,25 +107,33 @@ class Document(BaseModel):
         nullable=False,
         comment="SHA-256 checksum for integrity"
     )
+
+    # ← renamed Python attribute, DB column name stays 'metadata'
+    extra_data = Column(
+        "metadata",
+        JSON,
+        nullable=True,
+        comment="JSON field for additional attributes"
+    )
     
     # Relationships
     parcel = relationship(
         "Parcel",
         back_populates="documents"
     )
-    
+
     document_type = relationship(
         "DocumentType",
         back_populates="documents"
     )
-    
+
     physical_location = relationship(
         "PhysicalLocation",
         uselist=False,
         back_populates="document",
         cascade="all, delete-orphan"
     )
-    
+
     qr_codes = relationship(
         "QRCodeRegistry",
         back_populates="document",

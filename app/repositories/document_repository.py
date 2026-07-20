@@ -5,6 +5,7 @@ Phase 2 — Section 3.2
 Land Intelligence System
 """
 
+import uuid
 from typing import Optional, List, Tuple
 from sqlalchemy import select, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,26 +28,25 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
             db: Async database session
         """
         super().__init__(Document, db)
-
+    
     async def create(self, schema: DocumentCreate) -> Document:
         """
         Create a document, converting parcel_upi to parcel_id UUID.
         """
         data = schema.model_dump(exclude_none=True)
-        data.pop("metadata", None)
         
         # Convert parcel_upi to parcel_id if provided
         if "parcel_upi" in data:
             # This should be handled by the service layer
             # For now, we'll just remove parcel_upi as the DB model uses parcel_id
             data.pop("parcel_upi", None)
-
+        
         document = Document(**data)
         self.db.add(document)
-        await self.db.flush()
+        await self.db.commit()
         await self.db.refresh(document)
         return document
-
+    
     async def create_direct(self, data: dict) -> Document:
         """
         Create a document directly with raw data dictionary.
@@ -58,32 +58,34 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
         Returns:
             Created document instance
         """
+        # Generate UUID if not provided (required since database doesn't have gen_random_uuid)
+        if "id" not in data or data["id"] is None:
+            data["id"] = str(uuid.uuid4())
         document = Document(**data)
         self.db.add(document)
-        await self.db.flush()
+        await self.db.commit()
         await self.db.refresh(document)
         return document
-
+    
     async def update(self, id: str, schema: DocumentUpdate) -> Optional[Document]:
         """
-        Update a document, ignoring unsupported metadata payloads.
+        Update a document.
         """
         data = schema.model_dump(exclude_none=True)
-        data.pop("metadata", None)
         
         # Convert parcel_upi to parcel_id if provided
         if "parcel_upi" in data:
             data.pop("parcel_upi", None)
-
+        
         document = await self.get(id)
         if not document:
             return None
-
+        
         for field, value in data.items():
             if hasattr(document, field):
                 setattr(document, field, value)
-
-        await self.db.flush()
+        
+        await self.db.commit()
         await self.db.refresh(document)
         return document
     
@@ -194,7 +196,7 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
             )
         )
         return result.scalar_one_or_none()
-
+    
     async def get_by_checksum_and_parcel(
         self,
         checksum: str,
@@ -263,7 +265,7 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
         
         result = await self.db.execute(query)
         return list(result.scalars().all())
-
+    
     async def count_by_parcel(self, parcel_id: str) -> int:
         """
         Count active documents for a specific parcel.

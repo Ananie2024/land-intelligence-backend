@@ -99,22 +99,16 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
         rows={2}
       />
 
-      <div>
-        <label htmlFor="file" className="block text-sm font-medium text-slate-300">
-          File Upload {!document && <span className="text-red-400">*</span>}
-        </label>
-        <input
-          type="file"
-          id="file"
-          onChange={handleFileChange}
-          className="mt-1 block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-600 file:text-white hover:file:bg-primary-500 disabled:opacity-50"
-          disabled={isLoading}
-          required={!document}
-        />
-        {document && (
-          <p className="mt-1 text-xs text-slate-500">Current file: {document.filename}</p>
-        )}
-      </div>
+      <FormField
+        label="File Upload"
+        name="file"
+        type="file"
+        disabled={isLoading}
+        required={!document}
+        onChange={handleFileChange}
+        helperText={!document ? 'A file is required for new documents' : `Current file: ${document.filename}`}
+        optional={!!document}
+      />
 
       <div className="flex justify-end">
         <button

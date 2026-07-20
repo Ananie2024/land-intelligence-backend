@@ -179,6 +179,7 @@ def upgrade() -> None:
         sa.Column('reference_number', sa.String(200), nullable=True, comment='Official reference number'),
         sa.Column('page_count', sa.Integer(), nullable=True, comment='Number of pages (for PDF)'),
         sa.Column('checksum', sa.String(64), nullable=False, comment='SHA-256 checksum for integrity'),
+        sa.Column('metadata', sa.JSON(), nullable=True, comment='JSON field for additional attributes'),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False, comment='Timestamp when record was created'),
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False, comment='Timestamp when record was last updated'),
         sa.Column('is_active', sa.Boolean(), server_default=sa.text('true'), nullable=False, comment='Soft delete flag: True if record is active, False if deleted'),

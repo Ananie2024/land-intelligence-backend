@@ -20,7 +20,6 @@ class QRCodeBase(BaseModel):
     expires_at: Optional[datetime] = Field(None, description="Expiration timestamp")
     extra_data: Optional[Dict[str, Any]] = Field(
         None,
-        alias="metadata",
         description="JSON field for additional attributes",
     )
 
@@ -44,7 +43,6 @@ class QRCodeUpdate(BaseModel):
     is_revoked: Optional[bool] = Field(None, description="Whether QR code has been revoked")
     extra_data: Optional[Dict[str, Any]] = Field(
         None,
-        alias="metadata",
         description="JSON field for additional attributes",
     )
     is_active: Optional[bool] = Field(None, description="Soft delete flag")

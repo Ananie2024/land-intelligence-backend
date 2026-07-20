@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 import logging
+import uuid
 
 from app.models.base import Base
 
@@ -70,6 +71,9 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 data = schema.model_dump(exclude_none=True)
             else:
                 data = {k: v for k, v in schema.__dict__.items() if v is not None}
+            # Generate UUID for models that have an id field but didn't receive one
+            if 'id' not in data:
+                data['id'] = str(uuid.uuid4())
             instance = self.model(**data)
             self.db.add(instance)
             await self.db.flush()
