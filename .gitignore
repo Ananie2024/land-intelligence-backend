@@ -141,6 +141,11 @@ scratch_*.py
 monkey_patch_*.py
 one_off_*.py
 tmp_*.py
+scan_stubs.py
+verify_structure.py
+
+# VS Code (project-specific)
+ananie.vscode/
 
 # Encryption keys (NEVER commit)
 *.key
