@@ -1,5 +1,4 @@
 # app/services/backup/local/config_backup_service.py
-# app/services/backup/local/config_backup_service.py
 """
 Config Backup Service
 Land Intelligence System
@@ -9,7 +8,6 @@ Backs up YAML configuration files and the .env file to a ZIP archive.
 
 import logging
 import zipfile
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +21,6 @@ _CONFIG_GLOBS: list[tuple[str, str]] = [
     ("config", "**/*.yml"),
     (".", ".env"),
     (".", "alembic.ini"),
-    (".", "pyproject.toml"),
     (".", "requirements.txt"),
     (".", "constraints.txt"),
 ]

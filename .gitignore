@@ -116,7 +116,6 @@ gis-data/
 *.ipynb
 
 # Package managers
-poetry.lock
 Pipfile.lock
 
 # Node.js (for any JS tooling)

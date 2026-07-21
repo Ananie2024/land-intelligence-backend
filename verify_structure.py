@@ -73,7 +73,6 @@ def verify_structure() -> Tuple[int, int, List[str]]:
         "README.md",
         "SETUP.md",
         "requirements.txt",
-        "pyproject.toml",
         "alembic.ini",
         ".env.example",
         ".gitignore",
