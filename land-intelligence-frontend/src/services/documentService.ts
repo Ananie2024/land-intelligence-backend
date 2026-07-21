@@ -15,11 +15,7 @@ export const documentService = {
       document_type_id,
       size: 100,
     });
-    return {
-      success: response.success,
-      data: response.data?.items || [],
-      message: response.message,
-    };
+    return { ...response, data: response.data?.items || [] };
   },
 
   getDocumentById: async (id: string): Promise<APIResponse<Document>> => {

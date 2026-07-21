@@ -6,7 +6,7 @@ Land Intelligence System
 """
 
 import uuid
-from typing import Optional, List, Tuple
+from typing import Optional, List
 from sqlalchemy import select, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,7 +43,7 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
         
         document = Document(**data)
         self.db.add(document)
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(document)
         return document
     
@@ -63,7 +63,7 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
             data["id"] = str(uuid.uuid4())
         document = Document(**data)
         self.db.add(document)
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(document)
         return document
     
@@ -85,7 +85,7 @@ class DocumentRepository(BaseRepository[Document, DocumentCreate, DocumentUpdate
             if hasattr(document, field):
                 setattr(document, field, value)
         
-        await self.db.commit()
+        await self.db.flush()
         await self.db.refresh(document)
         return document
     
