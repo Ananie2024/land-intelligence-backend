@@ -1,12 +1,12 @@
 ﻿import React from 'react';
-import type { RegisterOptions, FieldError, UseFormRegisterReturn } from 'react-hook-form';
+import type { RegisterOptions, FieldError, UseFormRegister, FieldValues, FieldPath } from 'react-hook-form';
 
-interface FormFieldProps {
+interface FormFieldProps<TFieldValues extends FieldValues = FieldValues> {
   label: string;
-  name: string;
+  name: FieldPath<TFieldValues>;
   type?: 'text' | 'email' | 'password' | 'number' | 'date' | 'file';
-  register?: UseFormRegisterReturn; // react-hook-form's register function (optional for file inputs)
-  validation?: RegisterOptions;
+  register?: UseFormRegister<TFieldValues>; // react-hook-form's register function (optional for file inputs)
+  validation?: RegisterOptions<TFieldValues, FieldPath<TFieldValues>>;
   error?: FieldError;
   disabled?: boolean;
   placeholder?: string;
@@ -18,7 +18,7 @@ interface FormFieldProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
 }
 
-export const FormField: React.FC<FormFieldProps> = ({
+export const FormField = <TFieldValues extends FieldValues = FieldValues>({
   label,
   name,
   type = 'text',
@@ -33,7 +33,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   helperText,
   required,
   onChange,
-}) => {
+}: FormFieldProps<TFieldValues>) => {
   const inputClasses =
     'mt-1 block w-full rounded-lg border-slate-700 bg-slate-800/50 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-white placeholder-slate-500 disabled:opacity-50';
   const labelClasses = 'block text-sm font-medium text-slate-300';
@@ -45,7 +45,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       // Select element
       return (
         <select
-          {...register(name, validation)}
+          {...register?.(name, validation)}
           id={name}
           className={inputClasses}
           disabled={disabled}
@@ -73,7 +73,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       // Textarea
       return (
         <textarea
-          {...register(name, validation)}
+          {...register?.(name, validation)}
           id={name}
           rows={rows}
           placeholder={placeholder}
@@ -87,7 +87,7 @@ export const FormField: React.FC<FormFieldProps> = ({
     // Standard input
     return (
       <input
-        {...register(name, validation)}
+        {...register?.(name, validation)}
         type={type}
         id={name}
         placeholder={placeholder}

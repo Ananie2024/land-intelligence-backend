@@ -9,7 +9,6 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default marker icons in Leaflet with bundlers
-// @ts-expect-error - Leaflet type definitions require any cast
 delete ((L.Icon as any).Default.prototype as any)._getIconUrl;
 (L.Icon as any).Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',

@@ -71,7 +71,7 @@ export function Table<T>({
                 {columns.map((column) => {
                   const renderedValue = column.render
                     ? column.render(row, rowIndex)
-                    : (row as Record<string, unknown>)[column.key];
+                    : ((row as Record<string, unknown>)[column.key] as React.ReactNode);
 
                   return (
                     <td

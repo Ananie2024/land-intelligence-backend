@@ -141,8 +141,12 @@ scratch_*.py
 monkey_patch_*.py
 one_off_*.py
 tmp_*.py
+fix_*.py
 scan_stubs.py
 verify_structure.py
+
+# Autofix / lint generated reports
+eslint_results.json
 
 # VS Code (project-specific)
 ananie.vscode/

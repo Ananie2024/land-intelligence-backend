@@ -50,22 +50,22 @@ export function unwrapPaginated<T>(
  * For advanced use cases (file downloads, custom config), use the `api` instance directly.
  */
 export const apiClient = {
-  get: async <T>(url: string, params?: Record<string, unknown>, config?: AxiosRequestConfig): Promise<APIResponse<T>> => {
+  get: async <T, P = unknown>(url: string, params?: P, config?: AxiosRequestConfig): Promise<APIResponse<T>> => {
     const response = await api.get<APIResponse<T>>(url, { params, ...config });
     return response.data;
   },
 
-  post: async <T>(url: string, data?: Record<string, unknown>, config?: AxiosRequestConfig): Promise<APIResponse<T>> => {
+  post: async <T, D = unknown>(url: string, data?: D, config?: AxiosRequestConfig): Promise<APIResponse<T>> => {
     const response = await api.post<APIResponse<T>>(url, data, config);
     return response.data;
   },
 
-  put: async <T>(url: string, data?: Record<string, unknown>, config?: AxiosRequestConfig): Promise<APIResponse<T>> => {
+  put: async <T, D = unknown>(url: string, data?: D, config?: AxiosRequestConfig): Promise<APIResponse<T>> => {
     const response = await api.put<APIResponse<T>>(url, data, config);
     return response.data;
   },
 
-  patch: async <T>(url: string, data?: Record<string, unknown>, config?: AxiosRequestConfig): Promise<APIResponse<T>> => {
+  patch: async <T, D = unknown>(url: string, data?: D, config?: AxiosRequestConfig): Promise<APIResponse<T>> => {
     const response = await api.patch<APIResponse<T>>(url, data, config);
     return response.data;
   },

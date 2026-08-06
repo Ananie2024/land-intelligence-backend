@@ -1,0 +1,59 @@
+# -----------------------------------------------------------------------------
+# .dockerignore — keep the Docker build context small and safe
+# -----------------------------------------------------------------------------
+
+# VCS
+.git
+.gitignore
+
+# Python
+venv/
+env/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+build/
+dist/
+
+# Environment & secrets (NEVER copy real credentials into an image)
+.env
+.env.*
+*.pem
+*.key
+*.crt
+config/backup/credentials/
+*service-account*.json
+
+# Node / frontend (built separately; not needed in backend image)
+node_modules/
+src/
+land-intelligence-frontend/
+
+# Runtime-generated data (bind volumes provide these in production)
+file-storage/
+backups/
+logs/
+temp/
+uploaded_documents/
+qr-codes/
+celerybeat-schedule.*
+
+# Editor / OS
+.vscode/
+.idea/
+ananie.vscode/
+.DS_Store
+Thumbs.db
+
+# Docs & scratch scripts (keep the context lean)
+docs/
+scripts/
+*.md
+*_files*.sh
+*.py.tmp
