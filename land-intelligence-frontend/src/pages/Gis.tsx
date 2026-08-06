@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { GISMap, type ParcelGeoData, type MapSelectionMode } from '@/components/ui/GISMap';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
-import { RefreshCw, Layers, MapPin, User, Ruler, DollarSign, FileText, Calendar, Crosshair, Route, Shrink, Expand, Pointer, Search, X } from 'lucide-react';
+import { RefreshCw, Layers, MapPin, User, Ruler, DollarSign, FileText, Calendar, Crosshair, Route, Shrink, Pointer, Search, X } from 'lucide-react';
 import { landService } from '@/services/landService';
 import { reportService } from '@/services/reportService';
 import type { Parcel } from '@/types/land';
@@ -117,6 +117,7 @@ export default function GisPage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadParcels();
   }, [loadParcels]);
 

@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/Button';
 import { ListState } from '@/components/ui/ListState';
 import { Database, RefreshCw } from 'lucide-react';
 import { backupService } from '@/services/backupService';
-import type { Backup } from '@/types/backup';
+import type { Backup, BackupVerifyResponse } from '@/types/backup';
 import { BackupTable } from '@/features/backups/components/BackupTable';
 import { BackupVerifyCard } from '@/features/backups/components/BackupVerifyCard';
 import { useResourceQuery } from '@/hooks/useResourceList';
 import toast from 'react-hot-toast';
 
 export default function Backups() {
-  const [verifyData, setVerifyData] = useState<any>(null);
+  const [verifyData, setVerifyData] = useState<BackupVerifyResponse | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
 
   const { data, isLoading, error, refetch } = useResourceQuery<Backup[]>(

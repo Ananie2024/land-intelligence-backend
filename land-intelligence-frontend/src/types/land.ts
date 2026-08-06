@@ -1,4 +1,4 @@
-import { BaseEntity, QueryFilters } from './common';
+﻿import { BaseEntity, QueryFilters } from './common';
 
 export interface Parish extends BaseEntity {
   name: string;
@@ -28,7 +28,7 @@ export interface Parcel extends BaseEntity {
   location_description?: string | null;
   valuation?: number | null;
   valuation_date?: string | null;
-  metadata?: Record<string, any> | null;
+  metadata?: Record<string, unknown> | null;
   parish_name?: string | null;
   land_use_category_name?: string | null;
   // Parsed geometry for map display
@@ -46,7 +46,7 @@ export interface ParcelCreate {
   location_description?: string | null;
   valuation?: number | null;
   valuation_date?: string | null;
-  metadata?: Record<string, any> | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface ParcelFilters extends QueryFilters {

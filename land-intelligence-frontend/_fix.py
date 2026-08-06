@@ -1,11 +1,11 @@
-﻿import React from 'react';
-import type { RegisterOptions, FieldError, UseFormRegisterReturn } from 'react-hook-form';
+import React from 'react';
+import type { RegisterOptions, FieldError } from 'react-hook-form';
 
 interface FormFieldProps {
   label: string;
   name: string;
   type?: 'text' | 'email' | 'password' | 'number' | 'date' | 'file';
-  register?: UseFormRegisterReturn; // react-hook-form's register function (optional for file inputs)
+  register?: any; // react-hook-form's register function (optional for file inputs)
   validation?: RegisterOptions;
   error?: FieldError;
   disabled?: boolean;
@@ -15,7 +15,7 @@ interface FormFieldProps {
   optional?: boolean;
   helperText?: string;
   required?: boolean;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  onChange?: (e: React.ChangeEvent<any>) => void;
 }
 
 export const FormField: React.FC<FormFieldProps> = ({

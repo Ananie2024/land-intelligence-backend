@@ -4,6 +4,12 @@
 
 This guide is specifically tailored for setting up the Python backend on **Windows 11**.
 
+> **Database**: PostgreSQL 14+ with PostGIS extension (not MySQL)
+>
+> **Frontend**: React-based web UI (not JavaFX — see `land-intelligence-frontend/`)
+>
+> **Cache / Token blacklist**: Redis (required — `/health/ready` fails without it)
+
 ---
 
 ## Prerequisites
@@ -18,21 +24,48 @@ This guide is specifically tailored for setting up the Python backend on **Windo
      python --version
      ```
 
-2. **MySQL 8.0 or higher**
-   - Download: https://dev.mysql.com/downloads/installer/
-   - Choose "MySQL Installer for Windows"
-   - Select "Developer Default" installation
-   - Includes: MySQL Server, MySQL Workbench, MySQL Shell
+2. **PostgreSQL 14 or higher**
+   - Download: https://www.postgresql.org/download/windows/
+   - Choose the Windows installer from EDB
+   - **Included components**: PostgreSQL Server, pgAdmin, Command Line Tools
+   - **Remember the password** you set for the `postgres` superuser
    - Verify installation:
      ```powershell
-     mysql --version
+     psql --version
      ```
 
-3. **Git for Windows** (optional, for version control)
+3. **PostGIS Extension**
+   - Download: https://download.osgeo.org/postgis/windows/
+   - Choose the installer matching your PostgreSQL version (e.g., `postgis-bundle-pgXX-x64.zip`)
+   - Or use the Stack Builder that ships with the PostgreSQL installer:
+     - Start → PostgreSQL XX → Stack Builder
+     - Select "PostGIS XX Bundle" from the Spatial Extensions category
+   - Verify:
+     ```powershell
+     psql -U postgres -c "SELECT PostGIS_Version();"
+     ```
+
+4. **Redis for Windows**
+   - **Option A — Memurai** (recommended, actively maintained):
+     ```powershell
+     winget install Memurai.Memurai
+     ```
+   - **Option B — Microsoft archive port**:
+     Download from https://github.com/microsoftarchive/redis/releases
+   - Verify:
+     ```powershell
+     redis-cli ping
+     # → PONG
+     ```
+
+5. **Git for Windows** (optional, for version control)
    - Download: https://git-scm.com/download/win
 
-4. **VS Code** (recommended editor)
+6. **VS Code** (recommended editor)
    - Download: https://code.visualstudio.com/
+
+7. **Node.js 18+** and **npm** (for the React frontend)
+   - Download: https://nodejs.org/
 
 ---
 
@@ -101,39 +134,43 @@ pip install -r requirements.txt
 
 This will take 5-10 minutes to download and install all packages.
 
-### 5. Configure MySQL Database
+### 5. Configure PostgreSQL Database
 
-**Using MySQL Workbench:**
+**Using pgAdmin (GUI):**
 
-1. Open MySQL Workbench
-2. Connect to your local MySQL instance
-3. Run these commands:
+1. Open pgAdmin (installed with PostgreSQL)
+2. Connect to your local PostgreSQL server (password is the one you set during PostgreSQL installation)
+3. Right-click **Databases** → **Create** → **Database**
+   - Name: `land_intelligence_db`
+   - Owner: `postgres`
+4. Open the Query Tool for your new database
+5. Run these commands:
 
 ```sql
--- Create database
-CREATE DATABASE land_intelligence_db 
-    CHARACTER SET utf8mb4 
-    COLLATE utf8mb4_unicode_ci;
+-- Create a dedicated application user
+CREATE USER land_user WITH PASSWORD 'landuser11072';
 
--- Create user
-CREATE USER 'land_admin'@'localhost' IDENTIFIED BY 'YourSecurePassword123!';
+-- Grant all privileges on the database
+GRANT ALL PRIVILEGES ON DATABASE land_intelligence_db TO land_user;
 
--- Grant privileges
-GRANT ALL PRIVILEGES ON land_intelligence_db.* TO 'land_admin'@'localhost';
+-- Grant schema-level permissions
+GRANT ALL ON SCHEMA public TO land_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO land_user;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO land_user;
 
--- Apply changes
-FLUSH PRIVILEGES;
+-- Enable PostGIS extension (required for GIS data)
+CREATE EXTENSION IF NOT EXISTS postgis;
 
 -- Verify
-SHOW DATABASES;
+SELECT PostGIS_Full_Version();
 ```
 
 **Using Command Line:**
 ```powershell
-# Connect to MySQL
-mysql -u root -p
+# Connect to PostgreSQL as the superuser
+psql -U postgres
 
-# Then run the SQL commands above
+# Run the SQL commands from above
 ```
 
 ### 6. Configure Environment Variables
@@ -147,11 +184,18 @@ Copy-Item .env.example .env
 **Edit `.env` file** in VS Code and update these critical values:
 
 ```env
-# Database password you just created
-DATABASE_PASSWORD=YourSecurePassword123!
+# Database credentials (PostgreSQL, default port 5432)
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_NAME=land_intelligence_db
+DATABASE_USER=land_user
+DATABASE_PASSWORD=landuser11072
 
 # Generate a secret key
 SECRET_KEY=run_this_command_below_to_generate
+
+# Redis (required for token blacklist and Celery task queue)
+REDIS_URL=redis://localhost:6379/0
 
 # File paths (use forward slashes!)
 STORAGE_ROOT=C:/LandIntelligence
@@ -221,6 +265,8 @@ alembic current
 alembic upgrade head
 ```
 
+If you get a PostGIS-related error, ensure you ran `CREATE EXTENSION postgis;` on your database (see step 5).
+
 ### 10. Start the Application
 
 ```powershell
@@ -241,8 +287,66 @@ Open your web browser and navigate to:
 - **API Documentation**: http://127.0.0.1:8000/docs
 - **Alternative Docs**: http://127.0.0.1:8000/redoc
 - **Health Check**: http://127.0.0.1:8000/health
+- **Readiness Probe** (requires Redis): http://127.0.0.1:8000/health/ready
 
 If you see the Swagger UI documentation page, **congratulations!** ✅ Your backend is running.
+
+---
+
+## Redis Setup for Windows
+
+Redis is a **hard runtime dependency** — the `/health/ready` endpoint and the
+token-blacklist both fail if Redis is unavailable.
+
+### Option A: Memurai (Recommended)
+
+[Memurai](https://www.memurai.com/) is a compatible Redis server for Windows:
+
+```powershell
+# Install via winget (Windows 10/11)
+winget install Memurai.Memurai
+
+# Memurai starts automatically as a Windows service
+# Verify:
+redis-cli ping
+# → PONG
+```
+
+### Option B: Microsoft Archive Port
+
+1. Download from https://github.com/microsoftarchive/redis/releases
+2. Run the `.msi` installer
+3. During setup, check "Add Redis to PATH"
+4. Start the Redis service:
+   ```powershell
+   # Start Redis
+   redis-server --service-start
+   
+   # Verify
+   redis-cli ping
+   # → PONG
+   ```
+
+---
+
+## React Frontend Setup
+
+The frontend lives in the `land-intelligence-frontend/` directory within this repo.
+
+```powershell
+cd land-intelligence-frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+The React dev server defaults to **http://localhost:5173** (Vite). The backend
+CORS config already allows this origin.
+
+See `land-intelligence-frontend/CONVENTIONS.md` for coding conventions.
 
 ---
 
@@ -252,17 +356,17 @@ If you see the Swagger UI documentation page, **congratulations!** ✅ Your back
 
 Install these extensions in VS Code:
 
-1. **Python** (Microsoft) - ID: ms-python.python
-2. **Pylance** (Microsoft) - ID: ms-python.vscode-pylance
-3. **Python Docstring Generator** - ID: njpwerner.autodocstring
-4. **MySQL** (Jun Han) - ID: formulahendry.vscode-mysql
+1. **Python** (Microsoft) — ID: ms-python.python
+2. **Pylance** (Microsoft) — ID: ms-python.vscode-pylance
+3. **Python Docstring Generator** — ID: njpwerner.autodocstring
+4. **PostgreSQL** (Jun Han) — ID: formulahendry.vscode-postgresql
 
 **Install all at once:**
 ```powershell
 code --install-extension ms-python.python
 code --install-extension ms-python.vscode-pylance
 code --install-extension njpwerner.autodocstring
-code --install-extension formulahendry.vscode-mysql
+code --install-extension formulahendry.vscode-postgresql
 ```
 
 ### Workspace Settings
@@ -450,20 +554,34 @@ GCS_REGION=us-central1
 
 ## Troubleshooting
 
-### MySQL Connection Issues
+### PostgreSQL Connection Issues
 
-**Check MySQL Service:**
+**Check PostgreSQL Service:**
 ```powershell
-# Check if MySQL is running
-Get-Service MySQL80
+# Check if PostgreSQL is running
+Get-Service postgresql*
 
-# Start MySQL if stopped
-Start-Service MySQL80
+# Start PostgreSQL if stopped
+Start-Service postgresql-xx  # replace xx with your version
 ```
 
 **Test Connection:**
 ```powershell
-mysql -u land_admin -p -h localhost
+psql -U land_user -d land_intelligence_db -h localhost
+```
+
+### Redis Connection Issues
+
+```powershell
+# Check if Redis is running
+redis-cli ping
+# Should return PONG
+
+# If using Memurai:
+net start memurai
+
+# If using Microsoft Redis port:
+redis-server --service-start
 ```
 
 ### Python Import Errors
@@ -531,27 +649,28 @@ Add these folders to Windows Defender exclusions for better performance:
 3. Add exclusions:
    - `C:\LandIntelligence`
    - `C:\Projects\land-intelligence-backend`
-   - `C:\ProgramData\MySQL`
+   - `C:\ProgramData\PostgreSQL`
 
-### MySQL Performance Tuning
+### PostgreSQL Performance Tuning
 
-Edit `C:\ProgramData\MySQL\MySQL Server 8.0\my.ini`:
+Edit `C:\ProgramData\PostgreSQL\XX\postgresql.conf`:
 
 ```ini
-[mysqld]
-innodb_buffer_pool_size=2G
-max_connections=50
-query_cache_size=0
+shared_buffers = 512MB          # 25% of RAM
+effective_cache_size = 1.5GB    # 75% of RAM
+work_mem = 64MB
+maintenance_work_mem = 256MB
+max_connections = 50
 ```
 
-Restart MySQL service after changes.
+Restart PostgreSQL service after changes.
 
 ---
 
 ## Next Steps
 
 1. ✅ Backend is running on Windows 11
-2. 📱 Set up the JavaFX client application
+2. 📱 Set up the React web frontend (`cd land-intelligence-frontend && npm install && npm run dev`)
 3. 🗺️ Import GIS master plan data
 4. 📄 Test document upload functionality
 5. 👥 Create user accounts
@@ -592,8 +711,11 @@ pytest
 # Check Python version
 python --version
 
-# Check MySQL version
-mysql --version
+# Check PostgreSQL version
+psql --version
+
+# Check Redis
+redis-cli ping
 
 # List running services
 Get-Service | Where-Object {$_.Status -eq "Running"}

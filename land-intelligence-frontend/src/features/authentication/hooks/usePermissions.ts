@@ -4,13 +4,6 @@
 
 import { useEffect } from 'react';
 import { useAuth } from '../store/authStore';
-import { authService } from '@/services/authService';
-
-interface PermissionState {
-  permissions: string[];
-  isLoading: boolean;
-  error: string | null;
-}
 
 // Define all available permissions in the system
 export const PERMISSIONS = {

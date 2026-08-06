@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { Menu, Bell, User, LogOut, ChevronDown } from 'lucide-react';
 import { useUser, useAuthStore } from '@/features/authentication/store/authStore';
+import type { AuthState } from '@/features/authentication/store/authStore';
 import { env } from '@/utils/env';
 
 interface NavbarProps {
@@ -12,7 +13,7 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   const user = useUser();
-  const logout = useAuthStore((state: any) => state.logout);
+  const logout = useAuthStore((state: AuthState) => state.logout);
 
   // Close dropdown on click outside
   useEffect(() => {

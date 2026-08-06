@@ -65,7 +65,7 @@ export const locationService = {
   findDocument: async (payload: {
     document_id?: string;
     parcel_id?: string;
-  }): Promise<APIResponse<any>> => {
+  }): Promise<APIResponse<unknown>> => {
     return apiClient.post(ENDPOINTS.LOCATIONS.FIND, payload);
   },
 
@@ -89,7 +89,7 @@ export const locationService = {
     return apiClient.patch<StorageCabinet>(ENDPOINTS.LOCATIONS.CABINETS_BY_ID(id), cabinet);
   },
 
-  getLocationGrid: async (locationId: string): Promise<APIResponse<any>> => {
+  getLocationGrid: async (locationId: string): Promise<APIResponse<unknown>> => {
     return apiClient.get(ENDPOINTS.LOCATIONS.GRID(locationId));
   },
 };

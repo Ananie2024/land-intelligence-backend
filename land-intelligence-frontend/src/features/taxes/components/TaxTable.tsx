@@ -1,8 +1,7 @@
 // Tax Table Component
 // Land Intelligence System
 
-import { Eye, DollarSign } from 'lucide-react';
-import type { TaxPayment } from '@/types/tax';
+import { Eye } from 'lucide-react';
 import type { TaxRecordSummary } from '@/services/reportService';
 
 interface TaxTableProps {

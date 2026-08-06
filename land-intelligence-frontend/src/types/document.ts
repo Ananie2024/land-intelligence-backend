@@ -1,4 +1,4 @@
-// Document Types
+﻿// Document Types
 // Land Intelligence System
 
 import { BaseEntity, QueryFilters } from './common';
@@ -29,7 +29,7 @@ export interface Document extends BaseEntity {
   document_date?: string | null;
   reference_number?: string | null;
   page_count?: number | null;
-  metadata?: Record<string, any> | null;
+  metadata?: Record<string, unknown> | null;
   is_active: boolean;
   // Nested data
   document_type_name?: string | null;

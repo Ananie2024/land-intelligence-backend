@@ -1,7 +1,7 @@
 // User Detail Component
 // Land Intelligence System
 
-import { User, Mail, UserCheck, Shield } from 'lucide-react';
+
 import type { UserResponse } from '@/types/user';
 
 interface UserDetailProps {

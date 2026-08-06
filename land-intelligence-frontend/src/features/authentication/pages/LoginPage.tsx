@@ -21,6 +21,7 @@ export const LoginPage: React.FC = () => {
     await login(data);
     if (state.isAuthenticated) {
       // Redirect to the page the user was trying to access, or home
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const from = (location.state as any)?.from?.pathname || '/';
       navigate(from, { replace: true });
     }

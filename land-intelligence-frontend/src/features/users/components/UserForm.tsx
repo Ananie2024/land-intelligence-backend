@@ -3,7 +3,7 @@
 
 import { useForm } from 'react-hook-form';
 import { FormField } from '@/components/ui/FormField';
-import type { UserResponse, UserCreate, UserRole } from '@/types/user';
+import type { UserResponse, UserCreate } from '@/types/user';
 
 interface UserFormProps {
   user?: UserResponse | null;

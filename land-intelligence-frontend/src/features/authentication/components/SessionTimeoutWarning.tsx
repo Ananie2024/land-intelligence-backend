@@ -25,6 +25,7 @@ export const SessionTimeoutWarning: React.FC<SessionTimeoutWarningProps> = ({
 
   useEffect(() => {
     if (!state.accessToken) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowWarning(false);
       return;
     }

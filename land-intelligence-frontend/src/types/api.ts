@@ -1,4 +1,4 @@
-import { PaginationMeta } from './common';
+﻿import { PaginationMeta } from './common';
 
 export interface ErrorDetail {
   field?: string;
@@ -6,7 +6,7 @@ export interface ErrorDetail {
   code?: string;
 }
 
-export interface APIResponse<T = any> {
+export interface APIResponse<T = unknown> {
   success: boolean;
   data: T | null;
   message: string | null;

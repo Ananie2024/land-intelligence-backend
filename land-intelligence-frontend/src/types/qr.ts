@@ -1,4 +1,4 @@
-// QR Types
+﻿// QR Types
 // Land Intelligence System
 
 export interface QrCode {
@@ -7,7 +7,7 @@ export interface QrCode {
   document_id?: string | null;
   code: string;
   code_type: string;
-  data_payload: Record<string, any>;
+  data_payload: Record<string, unknown>;
   file_path: string;
   expires_at?: string | null;
   last_accessed_at?: string | null;
@@ -36,6 +36,6 @@ export interface QrCodeVerifyResponse {
   upi?: string | null;
   expires_at?: string | null;
   is_revoked: boolean;
-  data_payload?: Record<string, any> | null;
+  data_payload?: Record<string, unknown> | null;
   message: string;
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UseQueryOptions } from '@tanstack/react-query';
 import type { APIResponse } from '@/types/api';
@@ -20,7 +20,7 @@ export type ResourceListResult<T> = {
   isRefetching: boolean;
 };
 
-export function transformFilters(filters: ListFilters): Record<string, any> {
+export function transformFilters(filters: ListFilters): Record<string, unknown> {
   return {
     page: filters.page ?? 1,
     size: filters.size ?? 20,
@@ -30,7 +30,7 @@ export function transformFilters(filters: ListFilters): Record<string, any> {
 
 export function useResourceList<T>(
   queryKey: string[],
-  fetchFn: (filters: Record<string, any>) => Promise<APIResponse<PaginatedEnvelope<T>>>,
+  fetchFn: (filters: Record<string, unknown>) => Promise<APIResponse<PaginatedEnvelope<T>>>,
   filters: ListFilters,
   config?: {
     defaultFilters?: ListFilters;

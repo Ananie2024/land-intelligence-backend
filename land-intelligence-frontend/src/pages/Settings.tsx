@@ -15,10 +15,6 @@ export default function Settings() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
   const loadSettings = async () => {
     setIsLoading(true);
     try {
@@ -33,6 +29,14 @@ export default function Settings() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const execute = async () => {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      await loadSettings();
+    };
+    execute();
+  }, []);
 
   const handleRotateJwtKey = useCallback(async () => {
     try {

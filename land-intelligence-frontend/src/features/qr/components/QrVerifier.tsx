@@ -2,7 +2,7 @@
 // Land Intelligence System
 
 import { useState } from 'react';
-import { QrCode, Check, X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { qrService } from '@/services/qrService';
 
 export const QrVerifier: React.FC = () => {
@@ -21,7 +21,7 @@ export const QrVerifier: React.FC = () => {
           parcelUpi: response.data.parcel_upi ?? undefined,
         });
       }
-    } catch (error) {
+    } catch {
       setResult({ valid: false });
     } finally {
       setIsLoading(false);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
@@ -10,38 +10,28 @@ import type { SystemStats } from '@/types/dashboard';
 export default function Dashboard() {
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const statsResponse = await dashboardService.getSystemStats();
-      
-      if (statsResponse.success && statsResponse.data) {
-        setStats(statsResponse.data);
-      } else {
-        setError(statsResponse.message || 'Failed to load dashboard statistics');
-      }
-    } catch (error) {
-      console.error('Failed to load dashboard data', error);
-      setError('Failed to load dashboard data');
-      toast.error('Failed to load dashboard data');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const statsResponse = await dashboardService.getSystemStats();
+        
+        if (statsResponse.success && statsResponse.data) {
+          setStats(statsResponse.data);
+        } else {
+          toast.error(statsResponse.message || 'Failed to load dashboard statistics');
+        }
+      } catch (error) {
+        console.error('Failed to load dashboard data', error);
+        toast.error('Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await loadData();
-    setIsRefreshing(false);
-  };
+    loadData();
+  }, []);
 
   const formatFileSize = (bytes: number): string => {
     const gb = bytes / (1024 * 1024 * 1024);

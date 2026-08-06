@@ -66,10 +66,10 @@ export const DocumentDetail: React.FC<DocumentDetailProps> = ({ document }) => {
         if (res.success && res.data) {
           setQrCode(res.data.code);
         }
-      } catch (error) {
-        // QR code might not exist, which is normal
-        setQrCode(null);
-      } finally {
+  } catch {
+    // QR code might not exist, which is normal
+    setQrCode(null);
+  } finally {
         setLoadingQr(false);
       }
     };

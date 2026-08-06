@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Reusable Pagination Component
  * Land Intelligence System
  */
@@ -22,7 +22,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   onPageChange,
   onPageSizeChange,
 }) => {
-  const pages = [];
+  const pages: number[] = [];
   const maxVisiblePages = 5;
   
   // Generate page numbers with ellipsis
@@ -35,8 +35,8 @@ export const Pagination: React.FC<PaginationProps> = ({
     pages.push(1);
     
     // Calculate start and end for visible pages
-    let startPage = Math.max(2, currentPage - 1);
-    let endPage = Math.min(totalPages - 1, currentPage + 1);
+    const startPage = Math.max(2, currentPage - 1);
+    const endPage = Math.min(totalPages - 1, currentPage + 1);
     
     // Add ellipsis if needed
     if (startPage > 2) {

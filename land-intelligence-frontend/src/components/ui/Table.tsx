@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { LoadingSpinner } from './LoadingSpinner';
 
 export interface Column<T> {
@@ -71,7 +71,7 @@ export function Table<T>({
                 {columns.map((column) => {
                   const renderedValue = column.render
                     ? column.render(row, rowIndex)
-                    : (row as any)[column.key];
+                    : (row as Record<string, unknown>)[column.key];
 
                   return (
                     <td
@@ -97,3 +97,4 @@ export function Table<T>({
     </div>
   );
 }
+

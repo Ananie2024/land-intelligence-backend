@@ -16,7 +16,7 @@ export default function Login() {
   // Redirect to the page the user was trying to access, or home
   useEffect(() => {
     if (state.isAuthenticated) {
-      const from = (location.state as any)?.from?.pathname || '/dashboard';
+      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     }
   }, [state.isAuthenticated, navigate, location]);

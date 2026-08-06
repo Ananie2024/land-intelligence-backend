@@ -18,7 +18,6 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   document, 
   onSubmit, 
   isLoading = false,
-  parcels = [],
   documentTypes = []
 }) => {
   const {
@@ -41,8 +40,8 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
     await onSubmit(data, selectedFile);
   }, [onSubmit, selectedFile]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
     setSelectedFile(file);
   };
 

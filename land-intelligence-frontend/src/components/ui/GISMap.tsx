@@ -1,16 +1,15 @@
 // GIS Map Component
 // Land Intelligence System
 
-import React, { useEffect, useMemo, useCallback, useState } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useMap } from 'react-leaflet';
 import { MapContainer, TileLayer, Polygon, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { MapPin } from 'lucide-react';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default marker icons in Leaflet with bundlers
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// @ts-expect-error - Leaflet type definitions require any cast
 delete ((L.Icon as any).Default.prototype as any)._getIconUrl;
 (L.Icon as any).Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -63,6 +62,7 @@ function MapBoundsController({ parcels }: { parcels: ParcelGeoData[] }) {
       );
 
       if (allPoints.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const bounds = (L as any).latLngBounds(allPoints);
         map.fitBounds(bounds, { padding: [20, 20] });
       }
@@ -73,8 +73,7 @@ function MapBoundsController({ parcels }: { parcels: ParcelGeoData[] }) {
 }
 
 // Map click handler for point mode
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function MapClickHandler({ 
+function MapClickHandler({
   onMapClick, 
   selectionMode 
 }: { 

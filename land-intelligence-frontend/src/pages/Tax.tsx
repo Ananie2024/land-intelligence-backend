@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast';
 import { Pagination } from '@/components/ui/Pagination';
 
 export default function Tax() {
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
   const [parcelId, setParcelId] = useState('');
   const [isExporting, setIsExporting] = useState(false);
   const [isAssessing, setIsAssessing] = useState(false);
@@ -23,7 +23,6 @@ export default function Tax() {
   const [parcelSearch, setParcelSearch] = useState('');
   const [parcelSuggestions, setParcelSuggestions] = useState<{ id: string; upi: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isSearchingParcels, setIsSearchingParcels] = useState(false);
 
   // Tax records pagination state
   const [recordsPage, setRecordsPage] = useState(1);
@@ -43,7 +42,6 @@ export default function Tax() {
       setShowSuggestions(false);
       return;
     }
-    setIsSearchingParcels(true);
     try {
       const response = await taxService.searchParcels(query, 10);
       if (response.success && response.data) {
@@ -52,8 +50,6 @@ export default function Tax() {
       }
     } catch {
       setParcelSuggestions([]);
-    } finally {
-      setIsSearchingParcels(false);
     }
   }, []);
 

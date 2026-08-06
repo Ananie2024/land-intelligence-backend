@@ -78,6 +78,7 @@ export default function QrCodes() {
   // Load documents when document tab is active or type changes
   useEffect(() => {
     if (activeTab === 'document') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadDocumentsByType(selectedDocType);
     }
   }, [activeTab, selectedDocType, loadDocumentsByType]);

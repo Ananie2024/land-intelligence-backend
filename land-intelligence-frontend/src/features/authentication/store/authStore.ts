@@ -18,7 +18,7 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
 };
 
 // Auth state interface
-interface AuthState {
+export interface AuthState {
   user: UserResponse | null;
   accessToken: string | null;
   refreshToken: string | null;
@@ -35,10 +35,11 @@ interface AuthState {
   hasAnyRole: (roles: UserRole[]) => boolean;
 }
 
-// Create the store with middleware - use proper typing for zustand v5
-// Using any type to work around middleware typing incompatibility
+// Create the store with middleware
+// Use any cast to work around zustand persist middleware typing incompatibility
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const useAuthStore: any = create(
-  // @ts-ignore
+  // @ts-expect-error - persist middleware typing incompatibility with create
   persist(
     (set: (partial: Partial<AuthState>) => void, get: () => AuthState) => ({
       // Initial state
@@ -49,7 +50,6 @@ export const useAuthStore: any = create(
       isLoading: false,
       error: null,
 
-      // Initialize from localStorage
       initializeFromStorage: () => {
         const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
         const refreshTokenVal = localStorage.getItem(LOCAL_STORAGE_KEYS.REFRESH_TOKEN);
@@ -64,14 +64,13 @@ export const useAuthStore: any = create(
               refreshToken: refreshTokenVal,
               isAuthenticated: true,
             });
-          } catch (e) {
-            console.error('Failed to parse user profile', e);
+          } catch {
+            console.error('Failed to parse user profile');
             get().logout();
           }
         }
       },
 
-      // Listen for unauthorized events from axios interceptor
       setupUnauthorizedListener: () => {
         const handleUnauthorized = () => {
           set({
@@ -84,12 +83,9 @@ export const useAuthStore: any = create(
         };
 
         window.addEventListener('auth:unauthorized', handleUnauthorized);
-
-        // Return cleanup function
         return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
       },
 
-      // Login action
       login: async (credentials: LoginCredentials) => {
         set({ isLoading: true, error: null });
         try {
@@ -98,7 +94,6 @@ export const useAuthStore: any = create(
           if (response.success && response.data) {
             const { access_token, refresh_token, user } = response.data;
 
-            // Store tokens
             localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, access_token);
             localStorage.setItem(LOCAL_STORAGE_KEYS.REFRESH_TOKEN, refresh_token);
             localStorage.setItem(LOCAL_STORAGE_KEYS.USER_PROFILE, JSON.stringify(user));
@@ -123,15 +118,12 @@ export const useAuthStore: any = create(
         }
       },
 
-      // Logout action
       logout: () => {
-        // Invalidate token on backend (fire and forget)
         const currentToken = get().accessToken;
         if (currentToken) {
-          authService.logout().catch(() => { });
+          authService.logout().catch(() => {});
         }
 
-        // Clear local storage
         localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
         localStorage.removeItem(LOCAL_STORAGE_KEYS.REFRESH_TOKEN);
         localStorage.removeItem(LOCAL_STORAGE_KEYS.USER_PROFILE);
@@ -145,7 +137,6 @@ export const useAuthStore: any = create(
         });
       },
 
-      // Refresh access token
       refreshAccessToken: async () => {
         const refreshTokenValue = get().refreshToken;
         if (!refreshTokenValue) return;
@@ -166,12 +157,11 @@ export const useAuthStore: any = create(
               refreshToken: refresh_token,
             });
           }
-        } catch (error) {
+        } catch {
           get().logout();
         }
       },
 
-      // Fetch current user
       fetchCurrentUser: async () => {
         set({ isLoading: true });
         try {
@@ -184,23 +174,20 @@ export const useAuthStore: any = create(
           const response = await userService.getUserById(user.id);
 
           if (response.success && response.data) {
-            // Update both localStorage and state
             localStorage.setItem(LOCAL_STORAGE_KEYS.USER_PROFILE, JSON.stringify(response.data));
             set({ user: response.data, isLoading: false });
           }
-        } catch (error) {
+        } catch {
           set({ isLoading: false });
         }
       },
 
-      // Check if user has specific role
       hasRole: (role: UserRole): boolean => {
         const user = get().user;
         if (!user) return false;
         return user.role === role;
       },
 
-      // Check if user has any of the specified roles (with hierarchy support)
       hasAnyRole: (roles: UserRole[]): boolean => {
         const user = get().user;
         if (!user) return false;

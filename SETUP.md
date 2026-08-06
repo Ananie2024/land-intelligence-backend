@@ -2,22 +2,35 @@
 
 ## Quick Start
 
-This guide will help you set up the Python backend on your development machine.
+This guide will help you set up the **Python backend** on your development machine.
+
+> **Database**: PostgreSQL 14+ with PostGIS extension (not MySQL)
+>
+> **Frontend**: React-based web UI (not JavaFX — see `land-intelligence-frontend/`)
+>
+> **Cache / Token blacklist**: Redis (required — `/health/ready` fails without it)
+
+---
 
 ## Prerequisites
 
 Before you begin, ensure you have:
 
 - ✅ **Python 3.11 or higher** installed
-- ✅ **MySQL 8.0 or higher** installed and running
+- ✅ **PostgreSQL 14 or higher** installed and running with the **PostGIS** extension
+- ✅ **Redis** installed and running (see [Redis Setup](#redis-setup) below)
 - ✅ **Git** (optional, for version control)
+- ✅ **Node.js 18+** and **npm** (for the React frontend; see `land-intelligence-frontend/`)
 - ✅ **VS Code** or your preferred code editor
+
+---
 
 ## Step-by-Step Setup
 
 ### 1. Extract the Project
 
 If you received this as a ZIP file:
+
 ```bash
 # Extract to your desired location
 unzip land-intelligence-backend.zip
@@ -69,31 +82,41 @@ pip install -r requirements.txt
 
 This will install all required Python packages. It may take 5-10 minutes.
 
-### 5. Configure MySQL Database
+### 5. Configure PostgreSQL Database
 
-**Create the database:**
+**Create the database and user:**
 
 ```sql
--- Connect to MySQL as root
-mysql -u root -p
+-- Connect to PostgreSQL as the postgres superuser
+psql -U postgres
 
--- Create database
-CREATE DATABASE land_intelligence_db 
-    CHARACTER SET utf8mb4 
-    COLLATE utf8mb4_unicode_ci;
+-- Create the database
+CREATE DATABASE land_intelligence_db;
 
--- Create user
-CREATE USER 'land_admin'@'localhost' IDENTIFIED BY 'your_secure_password';
+-- Create a dedicated user
+CREATE USER land_user WITH PASSWORD 'landuser11072';
 
--- Grant privileges
-GRANT ALL PRIVILEGES ON land_intelligence_db.* TO 'land_admin'@'localhost';
+-- Grant all privileges on the database
+GRANT ALL PRIVILEGES ON DATABASE land_intelligence_db TO land_user;
 
--- Enable spatial extensions (if not already enabled)
--- MySQL 8.0+ has spatial support by default
+-- Connect to the new database (so the schema grant takes effect)
+\c land_intelligence_db
 
-FLUSH PRIVILEGES;
-EXIT;
+-- Grant schema-level permissions
+GRANT ALL ON SCHEMA public TO land_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO land_user;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO land_user;
+
+-- Enable PostGIS extension (required for GIS data)
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+-- Verify
+\dx postgis
+
+\q
 ```
+
+> **Note**: The application uses `asyncpg` (async driver) for runtime queries and `psycopg2-binary` for synchronous operations (e.g., Alembic migrations).
 
 ### 6. Configure Environment Variables
 
@@ -114,16 +137,19 @@ copy .env.example .env
 Open `.env` in VS Code and update these critical values:
 
 ```env
-# Database credentials
+# Database credentials (PostgreSQL, default port 5432)
 DATABASE_HOST=localhost
-DATABASE_PORT=3306
+DATABASE_PORT=5432
 DATABASE_NAME=land_intelligence_db
-DATABASE_USER=land_admin
-DATABASE_PASSWORD=your_secure_password
+DATABASE_USER=land_user
+DATABASE_PASSWORD=landuser11072
 
 # Generate a secret key (run this in terminal)
 # python -c "import secrets; print(secrets.token_hex(32))"
 SECRET_KEY=paste_generated_key_here
+
+# Redis (required for token blacklist and Celery task queue)
+REDIS_URL=redis://localhost:6379/0
 
 # File storage paths
 # Windows example:
@@ -161,7 +187,7 @@ New-Item -ItemType Directory -Force -Path C:\LandIntelligence\gis-data
 
 ### 8. Run Database Migrations
 
-Initialize the database schema:
+Initialize the database schema (this also applies the PostGIS extension check):
 
 ```bash
 # Check current migration status
@@ -171,7 +197,8 @@ alembic current
 alembic upgrade head
 ```
 
-You should see output indicating successful migrations.
+You should see output indicating successful migrations. If you get a PostGIS-related error,
+ensure you ran `CREATE EXTENSION postgis;` on your database (see step 5).
 
 ### 9. Start the Application
 
@@ -192,8 +219,79 @@ Open your browser and navigate to:
 - **API Documentation**: http://127.0.0.1:8000/docs
 - **Alternative Documentation**: http://127.0.0.1:8000/redoc
 - **Health Check**: http://127.0.0.1:8000/health
+- **Readiness Probe** (requires Redis): http://127.0.0.1:8000/health/ready
 
 If you see the API documentation page, congratulations! The backend is running.
+
+---
+
+## Redis Setup
+
+Redis is a **hard runtime dependency** — the `/health/ready` endpoint and the
+token-blacklist both fail if Redis is unavailable.
+
+### Linux (Ubuntu / Debian)
+
+```bash
+sudo apt update
+sudo apt install redis-server
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+# Verify
+redis-cli ping
+# → PONG
+```
+
+### macOS
+
+```bash
+brew install redis
+brew services start redis
+redis-cli ping
+# → PONG
+```
+
+### Windows
+
+Download the Microsoft archive port from:
+https://github.com/microsoftarchive/redis/releases
+
+Or install via [Memurai](https://www.memurai.com/) (a compatible Redis for Windows):
+
+```powershell
+# Using winget
+winget install Memurai.Memurai
+
+# Verify
+redis-cli ping
+# → PONG
+```
+
+> The default `REDIS_URL=redis://localhost:6379/0` in `.env.example` should work
+> for all platforms after a standard install.
+
+---
+
+## React Frontend Setup
+
+The frontend lives in the `land-intelligence-frontend/` directory within this repo.
+
+```bash
+cd land-intelligence-frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+The React dev server defaults to **http://localhost:5173** (Vite). The backend
+CORS config already allows this origin.
+
+See `land-intelligence-frontend/CONVENTIONS.md` for coding conventions.
+
+---
 
 ## VS Code Setup
 
@@ -201,12 +299,12 @@ If you see the API documentation page, congratulations! The backend is running.
 
 Install these VS Code extensions for the best development experience:
 
-1. **Python** (Microsoft) - Essential Python support
-2. **Pylance** (Microsoft) - Fast, feature-rich language support
-3. **Python Docstring Generator** - Auto-generate docstrings
-4. **autoDocstring** - Generate docstrings automatically
-5. **GitLens** - Git supercharged (optional)
-6. **MySQL** (cweijan.vscode-mysql-client2) - Database management
+1. **Python** (Microsoft) — Essential Python support
+2. **Pylance** (Microsoft) — Fast, feature-rich language support
+3. **Python Docstring Generator** — Auto-generate docstrings
+4. **autoDocstring** — Generate docstrings automatically
+5. **GitLens** — Git supercharged (optional)
+6. **PostgreSQL** (cweijan.vscode-postgresql-client2) — Database management
 
 ### VS Code Settings
 
@@ -260,6 +358,8 @@ Create `.vscode/launch.json` for debugging:
 }
 ```
 
+---
+
 ## Cloud Backup Setup (Optional)
 
 ### Google Cloud Storage
@@ -292,6 +392,8 @@ B2_APPLICATION_KEY=your_application_key
 B2_BUCKET_NAME=your-bucket-name
 ```
 
+---
+
 ## Troubleshooting
 
 ### "Module not found" Error
@@ -304,19 +406,42 @@ venv\Scripts\activate     # Windows
 
 ### Database Connection Failed
 
-Check MySQL is running:
+Check PostgreSQL is running:
 ```bash
 # Linux
-sudo systemctl status mysql
+sudo systemctl status postgresql
 
 # Windows
-net start MySQL80
+Get-Service postgresql*
 
 # Mac
 brew services list
 ```
 
-Verify credentials in `.env` file match your MySQL setup.
+Verify credentials in `.env` file match your PostgreSQL setup.
+
+**Test the connection:**
+```bash
+psql -U land_user -d land_intelligence_db -h localhost
+```
+
+### Redis Connection Failed
+
+```bash
+# Check if Redis is running
+redis-cli ping
+# Should return PONG
+
+# If not, start it:
+# Linux
+sudo systemctl start redis-server
+
+# macOS
+brew services start redis
+
+# Windows (Memurai)
+net start memurai
+```
 
 ### Permission Errors (Linux)
 
@@ -336,6 +461,8 @@ Then run:
 ```bash
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
 ```
+
+---
 
 ## Running as a System Service
 
@@ -364,7 +491,7 @@ Create `/etc/systemd/system/land-intelligence-api.service`:
 ```ini
 [Unit]
 Description=Land Intelligence FastAPI Backend
-After=network.target mysql.service
+After=network.target postgresql.service redis-server.service
 
 [Service]
 Type=notify
@@ -387,20 +514,26 @@ sudo systemctl start land-intelligence-api
 sudo systemctl status land-intelligence-api
 ```
 
+---
+
 ## Next Steps
 
 1. ✅ Backend is running
-2. 📱 Set up the JavaFX client application
+2. 📱 Set up the React web frontend (`cd land-intelligence-frontend && npm install && npm run dev`)
 3. 🗺️ Import GIS master plan data
 4. 📄 Configure document templates
 5. 👥 Create user accounts
 6. 🧪 Test the complete workflow
+
+---
 
 ## Getting Help
 
 - 📖 Check the README.md for detailed documentation
 - 🐛 Review logs in `logs/application.log`
 - 📧 Contact IT support: it-admin@church.org
+
+---
 
 ## Backup Testing
 
@@ -415,6 +548,8 @@ curl -X POST http://127.0.0.1:8000/api/v1/backups/trigger-manual \
 # Check backup status
 curl http://127.0.0.1:8000/api/v1/backups/jobs
 ```
+
+---
 
 ## Security Reminders
 

@@ -16,7 +16,7 @@ export const backupService = {
     jobType?: string; 
     tier?: string; 
     sourcePath?: string 
-  }): Promise<APIResponse<any>> => {
+  }): Promise<APIResponse<unknown>> => {
     // Use api directly for query params support
     const response = await api.post(ENDPOINTS.BACKUPS.TRIGGER, null, {
       params: {
@@ -28,11 +28,11 @@ export const backupService = {
     return response.data;
   },
 
-  getBackupJob: async (jobId: string): Promise<APIResponse<any>> => {
-    return apiClient.get<any>(ENDPOINTS.BACKUPS.BY_JOB_ID(jobId));
+  getBackupJob: async (jobId: string): Promise<APIResponse<unknown>> => {
+    return apiClient.get<unknown>(ENDPOINTS.BACKUPS.BY_JOB_ID(jobId));
   },
 
-  triggerRestore: async (backupJobId: string): Promise<APIResponse<any>> => {
+  triggerRestore: async (backupJobId: string): Promise<APIResponse<unknown>> => {
     // Use api directly for query params support
     const response = await api.post(ENDPOINTS.BACKUPS.RESTORE, null, {
       params: { backup_job_id: backupJobId }
@@ -40,12 +40,12 @@ export const backupService = {
     return response.data;
   },
 
-  getRestoreJob: async (jobId: string): Promise<APIResponse<any>> => {
-    return apiClient.get<any>(ENDPOINTS.BACKUPS.RESTORE_BY_ID(jobId));
+  getRestoreJob: async (jobId: string): Promise<APIResponse<unknown>> => {
+    return apiClient.get<unknown>(ENDPOINTS.BACKUPS.RESTORE_BY_ID(jobId));
   },
 
-  verifyBackups: async (): Promise<APIResponse<any>> => {
-    return apiClient.post<any>(ENDPOINTS.BACKUPS.VERIFY);
+  verifyBackups: async (): Promise<APIResponse<BackupVerifyResponse>> => {
+    return apiClient.post<BackupVerifyResponse>(ENDPOINTS.BACKUPS.VERIFY);
   },
 
   downloadBackup: async (jobId: string): Promise<Blob> => {
