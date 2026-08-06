@@ -75,6 +75,7 @@ WORKDIR ${APP_HOME}
 
 # Copy application code.
 # Alembic is required at runtime so migrations can be run inside the container.
+COPY docker-entrypoint.sh ./
 COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini ./
@@ -85,6 +86,7 @@ RUN mkdir -p \
         ${APP_HOME}/backups \
         ${APP_HOME}/logs \
         ${APP_HOME}/temp \
+    && chmod +x ${APP_HOME}/docker-entrypoint.sh \
     && chown -R appuser:appuser ${APP_HOME}
 
 # Run as an unprivileged user.
@@ -96,6 +98,14 @@ EXPOSE 8000
 # Healthcheck against the liveness endpoint.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD curl -fsS http://localhost:8000/health/live > /dev/null || exit 1
+
+# ---------------------------------------------------------------------
+# Entrypoint: runs `alembic upgrade head` before every role, then execs
+# the container command (uvicorn / celery worker / celery beat).
+# Because roles are launched by overriding CMD in docker-compose, the
+# migrations are wired here via ENTRYPOINT so they always run first.
+# ---------------------------------------------------------------------
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 # ---------------------------------------------------------------------
 # Default command: run the FastAPI application with Uvicorn.

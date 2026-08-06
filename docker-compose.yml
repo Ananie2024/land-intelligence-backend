@@ -117,11 +117,15 @@ services:
     environment:
       ENVIRONMENT: production
       DATABASE_HOST: db
+      DATABASE_PORT: 5432
       REDIS_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
       FILE_STORAGE_PATH: /app/file-storage
       BACKUP_BASE_PATH: /app/backups
       LOG_FILE_PATH: /app/logs/celery-worker.log
+      # The API container owns migrations; workers must not race it on a
+      # fresh database (SET via entrypoint RUN_MIGRATIONS gate).
+      RUN_MIGRATIONS: "false"
     command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=4
     volumes:
       - file-storage:/app/file-storage
@@ -154,6 +158,8 @@ services:
       FILE_STORAGE_PATH: /app/file-storage
       BACKUP_BASE_PATH: /app/backups
       LOG_FILE_PATH: /app/logs/celery-beat.log
+      # The API container owns migrations; beat must not race it.
+      RUN_MIGRATIONS: "false"
     command: celery -A app.tasks.celery_app beat --loglevel=info
     volumes:
       - backups:/app/backups
