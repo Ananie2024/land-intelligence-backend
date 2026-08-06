@@ -1,0 +1,9 @@
+# =============================================================================
+# Hugging Face Spaces — Spacefile (Docker SDK)
+# =============================================================================
+# Tells Hugging Face that this Space is a Docker Space (full control over the
+# container) and that the app listens on port 7860 (HF's default $PORT).
+# =============================================================================
+
+sdk: docker
+app_port: 7860
