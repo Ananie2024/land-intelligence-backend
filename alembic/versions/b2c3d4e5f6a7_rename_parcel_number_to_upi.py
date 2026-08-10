@@ -11,7 +11,11 @@ from geoalchemy2 import Geometry
 
 # revision identifiers, used by Alembic.
 revision = 'b2c3d4e5f6a7'
-down_revision = 'a1b2c3d4e5f6'
+# The column/index rename must run AFTER a3bfa1088a59 (which still operates on
+# `parcels.parcel_number` / `idx_parcel_number`). Both a3bfa1088a59 and this
+# migration are parents of the 032eaed0a76e merge, so Alembic must not be able
+# to run this rename before a3bfa1088a59 on a fresh database.
+down_revision = 'a3bfa1088a59'
 branch_labels = None
 depends_on = None
 

@@ -74,9 +74,11 @@ if ($SQL_EDITOR_ONLY -ne "1") {
 }
 
 # -----------------------------------------------------------------------------
-# 3) Run Alembic migrations against the Supabase database.
+# 3) Build the schema from the app models and stamp Alembic at head.
+#    (bootstrap_schema.py replaces `alembic upgrade head`: the migration history
+#    is not runnable from an empty database — see deploy/supabase/README.md.)
 # -----------------------------------------------------------------------------
-Write-Host "Running: alembic upgrade head -> $HOST_/$NAME_"
+Write-Host "Deploying schema to $HOST_/$NAME_ (bootstrap from models + stamp head)..."
 $env:DATABASE_HOST     = $HOST_
 $env:DATABASE_PORT     = $PORT_
 $env:DATABASE_NAME     = $NAME_
@@ -84,8 +86,8 @@ $env:DATABASE_USER     = $USER_
 $env:DATABASE_PASSWORD = $PASSWORD_
 $env:SECRET_KEY        = $SECRET_
 
-& .\venv\Scripts\python.exe -m alembic upgrade head
-if ($LASTEXITCODE -ne 0) { throw "alembic upgrade head failed (exit $LASTEXITCODE)" }
+& .\venv\Scripts\python.exe (Join-Path $PSScriptRoot "bootstrap_schema.py")
+if ($LASTEXITCODE -ne 0) { throw "bootstrap_schema.py failed (exit $LASTEXITCODE)" }
 
 Write-Host "Current migration version:"
 & .\venv\Scripts\python.exe -m alembic current

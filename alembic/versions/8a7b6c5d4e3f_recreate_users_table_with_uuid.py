@@ -19,9 +19,10 @@ depends_on: Union[str, None] = None
 
 def upgrade() -> None:
     """Create users table with UUID primary key and userrole enum."""
-    # Create the userrole enum type first (if not exists)
-    op.execute("CREATE TYPE IF NOT EXISTS userrole AS ENUM ('admin', 'client', 'viewer')")
-    
+    # The `sa.Enum('admin','client','viewer', name='userrole')` column below
+    # creates the `userrole` type automatically. The previous explicit
+    # `CREATE TYPE IF NOT EXISTS userrole` was invalid (PostgreSQL does not
+    # support IF NOT EXISTS on CREATE TYPE) and caused a duplicate-type error.
     op.create_table('users',
         sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False, comment='UUID primary key'),
         sa.Column('email', sa.VARCHAR(length=255), nullable=False, comment='User email address'),

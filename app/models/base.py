@@ -3,7 +3,7 @@
 Base Model Classes
 Land Intelligence System
 """
-from sqlalchemy import Column, DateTime, Boolean, func, UUID
+from sqlalchemy import Column, DateTime, Boolean, func, text, UUID
 from sqlalchemy.orm import DeclarativeBase
 
 
@@ -32,7 +32,7 @@ class SoftDeleteMixin:
         Boolean,
         nullable=False,
         default=True,
-        server_default=func.true(),
+        server_default=text("true"),
         comment="Soft delete flag: True if record is active, False if deleted"
     )
 

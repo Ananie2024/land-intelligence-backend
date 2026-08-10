@@ -95,7 +95,10 @@ class TaxRecord(BaseModel):
     )
     
     status = Column(
-        SQLEnum(TaxRecordStatus),
+        SQLEnum(
+            TaxRecordStatus,
+            values_callable=lambda e: [m.value for m in e],
+        ),
         nullable=False,
         default=TaxRecordStatus.PENDING,
         server_default="pending",
