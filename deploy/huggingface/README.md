@@ -15,6 +15,32 @@ Runs the **FastAPI** backend for the Land Intelligence & Stewardship System as a
 **Docker Space** on Hugging Face. It connects to a **Supabase** PostgreSQL
 database and is called by the **Vercel**-hosted frontend.
 
+## ⚠️ Required: PRO subscription for Docker Spaces
+
+Hugging Face now requires a **PRO subscription** to host Gradio *or* Docker
+Spaces (`sdk: docker`) — even private ones fail with HTTP 402 on a free
+account. Create the Space / deploy only after the account
+(Ananie2024) has PRO enabled.
+
+## Automated deployment (recommended)
+
+```powershell
+# 1. Stage the Space folder
+powershell -ExecutionPolicy Bypass -File deploy\huggingface\prepare_space.ps1
+
+# 2. Deploy (create Space + secrets + upload)
+$env:HF_TOKEN           = "<hf_...>"
+$env:DATABASE_HOST      = "aws-1-eu-west-1.pooler.supabase.com"
+$env:DATABASE_PORT      = "5432"
+$env:DATABASE_NAME      = "postgres"
+$env:DATABASE_USER      = "postgres.brlcynrinbcdgrrdcirm"
+$env:DATABASE_PASSWORD  = "<supabase-db-password>"
+$env:SECRET_KEY         = "<random-32+-char>"
+.\venv\Scripts\python.exe deploy/huggingface/deploy_space.py
+```
+
+See `deploy_space.py` for all accepted env vars and defaults.
+
 ## What this folder contains
 
 | File | Purpose |
