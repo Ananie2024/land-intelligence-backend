@@ -47,6 +47,9 @@ project_analysis_and_roadmap.md
 *.db
 *.sqlite3
 *.sql
+# ...but keep the Supabase deployment SQL (extensions + reference schema)
+!deploy/supabase/*.sql
+
 
 # Logs (runtime-generated, don't commit)
 logs/
