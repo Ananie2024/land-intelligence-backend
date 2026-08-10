@@ -59,15 +59,20 @@ def setup_logging() -> None:
     
     # File handler with rotation
     log_file_path = Path(settings.LOG_FILE_PATH)
-    log_file_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    file_handler = logging.handlers.RotatingFileHandler(
-        filename=str(log_file_path),
-        maxBytes=settings.LOG_MAX_BYTES,
-        backupCount=settings.LOG_BACKUP_COUNT
-    )
-    file_handler.setFormatter(json_formatter)
-    root_logger.addHandler(file_handler)
+    try:
+        log_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        file_handler = logging.handlers.RotatingFileHandler(
+            filename=str(log_file_path),
+            maxBytes=settings.LOG_MAX_BYTES,
+            backupCount=settings.LOG_BACKUP_COUNT,
+        )
+        file_handler.setFormatter(json_formatter)
+        root_logger.addHandler(file_handler)
+    except Exception as exc:
+        root_logger.warning(
+            "File logging disabled: %s", exc, exc_info=True
+        )
     
     # Set third-party loggers to WARNING to reduce noise
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
