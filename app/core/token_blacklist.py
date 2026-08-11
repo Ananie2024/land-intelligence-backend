@@ -40,6 +40,11 @@ def get_redis_client() -> redis.Redis:
             settings.REDIS_URL,
             encoding="utf-8",
             decode_responses=True,
+            # Some managed Redis providers (e.g. Upstash) serve TLS with a
+            # certificate that certain runtime cert bundles reject. We still use
+            # TLS, but relax certificate verification so the blacklist/cache
+            # layer works in serverless environments.
+            ssl_cert_reqs=None,
         )
     return _redis_client
 

@@ -197,9 +197,7 @@ async def health_ready():
     except Exception as e:
         logger.error(f"Redis health check failed: {str(e)}")
 
-    # Database is required; Redis is optional (fail-open blacklist behavior).
-    # In serverless/edge environments without Redis, the API remains functional.
-    is_ready = db_status == "healthy"
+    is_ready = db_status == "healthy" and redis_status == "healthy"
     status_code = 200 if is_ready else 503
 
     from fastapi.responses import JSONResponse
