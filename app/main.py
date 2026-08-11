@@ -118,6 +118,16 @@ register_exception_handler(app)
 # ------------------------------------------------------------------
 # CORS
 # ------------------------------------------------------------------
+# IMPORTANT: CORSMiddleware MUST be the LAST middleware added so that it is
+# the OUTERMOST layer. Starlette adds middleware such that the last one added
+# runs first. If CORSMiddleware is added before a BaseHTTPMiddleware (e.g.
+# StandardizeResponseMiddleware below), that body-rewriting middleware returns
+# a brand-new Response whose headers it does not copy from the original, which
+# silently drops the `Access-Control-Allow-*` headers on rewritten (usually
+# 2xx JSON) responses. Browsers then report
+#   "No 'Access-Control-Allow-Origin' header is present on the requested resource"
+# even though the origin is whitelisted.
+app.add_middleware(StandardizeResponseMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -126,9 +136,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Add response standardization middleware
-app.add_middleware(StandardizeResponseMiddleware)
 
 
 # ------------------------------------------------------------------

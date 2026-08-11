@@ -41,6 +41,30 @@ def _is_options_request(request: Request) -> bool:
     return request.method == "OPTIONS"
 
 
+# Header names that must survive when a response body is rebuilt. The CORS
+# headers are set by CORSMiddleware; dropping them (e.g. by returning a fresh
+# Response object) makes browsers block the request with
+# "No 'Access-Control-Allow-Origin' header is present on the requested resource".
+_CORS_HEADERS = (
+    "access-control-allow-origin",
+    "access-control-allow-credentials",
+    "access-control-allow-methods",
+    "access-control-allow-headers",
+    "access-control-expose-headers",
+    "access-control-max-age",
+    "vary",
+)
+
+
+def _carry_headers(source: Response, target: Response) -> Response:
+    """Copy important headers (notably the CORS ones) onto a rebuilt response."""
+    for name in _CORS_HEADERS:
+        value = source.headers.get(name)
+        if value is not None:
+            target.headers[name] = value
+    return target
+
+
 async def _read_body(response: Response) -> bytes:
     """Read the body from a response, handling both direct and streaming responses."""
     # First, try to get the body directly (works for regular Response)
@@ -96,7 +120,10 @@ class StandardizeResponseMiddleware(BaseHTTPMiddleware):
                 return JSONResponse(content=data, status_code=response.status_code)
 
             standardized = success_response(data=data)
-            return JSONResponse(content=standardized, status_code=response.status_code)
+            return _carry_headers(
+                response,
+                JSONResponse(content=standardized, status_code=response.status_code),
+            )
 
         except Exception as exc:
             logger.warning("StandardizeResponseMiddleware: failed to wrap response: %s", exc)
@@ -140,8 +167,11 @@ class PaginationMiddleware(BaseHTTPMiddleware):
                     size=data["size"],
                     total=data["total"],
                 )
-                return JSONResponse(
-                    content=standardized, status_code=response.status_code
+                return _carry_headers(
+                    response,
+                    JSONResponse(
+                        content=standardized, status_code=response.status_code
+                    ),
                 )
 
         except Exception as exc:
