@@ -39,7 +39,6 @@ export interface AuthState {
 // Use any cast to work around zustand persist middleware typing incompatibility
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const useAuthStore: any = create(
-  // @ts-expect-error - persist middleware typing incompatibility with create
   persist(
     (set: (partial: Partial<AuthState>) => void, get: () => AuthState) => ({
       // Initial state
