@@ -162,3 +162,5 @@ encryption/
 keys/
 test_auth.py
 .aider*
+.vercel
+.env*
