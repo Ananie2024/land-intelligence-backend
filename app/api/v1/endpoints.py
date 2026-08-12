@@ -22,7 +22,9 @@ from app.api.v1.routes import (
     documents,
     document_types,
     gis_analysis,
+    gis_exchange,
     tax_calculations,
+    lease_agreements,
     qr_codes,
     physical_locations,
     backups,
@@ -144,9 +146,23 @@ router.include_router(
 )
 
 router.include_router(
+    gis_exchange.router,
+    prefix="/gis",
+    tags=["GIS Data Exchange"],
+    dependencies=[Depends(get_current_user_data)]
+)
+
+router.include_router(
     tax_calculations.router,
     prefix="/tax",
     tags=["Tax Calculations"],
+    dependencies=[Depends(get_current_user_data)]
+)
+
+router.include_router(
+    lease_agreements.router,
+    prefix="/leases",
+    tags=["Lease Agreements"],
     dependencies=[Depends(get_current_user_data)]
 )
 

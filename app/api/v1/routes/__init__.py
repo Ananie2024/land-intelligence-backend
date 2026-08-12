@@ -6,6 +6,7 @@ from . import (
     documents,
     document_types,
     gis_analysis,
+    gis_exchange,
     tax_calculations,
     qr_codes,
     physical_locations,
