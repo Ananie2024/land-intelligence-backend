@@ -7,12 +7,13 @@ import {
   LeaseAgreement,
   LeaseAgreementCreate,
   LeaseAgreementUpdate,
+  LeaseListResponse,
   LeasePaymentRecordRequest,
   LeasePaymentSchedule,
   LeaseSummaryStats,
   LeaseStatus,
 } from '@/types/lease';
-import { APIResponse, PaginatedResponse } from '@/types/api';
+import { APIResponse } from '@/types/api';
 
 export const leaseService = {
   getLeases: async (params?: {
@@ -21,8 +22,8 @@ export const leaseService = {
     status?: LeaseStatus;
     page?: number;
     page_size?: number;
-  }): Promise<APIResponse<PaginatedResponse<LeaseAgreement>>> => {
-    return apiClient.get<PaginatedResponse<LeaseAgreement>>(ENDPOINTS.LEASES.BASE, { params });
+  }): Promise<APIResponse<LeaseListResponse>> => {
+    return apiClient.get<LeaseListResponse>(ENDPOINTS.LEASES.BASE, { params });
   },
 
   getLeaseById: async (id: string): Promise<APIResponse<LeaseAgreement>> => {

@@ -95,3 +95,11 @@ export interface LeaseSummaryStats {
   total_pending_revenue: number;
   overdue_payments_count: number;
 }
+
+// Paginated list response from GET /api/v1/leases
+export interface LeaseListResponse {
+  items: LeaseAgreement[];
+  total: number;
+  page: number;
+  page_size: number;
+}

@@ -105,7 +105,7 @@ export default function Leases() {
   return (
     <PageContainer
       title="Lease Agreements & Revenue"
-      description="Track tenant agreements, rental fees, payment terms, and installment schedules for church land."
+      subtitle="Track tenant agreements, rental fees, payment terms, and installment schedules for church land."
     >
       <div className="space-y-6">
         {/* Top Summary Metrics */}
@@ -272,7 +272,13 @@ export default function Leases() {
           {/* Pagination */}
           {total > pageSize && (
             <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700">
-              <Pagination currentPage={page} totalPages={Math.ceil(total / pageSize)} onPageChange={(p) => setPage(p)} />
+              <Pagination
+                currentPage={page}
+                totalPages={Math.ceil(total / pageSize)}
+                totalItems={total}
+                pageSize={pageSize}
+                onPageChange={(p) => setPage(p)}
+              />
             </div>
           )}
         </div>

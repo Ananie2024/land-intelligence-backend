@@ -204,7 +204,7 @@ export const useAuthStore: any = create(
         isAuthenticated: state.isAuthenticated,
       }),
     }
-  )
+  ) as any,
 );
 
 // Main hook for useAuth
