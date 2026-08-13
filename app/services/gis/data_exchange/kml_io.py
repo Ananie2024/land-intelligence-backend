@@ -5,7 +5,9 @@ Phase 3 — Section 4.3
 Land Intelligence System
 """
 
+import io
 import html
+import zipfile
 import xml.etree.ElementTree as ET
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -324,3 +326,75 @@ def dataset_to_kml(dataset: GisDataset) -> str:
 def dataset_to_kml_bytes(dataset: GisDataset) -> bytes:
     """Serialize a dataset into UTF-8 KML bytes."""
     return dataset_to_kml(dataset).encode("utf-8")
+
+
+def kmz_to_dataset(raw: bytes, source_crs: str = WGS84_CRS) -> GisDataset:
+    """
+    Decode a KMZ (Keyhole Markup Zip) document into a GisDataset.
+
+    A KMZ file is a ZIP archive that bundles a KML document (conventionally
+    ``doc.kml``) together with optional overlay assets (e.g. ground-overlay
+    PNGs). The first ``.kml`` member (preferring ``doc.kml``) is extracted and
+    parsed with :func:`kml_to_dataset`; the inner member names are recorded on
+    the dataset's ``properties`` so callers can locate overlays if needed.
+
+    Args:
+        raw: Raw KMZ (ZIP) bytes.
+        source_crs: Declared CRS of the source data when the KML carries none.
+
+    Returns:
+        GisDataset with the KML-derived features.
+
+    Raises:
+        ValueError: If the payload is empty, is not a valid ZIP archive, or
+            contains no ``.kml`` document.
+    """
+    if not raw:
+        raise ValueError("KMZ payload is empty")
+
+    try:
+        archive = zipfile.ZipFile(io.BytesIO(raw))
+    except zipfile.BadZipFile as exc:
+        raise ValueError(f"KMZ file is not a valid ZIP archive: {exc}")
+
+    with archive:
+        all_names = archive.namelist()
+        kml_names = [n for n in all_names if n.lower().endswith(".kml")]
+        if not kml_names:
+            raise ValueError("KMZ archive contains no .kml document")
+
+        # Prefer the conventional Google Earth document name, then sort for
+        # deterministic selection across archives with arbitrary member names.
+        kml_names.sort(key=lambda n: (n != "doc.kml", n.lower()))
+        kml_bytes = archive.read(kml_names[0])
+
+        overlay_types = (".png", ".jpg", ".jpeg", ".gif")
+        overlays = [
+            n for n in all_names
+            if n.lower().endswith(overlay_types)
+        ]
+
+    dataset = kml_to_dataset(kml_bytes, source_crs)
+    dataset.properties.setdefault("kmz_document", kml_names[0])
+    if overlays:
+        dataset.properties.setdefault("kmz_overlays", overlays)
+    return dataset
+
+
+def dataset_to_kmz_bytes(dataset: GisDataset, base_name: str = "doc") -> bytes:
+    """
+    Serialize a GisDataset into a KMZ archive (a ZIP containing one KML file).
+
+    Args:
+        dataset: Dataset to export.
+        base_name: Name stem used for the inner KML file (default ``doc.kml``).
+
+    Returns:
+        KMZ archive bytes.
+    """
+    kml_bytes = dataset_to_kml_bytes(dataset)
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(f"{base_name}.kml", kml_bytes)
+    buffer.seek(0)
+    return buffer.read()

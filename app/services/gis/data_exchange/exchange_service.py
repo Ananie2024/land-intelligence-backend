@@ -30,7 +30,7 @@ _WGS84_PRJ_WKT = (
     'PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]]'
 )
 
-SUPPORTED_FORMATS = ("geojson", "json", "kml", "shp", "shapefile")
+SUPPORTED_FORMATS = ("geojson", "json", "kml", "kmz", "shp", "shapefile")
 
 
 class GisExchangeService:
@@ -54,6 +54,13 @@ class GisExchangeService:
     def import_kml(raw: bytes, source_crs: str = WGS84_CRS) -> GisDataset:
         """Decode KML bytes into a WGS84-normalized GisDataset."""
         dataset = kml_io.kml_to_dataset(raw)
+        GisExchangeService._reproject(dataset, source_crs)
+        return dataset
+
+    @staticmethod
+    def import_kmz(raw: bytes, source_crs: str = WGS84_CRS) -> GisDataset:
+        """Decode KMZ (zipped KML) bytes into a WGS84-normalized GisDataset."""
+        dataset = kml_io.kmz_to_dataset(raw, source_crs)
         GisExchangeService._reproject(dataset, source_crs)
         return dataset
 
@@ -189,6 +196,11 @@ class GisExchangeService:
         return kml_io.dataset_to_kml_bytes(dataset)
 
     @staticmethod
+    def serialize_kmz_bytes(dataset: GisDataset, base_name: str = "doc") -> bytes:
+        """Serialize a dataset to KMZ (zipped KML) bytes."""
+        return kml_io.dataset_to_kmz_bytes(dataset, base_name)
+
+    @staticmethod
     def shapefile_files(dataset: GisDataset) -> Dict[str, bytes]:
         """Serialize a dataset into a Shapefile file set (shp/shx/dbf/prj)."""
         shp, shx, dbf = shapefile_io.write_shapefile(dataset.features)
@@ -237,6 +249,12 @@ class GisExchangeService:
                 f"{base_name}.kml",
                 self.serialize_kml_bytes(dataset),
             )
+        if fmt == "kmz":
+            return (
+                "application/vnd.google-earth.kmz",
+                f"{base_name}.kmz",
+                self.serialize_kmz_bytes(dataset, base_name),
+            )
         if fmt in ("shp", "shapefile"):
             filename, payload = self.shapefile_zip(dataset, base_name)
             return ("application/zip", filename, payload)
@@ -245,4 +263,3 @@ class GisExchangeService:
             f"Unsupported export format '{export_format}'. "
             f"Supported formats: {', '.join(SUPPORTED_FORMATS)}"
         )
-        return payload

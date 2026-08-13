@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-_SUPPORTED_IMPORT_FORMATS = {"geojson", "json", "kml", "shp", "shapefile"}
+_SUPPORTED_IMPORT_FORMATS = {"geojson", "json", "kml", "kmz", "shp", "shapefile"}
 _SHAPEFILE_EXTENSIONS = {".shp", ".shx", ".dbf", ".prj", ".cpg"}
 
 
@@ -62,7 +62,7 @@ async def import_gis_data(
     if fmt not in _SUPPORTED_IMPORT_FORMATS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported format '{format}'. Supported: geojson, kml, shapefile.",
+            detail=f"Unsupported format '{format}'. Supported: geojson, kml, kmz, shapefile.",
         )
 
     try:
@@ -76,6 +76,11 @@ async def import_gis_data(
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, "A KML file is required.")
             raw = await _read_upload(files[0])
             dataset = GisExchangeService.import_kml(raw, source_crs)
+        elif fmt == "kmz":
+            if not files:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, "A KMZ file is required.")
+            raw = await _read_upload(files[0])
+            dataset = GisExchangeService.import_kmz(raw, source_crs)
         else:  # shapefile
             shp_bytes: Optional[bytes] = None
             dbf_bytes: Optional[bytes] = None
@@ -177,6 +182,20 @@ async def export_parcels_kml(
     _: str = Depends(get_current_user_id),
 ):
     return await _stream_export(GisExchangeService(db), "kml", parish_id)
+
+
+@router.get(
+    "/export/kmz",
+    summary="Export parcels as KMZ",
+    description="Download all active parcels as a Google Earth KMZ archive "
+                "(a ZIP containing a KML document).",
+)
+async def export_parcels_kmz(
+    parish_id: Optional[str] = Query(None, description="Filter by parish UUID"),
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(get_current_user_id),
+):
+    return await _stream_export(GisExchangeService(db), "kmz", parish_id)
 
 
 @router.get(
