@@ -16,6 +16,8 @@ def import_all_models():
     from app.models.physical_location import PhysicalLocation  # noqa: F401
     from app.models.qr_code_registry import QRCodeRegistry  # noqa: F401
     from app.models.storage_cabinet import StorageCabinet  # noqa: F401
+    from app.models.lease_agreement import LeaseAgreement  # noqa: F401
+    from app.models.lease_payment_schedule import LeasePaymentSchedule  # noqa: F401
     from app.models.tax_payment import TaxPayment       # noqa: F401
     from app.models.tax_record import TaxRecord         # noqa: F401
     from app.models.user import User                    # noqa: F401

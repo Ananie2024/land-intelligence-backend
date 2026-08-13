@@ -80,6 +80,14 @@ export const ENDPOINTS = {
     RECORD: (recordId: string) => `/tax/record/${recordId}`,
   },
   
+  // Lease Agreements endpoints
+  LEASES: {
+    BASE: '/leases',
+    BY_ID: (id: string) => `/leases/${id}`,
+    STATS: '/leases/stats',
+    PAY: (leaseId: string, scheduleId: string) => `/leases/${leaseId}/schedules/${scheduleId}/pay`,
+  },
+  
 // QR Code endpoints
    QR: {
      BASE: '/qr',

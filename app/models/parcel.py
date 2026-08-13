@@ -130,7 +130,13 @@ class Parcel(BaseModel):
         back_populates="parcel",
         cascade="all, delete-orphan"
     )
-    
+
+    lease_agreements = relationship(
+        "LeaseAgreement",
+        back_populates="parcel",
+        cascade="all, delete-orphan"
+    )
+
     qr_codes = relationship(
         "QRCodeRegistry",
         back_populates="parcel",

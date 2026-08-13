@@ -14,12 +14,30 @@ export const taxService = {
     assessment_year: string;
     land_use_category_id?: string | null;
     include_penalties?: boolean;
+    custom_tax_rate?: number | null;
   }) => {
     return apiClient.post(ENDPOINTS.TAX.ASSESS, {
       parcel_upi: payload.parcel_upi,
       assessment_year: payload.assessment_year,
       land_use_category_id: payload.land_use_category_id ?? null,
       include_penalties: payload.include_penalties ?? true,
+      custom_tax_rate: payload.custom_tax_rate ?? null,
+    });
+  },
+
+  calculateTax: async (payload: {
+    parcel_upi: string;
+    assessment_year: string;
+    land_use_category_id?: string | null;
+    include_penalties?: boolean;
+    custom_tax_rate?: number | null;
+  }) => {
+    return apiClient.post(ENDPOINTS.TAX.CALCULATE, {
+      parcel_upi: payload.parcel_upi,
+      assessment_year: payload.assessment_year,
+      land_use_category_id: payload.land_use_category_id ?? null,
+      include_penalties: payload.include_penalties ?? true,
+      custom_tax_rate: payload.custom_tax_rate ?? null,
     });
   },
 

@@ -11,6 +11,7 @@ import {
   Building2,
   X,
   BarChart,
+  Receipt,
 } from 'lucide-react';
 import { env } from '@/utils/env';
 import { PermissionAwareNav } from '@/features/authentication/components/PermissionAwareNav';
@@ -37,6 +38,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       links: [
         { name: 'Document Archive', path: '/documents', icon: FileText },
         { name: 'Tax Calculations', path: '/tax', icon: DollarSign },
+        { name: 'Lease Agreements', path: '/leases', icon: Receipt },
         { name: 'Reports', path: '/reports', icon: BarChart },
         { name: 'QR Codes', path: '/qr', icon: QrCode },
       ],

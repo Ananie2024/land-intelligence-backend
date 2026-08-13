@@ -133,6 +133,7 @@ class TaxCalculationRequest(BaseModel):
     assessment_year: str = Field(..., pattern=r"^\d{4}$", description="Assessment year")
     land_use_category_id: Optional[str] = Field(None, description="Override land use category")
     include_penalties: bool = Field(True, description="Include late payment penalties")
+    custom_tax_rate: Optional[float] = Field(None, ge=0, description="Custom tax rate override per sqm")
 
 
 class TaxCalculationResponse(BaseModel):

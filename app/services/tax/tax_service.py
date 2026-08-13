@@ -52,7 +52,8 @@ class TaxService:
         parcel_upi: str,
         assessment_year: str,
         land_use_category_id: Optional[str] = None,
-        include_penalties: bool = False
+        include_penalties: bool = False,
+        custom_tax_rate: Optional[Decimal] = None,
     ) -> Dict[str, Any]:
         """
         Simulate tax calculation without storing a record.
@@ -77,7 +78,8 @@ class TaxService:
         calc_result = await self.tax_calculator.calculate_tax(
             parcel=parcel,
             assessment_year=int(assessment_year),
-            land_use_category=override_category
+            land_use_category=override_category,
+            custom_tax_rate=custom_tax_rate,
         )
 
         penalties = Decimal("0.00")
@@ -113,7 +115,8 @@ class TaxService:
         self,
         parcel_upi: str,
         assessment_year: str,
-        user_id: str
+        user_id: str,
+        custom_tax_rate: Optional[Decimal] = None,
     ) -> Optional[TaxRecord]:
         """
         Create a tax assessment record for a parcel.
@@ -129,14 +132,16 @@ class TaxService:
 
         return await self.assessment_generator.generate_assessment(
             parcel=parcel,
-            assessment_year=int(assessment_year)
+            assessment_year=int(assessment_year),
+            custom_tax_rate=custom_tax_rate,
         )
 
     async def generate_parish_assessments(
         self,
         parish_id: str,
         assessment_year: str,
-        user_id: str
+        user_id: str,
+        custom_tax_rate: Optional[Decimal] = None,
     ) -> Dict[str, Any]:
         """
         Generate tax assessments for all active parcels belonging to a specific parish.
@@ -168,7 +173,8 @@ class TaxService:
                     continue
                 await self.assessment_generator.generate_assessment(
                     parcel=parcel,
-                    assessment_year=int(assessment_year)
+                    assessment_year=int(assessment_year),
+                    custom_tax_rate=custom_tax_rate,
                 )
                 generated += 1
 

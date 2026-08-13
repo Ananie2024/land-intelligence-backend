@@ -9,6 +9,7 @@ import {
   Parishes,
   Documents,
   Tax,
+  Leases,
   QrCodes,
   Gis,
   Users,
@@ -68,6 +69,10 @@ export const router = createBrowserRouter([
           {
             path: 'tax',
             element: <SuspenseFallback><Tax /></SuspenseFallback>,
+          },
+          {
+            path: 'leases',
+            element: <SuspenseFallback><Leases /></SuspenseFallback>,
           },
           {
             path: 'qr',

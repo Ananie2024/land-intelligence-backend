@@ -36,10 +36,11 @@ class TaxCalculator:
         assessment_year: Union[int, str],
         land_use_category: Optional[LandUseCategory] = None,
         exemptions: Optional[Decimal] = None,
-        current_year: Optional[int] = None
+        current_year: Optional[int] = None,
+        custom_tax_rate: Optional[Decimal] = None,
     ) -> dict:
         """
-        Calculate tax liability for a parcel including exemptions.
+        Calculate tax liability for a parcel including exemptions and custom tax rates.
 
         Args:
             parcel: Parcel entity with area and land use category
@@ -47,24 +48,20 @@ class TaxCalculator:
             land_use_category: Optional override of parcel's land use category
             exemptions: Optional exemption amount to deduct from gross tax
             current_year: Optional override for current year (defaults to system date)
+            custom_tax_rate: Optional custom tax rate override per sqm
 
         Returns:
             Dictionary containing tax fields aligned with TaxRecord.
         """
         category = land_use_category or parcel.land_use_category
-        if not category:
-            return {
-                "assessed_value": Decimal("0.00"),
-                "tax_rate_applied": Decimal("0.00"),
-                "base_tax_amount": Decimal("0.00"),
-                "penalties_amount": Decimal("0.00"),
-                "total_amount": Decimal("0.00"),
-                "gross_tax": Decimal("0.00"),
-                "exemptions_applied": Decimal("0.00"),
-                "net_tax_due": Decimal("0.00"),
-            }
-
-        rate = await self._get_tax_rate(category, assessment_year)
+        
+        # Use custom tax rate if provided; otherwise fallback to land use category base tax rate
+        if custom_tax_rate is not None and custom_tax_rate >= Decimal("0.00"):
+            rate = Decimal(str(custom_tax_rate))
+        elif category:
+            rate = await self._get_tax_rate(category, assessment_year)
+        else:
+            rate = Decimal("0.00")
         
         area = Decimal(str(parcel.area_sqm))
         

@@ -50,7 +50,8 @@ class AssessmentGenerator:
         self,
         parcel: Parcel,
         assessment_year: int,
-        exemptions: Optional[Decimal] = None
+        exemptions: Optional[Decimal] = None,
+        custom_tax_rate: Optional[Decimal] = None,
     ) -> TaxRecord:
         """
         Generate a new tax assessment for a parcel.
@@ -59,6 +60,7 @@ class AssessmentGenerator:
             parcel: Parcel entity to assess
             assessment_year: Year of assessment
             exemptions: Optional exemption amount
+            custom_tax_rate: Optional custom tax rate override
 
         Returns:
             Created TaxRecord entity
@@ -67,7 +69,8 @@ class AssessmentGenerator:
         calculation = await self.tax_calculator.calculate_tax(
             parcel=parcel,
             assessment_year=assessment_year,
-            exemptions=exemptions
+            exemptions=exemptions,
+            custom_tax_rate=custom_tax_rate,
         )
 
         due_date = self._get_due_date_for_year(assessment_year)
@@ -90,6 +93,7 @@ class AssessmentGenerator:
         parish_id: UUID,
         assessment_year: int,
         exemptions: Optional[Decimal] = None,
+        custom_tax_rate: Optional[Decimal] = None,
         chunk_size: int = 100
     ) -> dict:
         """
@@ -139,7 +143,7 @@ class AssessmentGenerator:
             
             # Generate assessments concurrently for the chunk
             tasks = [
-                self.generate_assessment(parcel, assessment_year, exemptions)
+                self.generate_assessment(parcel, assessment_year, exemptions, custom_tax_rate)
                 for parcel in chunk
             ]
             

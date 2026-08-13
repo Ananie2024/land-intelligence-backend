@@ -9,6 +9,7 @@ export const Parcels = React.lazy(() => import('@/pages/Parcels'));
 export const Parishes = React.lazy(() => import('@/pages/Parishes'));
 export const Documents = React.lazy(() => import('@/pages/Documents'));
 export const Tax = React.lazy(() => import('@/pages/Tax'));
+export const Leases = React.lazy(() => import('@/pages/Leases'));
 export const QrCodes = React.lazy(() => import('@/pages/QrCodes'));
 export const Gis = React.lazy(() => import('@/pages/Gis'));
 export const Users = React.lazy(() => import('@/pages/Users'));

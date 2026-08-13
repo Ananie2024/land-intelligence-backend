@@ -27,3 +27,26 @@ class DocumentType(str, Enum):
     CESSION = "cession"
     OTHERS = "others"
     UNSPECIFIED = "unspecified"
+
+
+class LeaseStatus(str, Enum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    EXPIRED = "expired"
+    TERMINATED = "terminated"
+    RENEWED = "renewed"
+
+
+class PaymentFrequency(str, Enum):
+    MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
+    SEMI_ANNUALLY = "semi_annually"
+    ANNUALLY = "annually"
+
+
+class LeasePaymentStatus(str, Enum):
+    PENDING = "pending"
+    PAID = "paid"
+    OVERDUE = "overdue"
+    PARTIAL = "partial"
+    CANCELLED = "cancelled"

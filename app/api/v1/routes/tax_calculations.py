@@ -11,6 +11,8 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from decimal import Decimal
+
 from app.core.database import get_db
 from app.api.auth_dependencies import get_current_user_id, require_admin, prevent_viewer_access
 from app.services.tax.tax_service import TaxService
@@ -41,11 +43,13 @@ async def calculate_tax(
 ):
     try:
         service = TaxService(db)
+        custom_rate = Decimal(str(payload.custom_tax_rate)) if payload.custom_tax_rate is not None else None
         result = await service.calculate_tax(
             parcel_upi=payload.parcel_upi,
             assessment_year=payload.assessment_year,
             land_use_category_id=payload.land_use_category_id,
-            include_penalties=payload.include_penalties
+            include_penalties=payload.include_penalties,
+            custom_tax_rate=custom_rate,
         )
         
         return TaxCalculationResponse(
@@ -89,10 +93,12 @@ async def generate_assessment(
 ):
     try:
         service = TaxService(db)
+        custom_rate = Decimal(str(payload.custom_tax_rate)) if payload.custom_tax_rate is not None else None
         record = await service.generate_assessment(
             parcel_upi=payload.parcel_upi,
             assessment_year=payload.assessment_year,
-            user_id=user_id
+            user_id=user_id,
+            custom_tax_rate=custom_rate,
         )
         
         if not record:
@@ -127,16 +133,19 @@ async def generate_assessment(
 async def generate_parish_assessments(
     parish_id: str,
     assessment_year: str = Query(..., pattern=r"^\d{4}$", description="Assessment year"),
+    custom_tax_rate: Optional[float] = Query(None, ge=0, description="Optional custom tax rate per sqm"),
     db: AsyncSession = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
     _admin: str = Depends(require_admin),
 ):
     try:
         service = TaxService(db)
+        custom_rate = Decimal(str(custom_tax_rate)) if custom_tax_rate is not None else None
         result = await service.generate_parish_assessments(
             parish_id=parish_id,
             assessment_year=assessment_year,
-            user_id=user_id
+            user_id=user_id,
+            custom_tax_rate=custom_rate,
         )
         await db.commit()
         

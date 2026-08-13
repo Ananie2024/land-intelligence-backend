@@ -14,6 +14,7 @@ export default function Tax() {
   const [isAssessing, setIsAssessing] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [assessmentYear, setAssessmentYear] = useState(new Date().getFullYear().toString());
+  const [customTaxRate, setCustomTaxRate] = useState('');
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('bank_transfer');
   const [paymentReference, setPaymentReference] = useState('');
@@ -69,9 +70,9 @@ export default function Tax() {
     return format === 'excel' ? 'xlsx' : format;
   };
 
-  const handleExport = useCallback(async (format: ExportFormat) => {
+  const handleExport = async (format: ExportFormat) => {
     if (!parcelId) {
-      toast.error('Enter a UPI first');
+      toast.error('Select a parcel first');
       return;
     }
     setIsExporting(true);
@@ -92,11 +93,11 @@ export default function Tax() {
     } finally {
       setIsExporting(false);
     }
-  }, [parcelId]);
+  };
 
   const handleAssess = useCallback(async () => {
     if (!parcelId) {
-      toast.error('Enter a UPI first');
+      toast.error('Select a parcel first');
       return;
     }
     setIsAssessing(true);
@@ -106,6 +107,7 @@ export default function Tax() {
         assessment_year: assessmentYear,
         land_use_category_id: null,
         include_penalties: true,
+        custom_tax_rate: customTaxRate ? parseFloat(customTaxRate) : null,
       });
       if (response.success) {
         toast.success(`Assessment for ${parcelId} (${assessmentYear}) created`);
@@ -119,7 +121,7 @@ export default function Tax() {
     } finally {
       setIsAssessing(false);
     }
-  }, [parcelId, assessmentYear, refetch]);
+  }, [parcelId, assessmentYear, customTaxRate, refetch]);
 
   const handleRecordPayment = useCallback(async () => {
     if (!taxReport || taxReport.records.length === 0) {
@@ -303,18 +305,27 @@ export default function Tax() {
 
           {/* Action buttons */}
           <div className="flex gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <input
                 type="text"
                 placeholder="Year (e.g. 2025)"
                 value={assessmentYear}
                 onChange={(e) => setAssessmentYear(e.target.value)}
-                className="px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-md text-sm text-white placeholder-slate-500 w-24"
+                className="px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-md text-sm text-white placeholder-slate-500 w-28"
+              />
+              <input
+                type="number"
+                step="0.01"
+                placeholder="Custom Rate (RWF/sqm)"
+                value={customTaxRate}
+                onChange={(e) => setCustomTaxRate(e.target.value)}
+                className="px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-md text-sm text-white placeholder-slate-500 w-44 font-mono"
+                title="Optional custom tax rate per square meter override"
               />
               <button
                 onClick={handleAssess}
                 disabled={isAssessing}
-                className="px-4 py-2 bg-warning/20 text-warning rounded-md hover:bg-warning/30 transition-colors text-sm flex items-center gap-1"
+                className="px-4 py-2 bg-warning/20 text-warning rounded-md hover:bg-warning/30 transition-colors text-sm flex items-center gap-1 font-medium"
               >
                 <Plus className="w-4 h-4" />
                 {isAssessing ? 'Assessing...' : 'New Assessment'}
