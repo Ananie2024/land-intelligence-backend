@@ -165,3 +165,27 @@ class TestTaxCalculator:
             land_use_category=mock_category,
         )
         assert result["tax_rate_applied"] == Decimal("0.05")
+
+    async def test_calculate_tax_with_custom_rate_overrides_category(self, calculator, mock_parcel, mock_category):
+        """Custom tax rate overrides the land use category base rate."""
+        result = await calculator.calculate_tax(
+            parcel=mock_parcel,
+            assessment_year=2024,
+            land_use_category=mock_category,
+            custom_tax_rate=Decimal("0.10"),
+        )
+        assert result["tax_rate_applied"] == Decimal("0.10")
+        expected_base = Decimal("1000.0") * Decimal("0.10")
+        assert result["base_tax_amount"] == expected_base.quantize(Decimal("0.01"))
+
+    async def test_calculate_tax_with_custom_rate_zero(self, calculator, mock_parcel, mock_category):
+        """Custom tax rate of zero yields zero tax even with a category rate."""
+        result = await calculator.calculate_tax(
+            parcel=mock_parcel,
+            assessment_year=2024,
+            land_use_category=mock_category,
+            custom_tax_rate=Decimal("0.00"),
+        )
+        assert result["tax_rate_applied"] == Decimal("0.00")
+        assert result["base_tax_amount"] == Decimal("0.00")
+        assert result["total_amount"] == Decimal("0.00")

@@ -120,6 +120,13 @@ class TaxService:
     ) -> Optional[TaxRecord]:
         """
         Create a tax assessment record for a parcel.
+
+        Args:
+            parcel_upi: Unique Parcel Identifier
+            assessment_year: Year of tax assessment (4-digit string)
+            user_id: ID of the user creating the assessment
+            custom_tax_rate: Optional custom tax rate override per sqm
+                (falls back to land use category rate when ``None``).
         """
         parcel = await self.parcel_repo.get_by_upi(parcel_upi)
         if not parcel:
@@ -145,6 +152,13 @@ class TaxService:
     ) -> Dict[str, Any]:
         """
         Generate tax assessments for all active parcels belonging to a specific parish.
+
+        Args:
+            parish_id: UUID of the parish
+            assessment_year: Year of tax assessment (4-digit string)
+            user_id: ID of the user triggering the batch
+            custom_tax_rate: Optional custom tax rate override per sqm applied
+                to every parcel (falls back to land use category rate when ``None``).
         """
         parish = await self.parish_repo.get(parish_id)
         if not parish:

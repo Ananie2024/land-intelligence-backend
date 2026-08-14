@@ -162,3 +162,38 @@ class TestTaxService:
         service.repo.get = AsyncMock(return_value=record)
         result = await service.get_tax_record(str(record.id))
         assert result is record
+
+    async def test_calculate_tax_with_custom_rate(self, service, mock_parcel):
+        """Custom tax rate is forwarded to the calculator."""
+        service.parcel_repo.get_by_upi = AsyncMock(return_value=mock_parcel)
+        service.tax_calculator.calculate_tax = AsyncMock(return_value={
+            "assessed_value": Decimal("500000.00"),
+            "tax_rate_applied": Decimal("0.10"),
+            "base_tax_amount": Decimal("100.00"),
+            "penalties_amount": Decimal("0.00"),
+            "total_amount": Decimal("100.00"),
+            "gross_tax": Decimal("100.00"),
+            "exemptions_applied": Decimal("0.00"),
+            "net_tax_due": Decimal("100.00"),
+        })
+        result = await service.calculate_tax(
+            mock_parcel.upi, 2024, include_penalties=False,
+            custom_tax_rate=Decimal("0.10"),
+        )
+        kwargs = service.tax_calculator.calculate_tax.call_args.kwargs
+        assert kwargs["custom_tax_rate"] == Decimal("0.10")
+        assert result["tax_rate"] == 0.10
+
+    async def test_generate_assessment_with_custom_rate(self, service, mock_parcel):
+        """Custom tax rate is forwarded when generating an assessment."""
+        service.parcel_repo.get_by_upi = AsyncMock(return_value=mock_parcel)
+        service.repo.get_by_parcel_and_year = AsyncMock(return_value=None)
+        service.assessment_generator.generate_assessment = AsyncMock(
+            return_value=MagicMock(spec=TaxRecord)
+        )
+        await service.generate_assessment(
+            mock_parcel.upi, "2024", user_id="u-1",
+            custom_tax_rate=Decimal("0.08"),
+        )
+        kwargs = service.assessment_generator.generate_assessment.call_args.kwargs
+        assert kwargs["custom_tax_rate"] == Decimal("0.08")

@@ -131,3 +131,40 @@ class TestAssessmentGenerator:
     def test_get_due_date_for_year(self, generator):
         """Due date is March 31 of the following year."""
         assert generator._get_due_date_for_year(2024) == date(2025, 3, 31)
+
+    async def test_generate_assessment_passes_custom_tax_rate(self, generator, mock_repo, mock_calculator, mock_parcel):
+        """generate_assessment forwards custom_tax_rate to the calculator."""
+        mock_calculator.calculate_tax.return_value = {
+            "assessed_value": Decimal("500000.00"),
+            "tax_rate_applied": Decimal("0.10"),
+            "base_tax_amount": Decimal("100.00"),
+            "penalties_amount": Decimal("0.00"),
+            "total_amount": Decimal("100.00"),
+        }
+        mock_repo.create.return_value = MagicMock(spec=TaxRecord)
+        await generator.generate_assessment(
+            parcel=mock_parcel,
+            assessment_year=2024,
+            custom_tax_rate=Decimal("0.10"),
+        )
+        kwargs = mock_calculator.calculate_tax.call_args.kwargs
+        assert kwargs["custom_tax_rate"] == Decimal("0.10")
+
+    async def test_regenerate_assessment_passes_custom_tax_rate(self, generator, mock_repo, mock_calculator, mock_parcel):
+        """regenerate_assessment forwards custom_tax_rate to generate_assessment."""
+        mock_calculator.calculate_tax.return_value = {
+            "assessed_value": Decimal("500000.00"),
+            "tax_rate_applied": Decimal("0.10"),
+            "base_tax_amount": Decimal("100.00"),
+            "penalties_amount": Decimal("0.00"),
+            "total_amount": Decimal("100.00"),
+        }
+        mock_repo.get_parcel.return_value = mock_parcel
+        mock_repo.get_by_parcel_and_year.return_value = None
+        mock_repo.create.return_value = MagicMock(spec=TaxRecord)
+        await generator.regenerate_assessment(
+            mock_parcel.id, 2024,
+            custom_tax_rate=Decimal("0.10"),
+        )
+        kwargs = mock_calculator.calculate_tax.call_args.kwargs
+        assert kwargs["custom_tax_rate"] == Decimal("0.10")

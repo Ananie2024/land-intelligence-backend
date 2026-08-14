@@ -103,6 +103,9 @@ class AssessmentGenerator:
             parish_id: UUID of the parish
             assessment_year: Year of assessment
             exemptions: Optional exemption amount for all parcels
+            custom_tax_rate: Optional custom tax rate override per sqm applied
+                to every parcel in the parish (falls back to land use category
+                rate when None).
             chunk_size: Number of parcels to process concurrently per chunk
 
         Returns:
@@ -176,7 +179,8 @@ class AssessmentGenerator:
         self,
         parcel_id: UUID,
         assessment_year: int,
-        exemptions: Optional[Decimal] = None
+        exemptions: Optional[Decimal] = None,
+        custom_tax_rate: Optional[Decimal] = None
     ) -> Optional[TaxRecord]:
         """
         Regenerate an existing assessment (overwrites) with transaction safety.
@@ -185,6 +189,8 @@ class AssessmentGenerator:
             parcel_id: UUID of the parcel
             assessment_year: Year of assessment
             exemptions: Optional exemption amount
+            custom_tax_rate: Optional custom tax rate override per sqm
+                (falls back to land use category rate when None).
 
         Returns:
             Updated TaxRecord or None if parcel not found
@@ -203,7 +209,9 @@ class AssessmentGenerator:
                 await self.tax_repository.soft_delete(existing.id)
 
             # Generate new assessment within same transaction
-            return await self.generate_assessment(parcel, assessment_year, exemptions)
+            return await self.generate_assessment(
+                parcel, assessment_year, exemptions, custom_tax_rate
+            )
 
     async def get_assessment_document(
         self,
