@@ -202,6 +202,16 @@ export default function Tax() {
           <p className="text-slate-400 mt-0.5">Integrated calculations for diocese land tax rates, exemptions, and payment histories.</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="Custom Rate (RWF/sqm)"
+            value={customTaxRate}
+            onChange={(e) => setCustomTaxRate(e.target.value)}
+            className="px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-md text-sm text-white placeholder-slate-500 w-44 font-mono"
+            title="Set a custom tax rate (per square meter) to override the land use category rate when creating an assessment"
+          />
           <div className="relative">
             <input
               type="text"
@@ -312,15 +322,6 @@ export default function Tax() {
                 value={assessmentYear}
                 onChange={(e) => setAssessmentYear(e.target.value)}
                 className="px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-md text-sm text-white placeholder-slate-500 w-28"
-              />
-              <input
-                type="number"
-                step="0.01"
-                placeholder="Custom Rate (RWF/sqm)"
-                value={customTaxRate}
-                onChange={(e) => setCustomTaxRate(e.target.value)}
-                className="px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-md text-sm text-white placeholder-slate-500 w-44 font-mono"
-                title="Optional custom tax rate per square meter override"
               />
               <button
                 onClick={handleAssess}
